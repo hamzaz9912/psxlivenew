@@ -71,19 +71,53 @@ def main():
 
     # Sidebar for controls
     with st.sidebar:
-        st.header("Dashboard Controls")
+        # Attractive header with gradient
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;'>
+            <h2 style='color: white; margin: 0; font-size: 24px;'>📊 Dashboard Controls</h2>
+            <p style='color: #e8eaf6; margin: 5px 0 0 0; font-size: 14px;'>PSX Forecasting Hub</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Refresh button
+        # Refresh button with better styling
+        st.markdown("""
+        <style>
+        .refresh-btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: bold;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         if st.button("🔄 Refresh Data Now", use_container_width=True):
             st.session_state.last_update = None
             st.rerun()
 
-        # Show last update time
+        # Show last update time with better styling
         if st.session_state.last_update:
-            st.info(f"Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}")
-        
-        # Live Price Display
-        st.subheader("🔴 Live PSX Price")
+            st.markdown(f"""
+            <div style='background-color: #e8f5e8; padding: 8px; border-radius: 5px; border-left: 3px solid #4caf50; margin: 10px 0;'>
+                <small style='color: #2e7d32; font-weight: bold;'>🕒 Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Live Price Display with enhanced styling
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;'>
+            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>🔴 Live PSX Price</h4>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Get live KSE-100 price
         live_price_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
@@ -107,19 +141,33 @@ def main():
             </div>
             """, unsafe_allow_html=True)
         
-        st.markdown("---")
-        
-        # Analysis type selection
+        # Separator with style
+        st.markdown("""
+        <hr style='border: none; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2); margin: 20px 0;'>
+        """, unsafe_allow_html=True)
+
+        # Analysis type selection with styled container
+        st.markdown("""
+        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #2196f3;'>
+            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>🎯 Analysis Type</h4>
+        </div>
+        """, unsafe_allow_html=True)
+
         analysis_type = st.selectbox(
-            "Select Analysis Type",
+            "",
             ["📊 Enhanced Live Dashboard (Top 80 KSE-100)", "🔍 Comprehensive Brand Predictions", "🔴 Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "⚡ 5-Minute Live Predictions", "🏛️ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "📁 Universal File Upload", "📰 News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Database Overview"],
             key="analysis_type"
         )
-        
-        # Date range selection
-        st.subheader("Forecast Settings")
+
+        # Forecast Settings with enhanced styling
+        st.markdown("""
+        <div style='background-color: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;'>
+            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>⚙️ Forecast Settings</h4>
+        </div>
+        """, unsafe_allow_html=True)
+
         forecast_type = st.selectbox(
-            "Forecast Period",
+            "",
             ["Today (Intraday)", "Morning Session (9:30-12:00)", "Afternoon Session (12:00-15:30)", "Next Day", "Custom Date Range"],
             key="forecast_type"
         )
@@ -128,8 +176,13 @@ def main():
         days_ahead = 1
         
         if forecast_type == "Custom Date Range":
+            st.markdown("""
+            <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0;'>
+                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>📅 Select Target Date</label>
+            </div>
+            """, unsafe_allow_html=True)
             custom_date = st.date_input(
-                "Select Target Date",
+                "",
                 value=datetime.now().date() + timedelta(days=7),
                 min_value=datetime.now().date(),
                 max_value=datetime.now().date() + timedelta(days=365)
@@ -141,20 +194,30 @@ def main():
             days_ahead = 0
         elif forecast_type.startswith("Afternoon Session"):
             days_ahead = 0
-        
+
         # Company selection for individual analysis
         selected_company = None
         if analysis_type == "Individual Companies":
+            st.markdown("""
+            <div style='background-color: #f3e5f5; padding: 10px; border-radius: 5px; margin: 10px 0;'>
+                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>🏢 Select Company</label>
+            </div>
+            """, unsafe_allow_html=True)
             companies = st.session_state.data_fetcher.get_kse100_companies()
             selected_company = st.selectbox(
-                "Select Company",
+                "",
                 list(companies.keys()),
                 key="selected_company"
             )
         
         # Debug section for file upload issues
         if analysis_type == "📁 Universal File Upload":
-            with st.expander("🧪 Quick File Upload Test", expanded=False):
+            st.markdown("""
+            <div style='background-color: #fff8e1; padding: 10px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;'>
+                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>🧪 File Upload Debug</h5>
+            </div>
+            """, unsafe_allow_html=True)
+            with st.expander("🔍 Quick File Upload Test", expanded=False):
                 st.markdown("### Test Your File Upload Here")
                 debug_file = st.file_uploader("Upload test file (for debugging)", type=['csv', 'xlsx', 'xls'], key="debug_uploader")
                 
