@@ -1,0 +1,45 @@
+Project Idea (Forecasting PSX KSE-100 Index with Live Data)
+Goal: Build a complete project that forecasts the KSE-100 index of the Pakistan Stock Exchange (PSX), along with individual brand-wise forecasts, using live data fetched every 5 minutes. It should display forecast graphs and allow custom date selection for analysis.
+✅ Requirements:
+1. Live Data Integration:
+   * Use a library or API to fetch real-time stock data from PSX (KSE-100 and its companies).
+   * The data should refresh and be fetched every 5 minutes.
+   * Show real-time movements on a line graph/chart.
+2. Forecasting:
+   * Forecast for:
+      * Today (intraday prediction)
+      * Next day
+      * Any custom date selected by the user.
+   * Use machine learning (e.g., ARIMA, LSTM, Prophet, etc.) for predictions.
+3. Graphing:
+   * Show forecast vs. actual price in a line graph (e.g., Plotly or Matplotlib).
+   * Auto-update the graph every 5 minutes with new live data.
+4. Individual Company Forecasts:
+   * Fetch and predict for all brands listed under KSE-100 (e.g., OGDC, HBL, MCB, ENGRO, etc.).
+   * Allow the user to select a specific brand from a dropdown to view its forecasts.
+5. User Interface (UI):
+   * UI built in Streamlit or any lightweight web dashboard.
+   * Provide options to:
+      * Select date range.
+      * Choose brand.
+      * See forecast charts.
+      * Export data (optional).
+6. Deployment:
+   * Deploy on Streamlit Cloud, Render, or Heroku (preferably free tier).
+   * Auto-refreshing dashboard without manual reload.
+🔍 Is this possible?
+Yes, this is 100% possible.
+💡 Free Data Sources (for PSX):
+Unfortunately, PSX does not provide free APIs publicly like US stock markets. However, you can try the following:
+1. Investing.com Unofficial API (via web scraping):
+* Use investpy or custom requests + BeautifulSoup scraping.
+* Limitation: May block after multiple requests.
+* Some alternatives like yfinance won’t have PSX data.
+2. TradingView Widget + Webhooks:
+* TradingView has KSE-100 data you can scrape or embed.
+* Not officially an API, but with automation, can work.
+3. PSX Official Website (Scraping):
+* You can write a scraper for KSE-100 live page.
+* Needs handling dynamic JS and rate limits.
+🛠 Suggested Tech Stack:
+FeatureToolLive Data Fetchrequests, BeautifulSoup, or any unofficial APIForecastingProphet, ARIMA, or LSTM using scikit-learn / TensorFlowUI / DashboardStreamlitChartsPlotly, Altair, or MatplotlibScheduling / Auto Refreshstreamlit_autorefresh or Streamlit timersDeploymentStreamlit Cloud (Free)
