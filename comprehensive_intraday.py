@@ -437,39 +437,6 @@ def display_comprehensive_intraday_forecasts():
     st.header("🔮 Comprehensive Intraday Forecasting Dashboard")
     st.markdown("**Updated workflow: Yesterday last hour + Today session predictions**")
 
-    # Show workflow diagram
-    st.subheader("📋 Forecasting Workflow")
-    workflow_col1, workflow_col2 = st.columns([1, 2])
-
-    with workflow_col1:
-        st.markdown("""
-        **Yesterday (کل)**
-        ┌─────────────┐
-        │ Last Hour   │  ← Include in input
-        └─────────────┘
-
-        **Today (آج)**
-        09:30 ──────────────── 15:30  (Market Open → Close)
-        │
-        │ First 5 min (09:30–09:35) → Special feature
-        │
-        │ 09:36 → 15:30 → Model predicts intraday movement
-        │
-        └───────────────
-        """)
-
-    with workflow_col2:
-        st.markdown("""
-        **Graph Refresh:**
-        1️⃣ **15:30 (Market Close)**
-           - Input: Yesterday last hour + Today full session
-           - Output: Tomorrow Open Bias (UP/DOWN)
-
-        2️⃣ **09:36 (Next Day Morning)**
-           - Input: Yesterday + Today first 5 min + 09:30–09:36 live candles
-           - Output: Today remaining session (09:36–15:30) prediction in the live kse 40 brands
-        """)
-
     # Initialize forecaster
     forecaster = ComprehensiveIntradayForecaster()
 
