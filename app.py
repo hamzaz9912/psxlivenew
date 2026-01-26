@@ -30,6 +30,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+def is_market_open():
+    """Check if PSX market is currently open"""
+    now = datetime.now()
+    # PSX operates Monday to Friday, 9:30 AM to 3:30 PM Pakistan time
+    if now.weekday() >= 5:  # Saturday = 5, Sunday = 6
+        return False
+    market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
+    market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
+    return market_open <= now <= market_close
 
 def main():
     # Initialize session state FIRST
@@ -64,6 +73,11 @@ def main():
 
     st.title("📈 PSX KSE-100 Forecasting Dashboard")
     st.markdown("---")
+
+    # Check market status
+    if not is_market_open():
+        st.warning("⚠️ **Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
+        st.info("💡 You can still use file upload analysis, historical data, and forecasting features.")
 
     # Auto-refresh every 5 minutes (300 seconds)
     # count = st_autorefresh(interval=300000, limit=None, key="data_refresh")
@@ -118,26 +132,35 @@ def main():
             <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>🔴 Live PSX Price</h4>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Get live KSE-100 price
-        live_price_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
-        if live_price_data:
-            price = live_price_data['price']
-            timestamp = live_price_data['timestamp'].strftime('%H:%M:%S')
-            source = live_price_data.get('source', 'live')
-            
-            # Simple price change indicator
-            import random
-            change = random.uniform(-200, 200)
-            change_pct = (change / price) * 100
-            color = "green" if change > 0 else "red" if change < 0 else "gray"
-            arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
-            
-            st.markdown(f"""
-            <div style='background-color: {color}15; padding: 8px; border-radius: 4px; border-left: 3px solid {color}; margin-bottom: 10px;'>
-                <strong style='color: {color}; font-size: 18px;'>KSE-100: {format_currency(price, '')}</strong><br>
-                <small style='color: {color};'>{arrow} {change:+.2f} ({change_pct:+.2f}%)</small><br>
-                <small style='color: gray;'>Updated: {timestamp}</small>
+
+        if is_market_open():
+            # Get live KSE-100 price
+            live_price_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
+            if live_price_data:
+                price = live_price_data['price']
+                timestamp = live_price_data['timestamp'].strftime('%H:%M:%S')
+                source = live_price_data.get('source', 'live')
+
+                # Simple price change indicator
+                import random
+                change = random.uniform(-200, 200)
+                change_pct = (change / price) * 100
+                color = "green" if change > 0 else "red" if change < 0 else "gray"
+                arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
+
+                st.markdown(f"""
+                <div style='background-color: {color}15; padding: 8px; border-radius: 4px; border-left: 3px solid {color}; margin-bottom: 10px;'>
+                    <strong style='color: {color}; font-size: 18px;'>KSE-100: {format_currency(price, '')}</strong><br>
+                    <small style='color: {color};'>{arrow} {change:+.2f} ({change_pct:+.2f}%)</small><br>
+                    <small style='color: gray;'>Updated: {timestamp}</small>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.info("📊 Live price data not available at the moment.")
+        else:
+            st.markdown("""
+            <div style='background-color: #ffebee; padding: 8px; border-radius: 4px; border-left: 3px solid #f44336; margin-bottom: 10px;'>
+                <small style='color: #c62828; font-weight: bold;'>🏢 Market Closed - No live data available</small>
             </div>
             """, unsafe_allow_html=True)
         
