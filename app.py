@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time
 from datetime import datetime, timedelta
+import pytz
 # from streamlit_autorefresh import st_autorefresh
 
 # Import custom modules
@@ -32,7 +33,9 @@ st.set_page_config(
 
 def is_market_open():
     """Check if PSX market is currently open"""
-    now = datetime.now()
+    # Get current time in Pakistan timezone
+    pakistan_tz = pytz.timezone('Asia/Karachi')
+    now = datetime.now(pakistan_tz)
     # PSX operates Monday to Friday, 9:30 AM to 3:30 PM Pakistan time
     if now.weekday() >= 5:  # Saturday = 5, Sunday = 6
         return False
