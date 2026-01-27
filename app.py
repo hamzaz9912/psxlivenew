@@ -2163,7 +2163,7 @@ def display_five_minute_live_predictions():
             
             # Generate Complete Day 5-Minute Data
             st.subheader("📈 Complete Trading Day 5-Minute Chart")
-            
+
             # Create comprehensive full-day 5-minute data
             try:
                 # Generate complete trading day data (9:30 AM to 3:00 PM PKT)
@@ -2173,7 +2173,11 @@ def display_five_minute_live_predictions():
                 # Calculate total 5-minute intervals from 9:30 AM to 3:00 PM (5.5 hours = 66 intervals)
                 total_minutes = int((trading_end - trading_start).total_seconds() / 60)
                 total_intervals = (total_minutes // 5) + 1  # Add 1 to include the start time
-                
+
+                if total_intervals <= 0:
+                    st.error("Unable to generate chart: Invalid time range")
+                    return
+
                 # Generate 5-minute intervals for complete day
                 complete_day_times = []
                 complete_day_prices = []
@@ -2185,7 +2189,7 @@ def display_five_minute_live_predictions():
                     # Calculate current time interval - ensure proper datetime addition
                     minutes_to_add = timedelta(minutes=5 * i)
                     interval_time = trading_start + minutes_to_add
-                    complete_day_times.append(interval_time)
+                    complete_day_times.append(interval_time.isoformat())
                     
                     if i == 0:
                         # Opening price with slight variation
@@ -2247,9 +2251,9 @@ def display_five_minute_live_predictions():
                     ))
                 
                 # Add trading session markers
-                lunch_break = current_time_pkt.replace(hour=12, minute=0)
-                fig.add_vline(x=lunch_break, line_dash="dot", line_color="orange", 
-                             annotation_text="Mid-Day", annotation_position="top")
+                # lunch_break = current_time_pkt.replace(hour=12, minute=0)
+                # fig.add_vline(x=lunch_break.isoformat(), line_dash="dot", line_color="orange",
+                #              annotation_text="Mid-Day", annotation_position="top")
                 
                 # Add high/low lines
                 day_high = max(complete_day_prices)
@@ -2270,9 +2274,7 @@ def display_five_minute_live_predictions():
                     hovermode='x unified',
                     xaxis=dict(
                         tickformat='%H:%M',
-                        dtick=1800000,  # 30-minute intervals for better readability
-                        tickangle=45,
-                        range=[trading_start, trading_end]
+                        tickangle=45
                     ),
                     yaxis=dict(
                         tickformat='.2f'
@@ -2286,7 +2288,10 @@ def display_five_minute_live_predictions():
                 st.subheader("📊 Daily Trading Statistics")
                 
                 # Debug information
-                st.info(f"📊 Chart Data: {len(complete_day_times)} intervals from {complete_day_times[0].strftime('%H:%M')} to {complete_day_times[-1].strftime('%H:%M')}")
+                from datetime import datetime
+                start_dt = datetime.fromisoformat(complete_day_times[0])
+                end_dt = datetime.fromisoformat(complete_day_times[-1])
+                st.info(f"📊 Chart Data: {len(complete_day_times)} intervals from {start_dt.strftime('%H:%M')} to {end_dt.strftime('%H:%M')}")
                 
                 opening_price = complete_day_prices[0]
                 closing_price = complete_day_prices[-1]
@@ -2317,10 +2322,12 @@ def display_five_minute_live_predictions():
                 
                 with col2:
                     # Time of day high/low
-                    high_time = complete_day_times[complete_day_prices.index(day_high)]
-                    low_time = complete_day_times[complete_day_prices.index(day_low)]
-                    st.metric("High Time", high_time.strftime("%H:%M"))
-                    st.metric("Low Time", low_time.strftime("%H:%M"))
+                    high_time_str = complete_day_times[complete_day_prices.index(day_high)]
+                    low_time_str = complete_day_times[complete_day_prices.index(day_low)]
+                    high_dt = datetime.fromisoformat(high_time_str)
+                    low_dt = datetime.fromisoformat(low_time_str)
+                    st.metric("High Time", high_dt.strftime("%H:%M"))
+                    st.metric("Low Time", low_dt.strftime("%H:%M"))
                 
                 with col3:
                     # Market trend analysis
