@@ -6,7 +6,7 @@ from plotly.subplots import make_subplots
 import time
 from datetime import datetime, timedelta
 import pytz
-# from streamlit_autorefresh import st_autorefresh
+# from streamlit_autorefresh import st_autorefresh  # Commented out due to installation issues
 
 # Import custom modules
 from data_fetcher import DataFetcher
@@ -181,7 +181,7 @@ def main():
 
         analysis_type = st.selectbox(
             "",
-            ["📊 Enhanced Live Dashboard (Top 80 KSE-100)", "🔍 Comprehensive Brand Predictions", "🔴 Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "⚡ 5-Minute Live Predictions", "🏛️ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "📁 Universal File Upload", "📰 News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Database Overview"],
+            ["📊 Enhanced Live Dashboard (Top 80 KSE-100)", "🔍 Comprehensive Brand Predictions", "🔴 Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "⚡ 15-Minute Live Predictions", "🏛️ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "📁 Universal File Upload", "📰 News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Database Overview"],
             key="analysis_type"
         )
 
@@ -323,7 +323,7 @@ def main():
         st.session_state.live_kse40_dashboard.display_live_dashboard()
     elif analysis_type == "Live Market Dashboard":
         display_live_market_dashboard()
-    elif analysis_type == "⚡ 5-Minute Live Predictions":
+    elif analysis_type == "⚡ 15-Minute Live Predictions":
         display_five_minute_live_predictions()
     elif analysis_type == "🔍 Comprehensive Brand Predictions":
         st.session_state.brand_predictor.display_comprehensive_brand_predictions()
@@ -1862,19 +1862,33 @@ def display_file_upload_prediction():
         """)
 
 def display_five_minute_live_predictions():
-    """Live market data scraping with 5-minute predictions for all KSE-100 brands"""
+    """Live market data scraping with 15-minute predictions for all KSE-100 brands"""
 
-    st.title("⚡ 5-Minute Live Predictions - Complete KSE-100 Brands")
-    st.markdown("**Real-time market data scraping with continuous 5-minute predictions for all 100 KSE-100 companies**")
-    st.markdown("**✅ Complete KSE-100 coverage with accurate current prices and live 5-minute predictions for every brand**")
-    
     from utils import format_market_status
     from datetime import datetime, timedelta
     import pytz
+
+    # Auto-refresh logic
+    if 'last_refresh_15min' not in st.session_state:
+        st.session_state.last_refresh_15min = datetime.now()
+
+    st.title("⚡ 15-Minute Live Predictions - Complete KSE-100 Brands")
+    st.markdown("**Real-time market data scraping with continuous 15-minute predictions for all 100 KSE-100 companies**")
+    st.markdown("**✅ Complete KSE-100 coverage with accurate current prices and live 15-minute predictions for every brand**")
     
     # Market status and real-time updates
     market_status = format_market_status()
-    
+
+    # Auto-refresh checkbox
+    auto_refresh_enabled = st.checkbox("🔄 Enable Auto-Refresh (every 5 minutes)", key="auto_refresh_checkbox")
+
+    # Check for auto-refresh
+    if auto_refresh_enabled:
+        time_since_last_refresh = (datetime.now() - st.session_state.last_refresh_15min).total_seconds()
+        if time_since_last_refresh > 300:  # 5 minutes
+            st.session_state.last_refresh_15min = datetime.now()
+            st.rerun()
+
     # Status indicators
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -1889,10 +1903,16 @@ def display_five_minute_live_predictions():
         st.info(f"📅 **PKT Time:** {current_time_pkt.strftime('%H:%M:%S')}")
     
     with col3:
-        # Manual refresh button instead of auto-refresh
-        if st.button("🔄 Refresh Market Data", type="primary", key="manual_refresh"):
-            st.rerun()
-        st.info("📊 **Manual Refresh Mode**")
+        if auto_refresh_enabled:
+            time_since_last = (datetime.now() - st.session_state.last_refresh_15min).total_seconds()
+            minutes_left = max(0, (300 - time_since_last) / 60)
+            st.success(f"🔄 **Auto-refresh enabled** ({minutes_left:.1f} min left)")
+        else:
+            # Manual refresh button
+            if st.button("🔄 Refresh Market Data", type="primary", key="manual_refresh_15min"):
+                st.session_state.last_refresh_15min = datetime.now()
+                st.rerun()
+            st.info("📊 **Manual Refresh Mode**")
     
     st.markdown("---")
     
