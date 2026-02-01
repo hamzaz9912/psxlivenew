@@ -637,9 +637,182 @@ def display_comprehensive_intraday_forecasts():
     with tab3:
         st.subheader("📊 Session Comparison Analysis")
         st.write("Compare morning vs afternoon trading patterns")
-        
-        # Implementation for session comparisons
-        st.info("This feature compares morning (9:30 AM - 12:00 PM) vs afternoon (12:00 PM - 3:00 PM) session predictions")
+
+        # Get KSE-100 data for session comparison
+        if hasattr(st.session_state, 'data_fetcher'):
+            live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
+            historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
+
+            if live_kse_data and historical_kse is not None:
+                current_price = live_kse_data['price']
+
+                # Generate comprehensive forecasts
+                kse_forecasts = forecaster.generate_comprehensive_forecasts(
+                    historical_kse, "KSE-100", current_price
+                )
+
+                # Create session comparison chart
+                fig = make_subplots(
+                    rows=2, cols=2,
+                    subplot_titles=("Morning Session (09:30-12:00)", "Afternoon Session (12:00-15:00)",
+                                  "Full Day Forecast", "Session Volatility Comparison"),
+                    specs=[[{"secondary_y": False}, {"secondary_y": False}],
+                           [{"colspan": 2}, None]],
+                    vertical_spacing=0.1
+                )
+
+                # Morning session
+                morning_data = kse_forecasts.get('morning_session')
+                if morning_data is not None and not morning_data.empty:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=morning_data['time'],
+                            y=morning_data['predicted_price'],
+                            mode='lines+markers',
+                            name='Morning Session',
+                            line=dict(color='orange', width=3),
+                            marker=dict(size=8, symbol='circle')
+                        ),
+                        row=1, col=1
+                    )
+
+                # Afternoon session
+                afternoon_data = kse_forecasts.get('afternoon_session')
+                if afternoon_data is not None and not afternoon_data.empty:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=afternoon_data['time'],
+                            y=afternoon_data['predicted_price'],
+                            mode='lines+markers',
+                            name='Afternoon Session',
+                            line=dict(color='red', width=3),
+                            marker=dict(size=8, symbol='square')
+                        ),
+                        row=1, col=2
+                    )
+
+                # Full day forecast
+                full_day_data = kse_forecasts.get('full_day')
+                if full_day_data is not None and not full_day_data.empty:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=full_day_data['time'],
+                            y=full_day_data['predicted_price'],
+                            mode='lines+markers',
+                            name='Full Day Forecast',
+                            line=dict(color='blue', width=2),
+                            marker=dict(size=6)
+                        ),
+                        row=2, col=1
+                    )
+
+                    # Add confidence bands for full day
+                    fig.add_trace(
+                        go.Scatter(
+                            x=list(full_day_data['time']) + list(full_day_data['time'][::-1]),
+                            y=list(full_day_data['high']) + list(full_day_data['low'][::-1]),
+                            fill='toself',
+                            fillcolor='rgba(0,100,80,0.2)',
+                            line=dict(color='rgba(255,255,255,0)'),
+                            name='Price Range',
+                            showlegend=True
+                        ),
+                        row=2, col=1
+                    )
+
+                # Session volatility comparison (bar chart)
+                if morning_data is not None and afternoon_data is not None:
+                    morning_volatility = morning_data['predicted_price'].std() if len(morning_data) > 1 else 0
+                    afternoon_volatility = afternoon_data['predicted_price'].std() if len(afternoon_data) > 1 else 0
+
+                    fig.add_trace(
+                        go.Bar(
+                            x=['Morning Session', 'Afternoon Session'],
+                            y=[morning_volatility, afternoon_volatility],
+                            name='Volatility',
+                            marker_color=['orange', 'red'],
+                            showlegend=False
+                        ),
+                        row=1, col=2
+                    )
+
+                fig.update_layout(
+                    title="KSE-100 Session Analysis: Morning vs Afternoon vs Full Day",
+                    height=800,
+                    showlegend=True
+                )
+
+                # Update axes labels
+                fig.update_xaxes(title_text="Time", row=1, col=1)
+                fig.update_xaxes(title_text="Time", row=1, col=2)
+                fig.update_xaxes(title_text="Trading Time", row=2, col=1)
+                fig.update_xaxes(title_text="Session", row=1, col=2)
+
+                fig.update_yaxes(title_text="Price (PKR)", row=1, col=1)
+                fig.update_yaxes(title_text="Price (PKR)", row=1, col=2)
+                fig.update_yaxes(title_text="Price (PKR)", row=2, col=1)
+                fig.update_yaxes(title_text="Volatility", row=1, col=2)
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Session metrics comparison
+                st.subheader("📊 Session Metrics Comparison")
+
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    if morning_data is not None and not morning_data.empty:
+                        morning_high = morning_data['predicted_price'].max()
+                        morning_low = morning_data['predicted_price'].min()
+                        morning_range = morning_high - morning_low
+                        st.metric("Morning Range", f"PKR {morning_range:,.2f}")
+
+                with col2:
+                    if afternoon_data is not None and not afternoon_data.empty:
+                        afternoon_high = afternoon_data['predicted_price'].max()
+                        afternoon_low = afternoon_data['predicted_price'].min()
+                        afternoon_range = afternoon_high - afternoon_low
+                        st.metric("Afternoon Range", f"PKR {afternoon_range:,.2f}")
+
+                with col3:
+                    if full_day_data is not None and not full_day_data.empty:
+                        full_day_range = full_day_data['high'].max() - full_day_data['low'].min()
+                        st.metric("Full Day Range", f"PKR {full_day_range:,.2f}")
+
+                with col4:
+                    if morning_data is not None and afternoon_data is not None:
+                        morning_avg_conf = morning_data['confidence'].mean()
+                        afternoon_avg_conf = afternoon_data['confidence'].mean()
+                        avg_conf = (morning_avg_conf + afternoon_avg_conf) / 2
+                        st.metric("Avg Confidence", f"{avg_conf:.0%}")
+
+                # Session trend analysis
+                st.subheader("📈 Session Trend Analysis")
+
+                trend_col1, trend_col2 = st.columns(2)
+
+                with trend_col1:
+                    st.write("**Morning Session Trend:**")
+                    if morning_data is not None and not morning_data.empty:
+                        morning_start = morning_data['predicted_price'].iloc[0]
+                        morning_end = morning_data['predicted_price'].iloc[-1]
+                        morning_change = ((morning_end - morning_start) / morning_start) * 100
+                        trend_color = "green" if morning_change > 0 else "red"
+                        st.markdown(f"<span style='color:{trend_color}; font-weight:bold;'>Change: {morning_change:+.2f}%</span>", unsafe_allow_html=True)
+
+                with trend_col2:
+                    st.write("**Afternoon Session Trend:**")
+                    if afternoon_data is not None and not afternoon_data.empty:
+                        afternoon_start = afternoon_data['predicted_price'].iloc[0]
+                        afternoon_end = afternoon_data['predicted_price'].iloc[-1]
+                        afternoon_change = ((afternoon_end - afternoon_start) / afternoon_start) * 100
+                        trend_color = "green" if afternoon_change > 0 else "red"
+                        st.markdown(f"<span style='color:{trend_color}; font-weight:bold;'>Change: {afternoon_change:+.2f}%</span>", unsafe_allow_html=True)
+
+            else:
+                st.warning("Unable to fetch KSE-100 data for session comparison")
+        else:
+            st.error("Data fetcher not available")
     
     with tab4:
         st.subheader("📁 Upload-Based Forecasts")

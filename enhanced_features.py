@@ -411,7 +411,7 @@ class EnhancedPSXFeatures:
                     time_with_date = datetime.combine(today, datetime.strptime(time_str, '%H:%M').time())
                     
                     intraday_data.append({
-                        'time': time_with_date,
+                        'time': time_with_date.isoformat(),
                         'predicted_price': round(predicted_price, 2),
                         'predicted_high': round(predicted_high, 2),
                         'predicted_low': round(predicted_low, 2),
