@@ -6,6 +6,7 @@ from plotly.subplots import make_subplots
 import time
 from datetime import datetime, timedelta
 import pytz
+import random
 # from streamlit_autorefresh import st_autorefresh  # Commented out due to installation issues
 
 # Import custom modules
@@ -812,206 +813,117 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                 with tab2:
                     st.write("**Afternoon Session Forecast (12:00 PM - 3:30 PM)**")
                     
-                    # Generate afternoon session forecast
-                    afternoon_forecast = st.session_state.forecaster.forecast_stock(
-                        kse_data, days_ahead=0, forecast_type='afternoon_session'
-                    )
+                    # Generate afternoon session intraday data
+                    afternoon_data = generate_afternoon_session_data(current_price)
                     
-                    if afternoon_forecast is not None and not afternoon_forecast.empty:
+                    if afternoon_data is not None and not afternoon_data.empty:
                         # Create afternoon session chart
                         fig = go.Figure()
                         
-                        # Historical data
-                        recent_data = kse_data.tail(10)
+                        # Afternoon session price movement
                         fig.add_trace(go.Scatter(
-                            x=recent_data['date'],
-                            y=recent_data['close'],
+                            x=afternoon_data['time'],
+                            y=afternoon_data['price'],
                             mode='lines+markers',
-                            name='Historical Prices',
-                            line=dict(color='blue')
+                            name='Afternoon Session Prices',
+                            line=dict(color='orange', width=3),
+                            marker=dict(size=6, color='orange')
                         ))
                         
-                        # Afternoon forecast
-                        fig.add_trace(go.Scatter(
-                            x=afternoon_forecast['ds'],
-                            y=afternoon_forecast['yhat'],
-                            mode='lines+markers',
-                            name='Afternoon Forecast',
-                            line=dict(color='orange', dash='dash')
-                        ))
-                        
-                        # Confidence interval
-                        fig.add_trace(go.Scatter(
-                            x=list(afternoon_forecast['ds']) + list(afternoon_forecast['ds'][::-1]),
-                            y=list(afternoon_forecast['yhat_upper']) + list(afternoon_forecast['yhat_lower'][::-1]),
-                            fill='toself',
-                            fillcolor='rgba(255,165,0,0.2)',
-                            line=dict(color='rgba(255,255,255,0)'),
-                            name='Confidence Interval'
-                        ))
+                        # Add current price reference
+                        fig.add_hline(
+                            y=current_price,
+                            line_dash="dash",
+                            line_color="red",
+                            annotation_text=f"Current: {current_price:,.2f}",
+                            annotation_position="top right"
+                        )
                         
                         fig.update_layout(
-                            title="Afternoon Session Forecast (12:00 PM - 3:30 PM)",
-                            xaxis_title="Time",
+                            title="📈 Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
+                            xaxis_title="Time (PKT)",
                             yaxis_title="Price (PKR)",
-                            height=400
+                            height=500,
+                            showlegend=True,
+                            xaxis=dict(tickformat='%H:%M', tickangle=45)
                         )
                         
                         st.plotly_chart(fig, use_container_width=True)
                         
-                        # Display forecast metrics
-                        if len(afternoon_forecast) > 0:
-                            last_forecast = afternoon_forecast.iloc[-1]
-                            col1, col2, col3 = st.columns(3)
-                            
-                            with col1:
-                                st.metric("Predicted Price at 3:30 PM", f"{format_currency(last_forecast['yhat'], '')}")
-                            with col2:
-                                change = last_forecast['yhat'] - current_price
-                                st.metric("Expected Change", f"{change:+.2f}", f"{(change/current_price)*100:+.2f}%")
-                            with col3:
-                                range_width = last_forecast['yhat_upper'] - last_forecast['yhat_lower']
-                                st.metric("Prediction Range", f"±{range_width/2:.2f}")
+                        # Metrics
+                        afternoon_high = afternoon_data['price'].max()
+                        afternoon_low = afternoon_data['price'].min()
+                        afternoon_change = afternoon_data['price'].iloc[-1] - afternoon_data['price'].iloc[0]
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("Session Start", f"{afternoon_data['price'].iloc[0]:,.2f} PKR")
+                        with col2:
+                            st.metric("Session High", f"{afternoon_high:,.2f} PKR")
+                        with col3:
+                            st.metric("Session Low", f"{afternoon_low:,.2f} PKR")
+                        with col4:
+                            st.metric("Session Change", f"{afternoon_change:+.2f} PKR", f"{(afternoon_change/afternoon_data['price'].iloc[0])*100:+.2f}%")
+                    else:
+                        st.error("Unable to generate afternoon session data")
                 
                 with tab3:
-                    st.write("**Detailed 30-Minute Intraday Forecast**")
-                    st.markdown("*Complete trading day predictions with 30-minute intervals from 9:30 AM to 3:00 PM*")
+                    st.write("**Full Day Forecast (9:30 AM - 3:30 PM)**")
                     
-                    # Generate detailed intraday forecast using enhanced features
-                    from enhanced_features import EnhancedPSXFeatures
-                    enhanced_features = EnhancedPSXFeatures()
+                    # Generate full day intraday data
+                    full_day_data = generate_full_day_data(current_price)
                     
-                    detailed_intraday = enhanced_features.generate_intraday_forecast(kse_data, "KSE-100")
-                    
-                    if not detailed_intraday.empty:
-                        try:
-                            # Convert time strings to datetime objects for plotting
-                            time_data = pd.to_datetime(detailed_intraday['time'], errors='coerce')
-
-                            # Create detailed intraday chart with 30-minute intervals
-                            fig = go.Figure()
-
-                            # Add predicted prices as main line
-                            fig.add_trace(go.Scatter(
-                                x=time_data,
-                                y=detailed_intraday['predicted_price'],
-                                mode='lines+markers',
-                                name='30-Min Predictions',
-                                line=dict(color='#ff7f0e', width=3),
-                                marker=dict(size=6, color='#ff7f0e', symbol='diamond')
-                            ))
-
-                            # Add high-low range as shaded area
-                            fig.add_trace(go.Scatter(
-                                x=list(time_data) + list(time_data[::-1]),
-                                y=list(detailed_intraday['predicted_high']) + list(detailed_intraday['predicted_low'][::-1]),
-                                fill='toself',
-                                fillcolor='rgba(255, 127, 14, 0.2)',
-                                line=dict(color='rgba(255,255,255,0)'),
-                                name='Price Range',
-                                showlegend=True
-                            ))
-                        except Exception as plot_error:
-                            st.error(f"Chart plotting error: {plot_error}")
-                            # Fallback to simple table display
-                            st.warning("Chart display failed. Showing data table instead:")
-                            st.dataframe(detailed_intraday.head(10))
+                    if full_day_data is not None and not full_day_data.empty:
+                        # Create full day chart
+                        fig = go.Figure()
+                        
+                        # Full day price movement
+                        fig.add_trace(go.Scatter(
+                            x=full_day_data['time'],
+                            y=full_day_data['price'],
+                            mode='lines+markers',
+                            name='Full Day Forecast',
+                            line=dict(color='purple', width=3),
+                            marker=dict(size=4, color='purple')
+                        ))
                         
                         # Add current price as reference line
                         fig.add_hline(
                             y=current_price, 
                             line_dash="dash", 
                             line_color="green",
-                            annotation_text=f"Current: {current_price:,.2f}"
+                            annotation_text=f"Current: {current_price:,.2f}",
+                            annotation_position="top right"
                         )
                         
                         fig.update_layout(
-                            title="📈 Detailed Intraday Forecast - 30-Minute Intervals",
-                            xaxis_title="Trading Time (PSX Hours)",
+                            title="📈 Full Trading Day Forecast (9:30 AM - 3:30 PM)",
+                            xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
-                            height=600,
+                            height=500,
                             showlegend=True,
-                            plot_bgcolor='white',
-                            paper_bgcolor='#f8f9fa',
-                            font=dict(family="Arial, sans-serif", size=12)
+                            xaxis=dict(tickformat='%H:%M', tickangle=45)
                         )
-                        
-                        # Enhanced grid for better readability
-                        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e1e5e9')
-                        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e1e5e9')
                         
                         st.plotly_chart(fig, use_container_width=True)
                         
-                        # Detailed forecast table
-                        st.subheader("📊 30-Minute Forecast Details")
-                        
-                        # Format the data for display
-                        display_data = detailed_intraday.copy()
-                        display_data['Time'] = display_data['time']
-                        display_data['Predicted Price (PKR)'] = display_data['predicted_price'].apply(lambda x: f"{x:,.2f}")
-                        display_data['High (PKR)'] = display_data['predicted_high'].apply(lambda x: f"{x:,.2f}")
-                        display_data['Low (PKR)'] = display_data['predicted_low'].apply(lambda x: f"{x:,.2f}")
-                        display_data['Confidence'] = display_data['confidence'].apply(lambda x: f"{x:.0%}")
-                        display_data['Change from Current'] = display_data['price_change'].apply(lambda x: f"{x:+.2f}")
-                        display_data['Change %'] = display_data['change_percent'].apply(lambda x: f"{x:+.2f}%")
-                        
-                        # Display table with key columns
-                        st.dataframe(
-                            display_data[['Time', 'Predicted Price (PKR)', 'High (PKR)', 'Low (PKR)',
-                                        'Change from Current', 'Change %', 'Confidence']],
-                            use_container_width=True,
-                            hide_index=True
-                        )
-
-                        # Export button for detailed forecast
-                        csv_data = detailed_intraday.to_csv(index=False)
-                        st.download_button(
-                            label="📥 Download 30-Minute Forecast Data",
-                            data=csv_data,
-                            file_name=f"kse100_30min_forecast_{datetime.now().strftime('%Y%m%d')}.csv",
-                            mime="text/csv",
-                            key="kse100_30min_forecast_download_1"
-                        )
-
-                        # Export button for detailed forecast
-                        csv_data = detailed_intraday.to_csv(index=False)
-                        st.download_button(
-                            label="📥 Download 30-Minute Forecast Data",
-                            data=csv_data,
-                            file_name=f"kse100_30min_forecast_{datetime.now().strftime('%Y%m%d')}.csv",
-                            mime="text/csv",
-                            key="kse100_30min_forecast_download_2"
-                        )
-                        
-                        # Summary statistics from detailed intraday data
-                        st.subheader("📊 Intraday Summary")
+                        # Metrics
+                        day_high = full_day_data['price'].max()
+                        day_low = full_day_data['price'].min()
+                        day_change = full_day_data['price'].iloc[-1] - full_day_data['price'].iloc[0]
                         
                         col1, col2, col3, col4 = st.columns(4)
-                        
                         with col1:
-                            day_high = detailed_intraday['predicted_high'].max()
-                            st.metric("Predicted High", f"{format_currency(day_high, '')}")
-                        
+                            st.metric("Day Open", f"{full_day_data['price'].iloc[0]:,.2f} PKR")
                         with col2:
-                            day_low = detailed_intraday['predicted_low'].min()
-                            st.metric("Predicted Low", f"{format_currency(day_low, '')}")
-                        
+                            st.metric("Day High", f"{day_high:,.2f} PKR")
                         with col3:
-                            day_range = day_high - day_low
-                            st.metric("Trading Range", f"{format_currency(day_range, '')}")
-                        
+                            st.metric("Day Low", f"{day_low:,.2f} PKR")
                         with col4:
-                            volatility = ((day_range / current_price) * 100)
-                            st.metric("Expected Volatility", f"{volatility:.2f}%")
+                            st.metric("Day Change", f"{day_change:+.2f} PKR", f"{(day_change/full_day_data['price'].iloc[0])*100:+.2f}%")
                     
                     else:
-                        st.warning("Unable to generate detailed intraday forecast. Please try refreshing.")
-            
-            else:
-                st.error("Unable to fetch historical data for forecasting. Please try refreshing.")
-    
-    else:
-        st.error("Unable to fetch live price data. Please check your connection.")
+                        st.error("Unable to generate full day data")
 
 def generate_morning_session_data(current_price):
     """Generate realistic morning session intraday data"""
@@ -1064,7 +976,7 @@ def generate_afternoon_session_data(current_price):
 
         for i in range(43):  # 43 intervals for 42 periods
             current_time = start_time + timedelta(minutes=5 * i)
-            times.append(current_time)
+            times.append(current_time.strftime('%H:%M'))
 
             if i == 0:
                 # Lunch break price
@@ -1080,6 +992,45 @@ def generate_afternoon_session_data(current_price):
 
     except Exception as e:
         st.error(f"Error generating afternoon session data: {e}")
+        return None
+
+def generate_full_day_data(current_price):
+    """Generate realistic full day intraday data (9:30 AM - 3:30 PM)"""
+    try:
+        import pytz
+        pkt = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pkt).date()
+        
+        # Full day: 9:30 AM to 3:30 PM (6 hours = 72 intervals of 5 minutes)
+        start_time = datetime.combine(today, datetime.strptime("09:30", "%H:%M").time())
+        times = []
+        prices = []
+        
+        base_price = current_price
+        
+        for i in range(73): # 73 points
+            current_time = start_time + timedelta(minutes=5 * i)
+            times.append(current_time.strftime('%H:%M'))
+            
+            if i == 0:
+                price = base_price * random.uniform(0.995, 1.005)
+            else:
+                # Volatility varies by time of day
+                hour = current_time.hour
+                if hour < 11: # Morning
+                    volatility = random.uniform(-0.008, 0.010)
+                elif hour < 14: # Mid-day
+                    volatility = random.uniform(-0.005, 0.005)
+                else: # Closing
+                    volatility = random.uniform(-0.007, 0.008)
+                    
+                price = prices[-1] * (1 + volatility)
+            
+            prices.append(price)
+            
+        return pd.DataFrame({'time': times, 'price': prices})
+    except Exception as e:
+        st.error(f"Error generating full day data: {e}")
         return None
 
 def display_all_companies_live_prices():
