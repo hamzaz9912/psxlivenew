@@ -32,7 +32,7 @@ class NewsBasedPredictor:
         
         for source_url in self.news_sources:
             try:
-                response = self.session.get(source_url, timeout=10)
+                response = self.session.get(source_url, timeout=3)
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.content, 'html.parser')
                     

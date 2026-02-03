@@ -931,6 +931,9 @@ def generate_morning_session_data(current_price):
         import pytz
         pkt = pytz.timezone('Asia/Karachi')
         today = datetime.now(pkt).date()
+        
+        # Use seeded random generator for consistent daily graph
+        rng = random.Random(f"{today}_morning")
 
         # Morning session: 9:30 AM to 12:00 PM (2.5 hours = 30 intervals of 5 minutes)
         start_time = datetime(today.year, today.month, today.day, 9, 30, 0)
@@ -945,10 +948,10 @@ def generate_morning_session_data(current_price):
 
             if i == 0:
                 # Opening price with slight gap
-                price = base_price * random.uniform(0.995, 1.005)
+                price = base_price * rng.uniform(0.995, 1.005)
             else:
                 # Progressive morning movement with higher volatility
-                volatility = random.uniform(-0.008, 0.010)  # Higher morning volatility
+                volatility = rng.uniform(-0.008, 0.010)  # Higher morning volatility
                 price = prices[-1] * (1 + volatility)
 
             prices.append(price)
@@ -966,6 +969,9 @@ def generate_afternoon_session_data(current_price):
         from datetime import time as dt_time
         pkt = pytz.timezone('Asia/Karachi')
         today = datetime.now(pkt).date()
+        
+        # Use seeded random generator for consistent daily graph
+        rng = random.Random(f"{today}_afternoon")
 
         # Afternoon session: 12:00 PM to 3:30 PM (3.5 hours = 42 intervals of 5 minutes)
         start_time = datetime.combine(today, dt_time(12, 0))
@@ -980,10 +986,10 @@ def generate_afternoon_session_data(current_price):
 
             if i == 0:
                 # Lunch break price
-                price = base_price * random.uniform(0.997, 1.003)
+                price = base_price * rng.uniform(0.997, 1.003)
             else:
                 # Progressive afternoon movement with moderate volatility
-                volatility = random.uniform(-0.006, 0.007)  # Moderate afternoon volatility
+                volatility = rng.uniform(-0.006, 0.007)  # Moderate afternoon volatility
                 price = prices[-1] * (1 + volatility)
 
             prices.append(price)
@@ -1001,6 +1007,9 @@ def generate_full_day_data(current_price):
         pkt = pytz.timezone('Asia/Karachi')
         today = datetime.now(pkt).date()
         
+        # Use seeded random generator for consistent daily graph
+        rng = random.Random(f"{today}_full_day")
+        
         # Full day: 9:30 AM to 3:30 PM (6 hours = 72 intervals of 5 minutes)
         start_time = datetime.combine(today, datetime.strptime("09:30", "%H:%M").time())
         times = []
@@ -1013,16 +1022,16 @@ def generate_full_day_data(current_price):
             times.append(current_time.strftime('%H:%M'))
             
             if i == 0:
-                price = base_price * random.uniform(0.995, 1.005)
+                price = base_price * rng.uniform(0.995, 1.005)
             else:
                 # Volatility varies by time of day
                 hour = current_time.hour
                 if hour < 11: # Morning
-                    volatility = random.uniform(-0.008, 0.010)
+                    volatility = rng.uniform(-0.008, 0.010)
                 elif hour < 14: # Mid-day
-                    volatility = random.uniform(-0.005, 0.005)
+                    volatility = rng.uniform(-0.005, 0.005)
                 else: # Closing
-                    volatility = random.uniform(-0.007, 0.008)
+                    volatility = rng.uniform(-0.007, 0.008)
                     
                 price = prices[-1] * (1 + volatility)
             
@@ -1339,6 +1348,10 @@ def display_live_market_dashboard():
     # Get accurate Pakistan market status
     market_status = format_market_status()
     
+    # Initialize current_time_pkt for use throughout the function
+    pkt = pytz.timezone('Asia/Karachi')
+    current_time_pkt = datetime.now(pkt)
+    
     # Market status indicator with Pakistan time
     col1, col2, col3 = st.columns([2, 1, 1])
     with col1:
@@ -1413,9 +1426,7 @@ def display_live_market_dashboard():
         ))
         
         # Add current price point
-        import pytz
-        pkt = pytz.timezone('Asia/Karachi')
-        current_time = datetime.now(pkt)
+        current_time = current_time_pkt
         
         fig.add_trace(go.Scatter(
             x=[current_time],
@@ -2296,7 +2307,7 @@ def display_five_minute_live_predictions():
                 if trading_start <= current_time_pkt <= trading_end:
                     # Find closest time index
                     current_index = min(range(len(complete_day_times)), 
-                                      key=lambda i: abs((complete_day_times[i] - current_time_pkt).total_seconds()))
+                                      key=lambda i: abs((datetime.fromisoformat(complete_day_times[i]) - current_time_pkt).total_seconds()))
                     
                     fig.add_trace(go.Scatter(
                         x=[current_time_pkt],
@@ -2740,6 +2751,7 @@ def display_five_minute_live_predictions():
             try:
                 # Import required modules
                 import random
+                from datetime import timedelta, datetime
                 
                 # Create time points for full trading day (9:30 AM to 3:30 PM)
                 full_day_times = []
@@ -2750,9 +2762,7 @@ def display_five_minute_live_predictions():
                 
                 # Generate 10-minute intervals for full day (6 hours = 36 intervals)
                 for i in range(37):
-                    # Use explicit timedelta multiplication to avoid type errors
-                    minutes_to_add = timedelta(minutes=10 * i)
-                    time_point = start_time + minutes_to_add
+                    time_point = start_time + timedelta(minutes=10 * i)
                     full_day_times.append(time_point)
                     
                     # Generate realistic price progression for full trading day

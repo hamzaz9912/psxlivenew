@@ -296,7 +296,7 @@ class EnhancedPSXFetcher:
 
         for url in urls:
             try:
-                response = self.session.get(url, timeout=15)
+                response = self.session.get(url, timeout=3)
 
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.content, 'html.parser')
@@ -557,7 +557,7 @@ class EnhancedPSXFetcher:
 
             for url in alt_urls:
                 try:
-                    response = self.session.get(url, timeout=10)
+                    response = self.session.get(url, timeout=3)
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -681,7 +681,7 @@ class EnhancedPSXFetcher:
         """Get current KSE-100 index value from official PSX"""
         try:
             url = "https://www.psx.com.pk/market-summary/"
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=3)
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
@@ -828,7 +828,7 @@ class EnhancedPSXFetcher:
 
             for url in url_patterns:
                 try:
-                    response = self.session.get(url, timeout=10)
+                    response = self.session.get(url, timeout=3)
 
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.content, 'html.parser')

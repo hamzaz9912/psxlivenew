@@ -556,7 +556,7 @@ class DataFetcher:
             
             for url in sources:
                 try:
-                    response = self.session.get(url, timeout=8)
+                    response = self.session.get(url, timeout=3)
                     
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.content, 'html.parser')
@@ -625,7 +625,7 @@ class DataFetcher:
         """Fetch from Business Recorder - Pakistan's leading business newspaper"""
         try:
             url = f"https://www.businessrecorder.com.pk/stocks/{symbol}"
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=3)
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
@@ -666,7 +666,7 @@ class DataFetcher:
         """Fetch from Dawn Business section"""
         try:
             url = f"https://www.dawn.com/business/stocks/{symbol}"
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=3)
             
             if response.status_code == 200:
                 text_content = trafilatura.extract(response.text)
@@ -703,7 +703,7 @@ class DataFetcher:
         """Fetch from The News International stocks section"""
         try:
             url = f"https://www.thenews.com.pk/business/stocks/{symbol}"
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=3)
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
@@ -744,7 +744,7 @@ class DataFetcher:
         """Fetch from Dunya Business section"""
         try:
             url = f"https://dunya.com.pk/business/stocks/{symbol}"
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=3)
             
             if response.status_code == 200:
                 text_content = trafilatura.extract(response.text)
@@ -791,7 +791,7 @@ class DataFetcher:
             
             for url in urls:
                 try:
-                    response = self.session.get(url, timeout=10)
+                    response = self.session.get(url, timeout=3)
                     
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.content, 'html.parser')
@@ -906,7 +906,7 @@ class DataFetcher:
             
             for url in sources:
                 try:
-                    response = self.session.get(url, timeout=8)
+                    response = self.session.get(url, timeout=3)
                     if response.status_code == 200:
                         # Use trafilatura for clean text extraction
                         clean_text = trafilatura.extract(response.text)
@@ -978,6 +978,22 @@ class DataFetcher:
         # Try multiple sources for reliability
         data = None
         
+        # Source 0: Try yfinance library directly (most reliable)
+        try:
+            import yfinance as yf
+            # Check if yfinance is functional
+            if hasattr(yf, 'Ticker'):
+                ticker = yf.Ticker("^KSE100")
+                hist = ticker.history(period="1mo", interval="1d")
+                if not hist.empty:
+                    hist = hist.reset_index()
+                    hist.columns = [c.lower() for c in hist.columns]
+                    if 'date' in hist.columns:
+                        hist['date'] = pd.to_datetime(hist['date']).dt.tz_localize(None)
+                    return hist
+        except Exception:
+            pass
+        
         # Source 1: Try investing.com
         try:
             data = _self._fetch_from_investing_com('kse-100')
@@ -1018,6 +1034,22 @@ class DataFetcher:
         # Try multiple sources
         data = None
         
+        # Source 0: Try yfinance library directly
+        try:
+            import yfinance as yf
+            if hasattr(yf, 'Ticker'):
+                # PSX symbols usually need .KA suffix on Yahoo Finance
+                ticker = yf.Ticker(f"{symbol}.KA")
+                hist = ticker.history(period="1mo", interval="1d")
+                if not hist.empty:
+                    hist = hist.reset_index()
+                    hist.columns = [c.lower() for c in hist.columns]
+                    if 'date' in hist.columns:
+                        hist['date'] = pd.to_datetime(hist['date']).dt.tz_localize(None)
+                    return hist
+        except Exception:
+            pass
+        
         # Source 1: Try investing.com
         try:
             data = _self._fetch_from_investing_com(symbol.lower())
@@ -1046,7 +1078,7 @@ class DataFetcher:
             # This is a simplified approach - in production, you'd need more robust scraping
             base_url = f"https://www.investing.com/equities/{symbol}-historical-data"
             
-            response = self.session.get(base_url, timeout=10)
+            response = self.session.get(base_url, timeout=3)
             if response.status_code != 200:
                 return None
             
@@ -1120,7 +1152,7 @@ class DataFetcher:
                     continue
                     
                 try:
-                    response = requests.get(url, headers=headers, timeout=8)
+                    response = requests.get(url, headers=headers, timeout=3)
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.content, 'html.parser')
                         
@@ -1181,7 +1213,7 @@ class DataFetcher:
                     continue
                     
                 try:
-                    response = requests.get(url, headers=headers, timeout=8)
+                    response = requests.get(url, headers=headers, timeout=3)
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.content, 'html.parser')
                         
@@ -1226,7 +1258,7 @@ class DataFetcher:
             # PSX Live data URL (this would need adjustment based on actual API)
             url = "https://www.psx.com.pk/"
             
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=3)
             if response.status_code != 200:
                 return None
             
@@ -1261,7 +1293,7 @@ class DataFetcher:
             
             url = f"https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={start_time}&period2={end_time}&interval=1d&events=history"
             
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=3)
             if response.status_code != 200:
                 return None
             
@@ -1304,6 +1336,13 @@ class DataFetcher:
             (current_time - self.cache_timestamp).seconds < 30 and 
             symbol in self.live_price_cache):
             return self.live_price_cache[symbol]
+            
+        # Try fetching from external sources first (Real Live Data)
+        live_price = self._fetch_live_price_from_sources(symbol)
+        if live_price:
+            self.live_price_cache[symbol] = live_price
+            self.cache_timestamp = current_time
+            return live_price
         
         # Current accurate PSX market prices (July 2025)
         current_market_prices = {
@@ -1354,18 +1393,14 @@ class DataFetcher:
                 'base_price': base_price
             }
         else:
-            # Try fetching from external sources for unlisted companies
-            live_price = self._fetch_live_price_from_sources(symbol)
-            
-            if not live_price:
-                # Provide reasonable estimate
-                import random
-                estimated_price = random.uniform(50, 300)
-                live_price = {
-                    'price': round(estimated_price, 2),
-                    'timestamp': current_time,
-                    'source': 'estimated'
-                }
+            # Provide reasonable estimate for unlisted/unknown companies
+            import random
+            estimated_price = random.uniform(50, 300)
+            live_price = {
+                'price': round(estimated_price, 2),
+                'timestamp': current_time,
+                'source': 'estimated'
+            }
         
         # Update cache
         if live_price:
@@ -1406,8 +1441,8 @@ class DataFetcher:
         if scraped_price:
             return scraped_price
         
-        # Final fallback: Generate realistic current price
-        return self._generate_realistic_current_price(symbol)
+        # Return None if no live data found (let caller handle fallback)
+        return None
     
     def _scrape_real_time_price(self, symbol):
         """Scrape real-time prices from Pakistani financial websites"""
@@ -1427,7 +1462,7 @@ class DataFetcher:
                             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
                         }
                         
-                        response = self.session.get(url, headers=headers, timeout=8)
+                        response = self.session.get(url, headers=headers, timeout=3)
                         if response.status_code == 200:
                             content = response.text
                             
@@ -1497,7 +1532,7 @@ class DataFetcher:
             
             for url in urls:
                 try:
-                    response = self.session.get(url, headers=headers, timeout=10)
+                    response = self.session.get(url, headers=headers, timeout=3)
                     if response.status_code == 200:
                         
                         # JSON response handling
@@ -1609,7 +1644,7 @@ class DataFetcher:
             
             for url in pakistani_sources:
                 try:
-                    response = self.session.get(url, headers=headers, timeout=8)
+                    response = self.session.get(url, headers=headers, timeout=3)
                     if response.status_code == 200:
                         # Use trafilatura to extract clean text
                         clean_text = trafilatura.extract(response.text)
@@ -1656,7 +1691,7 @@ class DataFetcher:
             search_term = "kse-100" if symbol == "KSE-100" else symbol.lower()
             url = f"https://www.investing.com/indices/{search_term}"
             
-            response = self.session.get(url, timeout=5)
+            response = self.session.get(url, timeout=3)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
