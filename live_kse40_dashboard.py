@@ -180,7 +180,7 @@ class LiveKSE40Dashboard:
             'HBL': 363.00, 'UBL': 494.00, 'MCB': 210.00, 'NBP': 272.00,
             'ABL': 125.00, 'BAFL': 45.00, 'MEBL': 180.00, 'BAHL': 85.00,
             'AKBL': 22.50, 'BOP': 6.80, 'FABL': 28.50, 'SMBL': 2.50,
-            'SNBL': 12.00, 'JSBL': 17.50, 'UBLTFC': 15.00, 'KSE100': 188562.07,
+            'SNBL': 12.00, 'JSBL': 17.50, 'UBLTFC': 15.00, 'KSE100': 135000.00,
 
             # Oil & Gas - Accurate current prices
             'OGDC': 105.00, 'PPL': 85.00, 'POL': 380.00, 'MARI': 1850.00,
@@ -656,7 +656,7 @@ class LiveKSE40Dashboard:
             st.markdown(f"⏰ **{self.get_pakistan_time().strftime('%H:%M:%S')}**")
         
         # KSE-100 Index
-        kse_index = 140153.24 + np.random.normal(0, 100)  # Simulate index movement
+        kse_index = 135000.00 + np.random.normal(0, 100)  # Simulate index movement
         index_change = np.random.uniform(-500, 500)
         index_change_pct = (index_change / kse_index) * 100
         

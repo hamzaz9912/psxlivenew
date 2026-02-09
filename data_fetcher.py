@@ -1177,6 +1177,10 @@ class DataFetcher:
                                     try:
                                         price = float(matches[0])
                                         if price > 0:
+                                            # Validate KSE-100 range
+                                            if symbol == "KSE-100" and (price < 80000 or price > 200000):
+                                                continue
+                                                
                                             return {
                                                 'price': price,
                                                 'timestamp': datetime.now(),
@@ -1238,6 +1242,10 @@ class DataFetcher:
                                     try:
                                         price = float(matches[0])
                                         if price > 0:
+                                            # Validate KSE-100 range
+                                            if symbol == "KSE-100" and (price < 80000 or price > 200000):
+                                                continue
+                                                
                                             return {
                                                 'price': price,
                                                 'timestamp': datetime.now(),
@@ -1346,7 +1354,7 @@ class DataFetcher:
         
         # Current accurate PSX market prices (July 2025)
         current_market_prices = {
-            'KSE-100': 132920.00,  # Current PSX KSE-100 index (user provided)
+            'KSE-100': 135000.00,  # Current PSX KSE-100 index (Updated)
             'OGDC': 195.50,        # Oil & Gas Development Company  
             'LUCK': 1150.00,       # Lucky Cement
             'PSO': 245.25,         # Pakistan State Oil
@@ -1727,7 +1735,7 @@ class DataFetcher:
         try:
             # Get base price from historical data
             if symbol == "KSE-100":
-                base_price = 45000 + np.random.randint(-2000, 2000)  # KSE-100 range
+                base_price = 135000 + np.random.randint(-2000, 2000)  # KSE-100 range
             else:
                 # Use company-specific base prices
                 company_prices = {
@@ -1747,7 +1755,7 @@ class DataFetcher:
             }
             
         except Exception:
-            return {'price': 45000, 'timestamp': datetime.now(), 'source': 'fallback'}
+            return {'price': 135000, 'timestamp': datetime.now(), 'source': 'fallback'}
     
     def _generate_recent_data_around_price(self, current_price):
         """Generate realistic recent data points around a given current price"""
@@ -1789,7 +1797,7 @@ class DataFetcher:
         dates = pd.date_range(end=datetime.now().replace(tzinfo=None), periods=30, freq='D')
         
         # Start with a base price around current KSE-100 levels
-        base_price = 45000  # Approximate KSE-100 level
+        base_price = 135000  # Approximate KSE-100 level
         
         # Generate realistic price movements
         returns = np.random.normal(0, 0.015, 30)  # 1.5% daily volatility

@@ -730,18 +730,23 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                 # Session-based forecasting
                 st.subheader("📈 Session-Based Predictions")
                 
-                tab1, tab2, tab3 = st.tabs(["Morning Session (9:30-12:00)", "Afternoon Session (12:00-15:30)", "Full Day Forecast"])
+                tab1, tab2, tab3, tab4 = st.tabs([
+                    "Morning Session (9:45-12:00)", 
+                    "Afternoon Session (12:00-3:00)", 
+                    "Today's Full Day (9:45-3:00)",
+                    "Next Day Full Forecast"
+                ])
                 
                 with tab1:
-                    st.write("**Morning Session Analysis (9:30 AM - 12:00 PM)**")
+                    st.write("**Morning Session Analysis (9:45 AM - 12:00 PM)**")
 
                     # Check if market is open for morning session
                     current_time = datetime.now(pytz.timezone('Asia/Karachi'))
-                    morning_start = current_time.replace(hour=9, minute=30, second=0, microsecond=0)
+                    morning_start = current_time.replace(hour=9, minute=45, second=0, microsecond=0)
                     morning_end = current_time.replace(hour=12, minute=0, second=0, microsecond=0)
 
                     if current_time < morning_start:
-                        st.info("🕘 Morning session starts at 9:30 AM PKT")
+                        st.info("🕘 Morning session starts at 9:45 AM PKT")
                     elif current_time > morning_end:
                         st.info("🏁 Morning session ended at 12:00 PM PKT")
                     else:
@@ -782,7 +787,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             )
 
                             fig.update_layout(
-                                title="📈 Morning Session Intraday Chart (9:30 AM - 12:00 PM)",
+                                title="📈 Morning Session Intraday Chart (9:45 AM - 12:00 PM)",
                                 xaxis_title="Time (PKT)",
                                 yaxis_title="Price (PKR)",
                                 height=500,
@@ -811,7 +816,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             st.error("Unable to generate morning session data")
                 
                 with tab2:
-                    st.write("**Afternoon Session Forecast (12:00 PM - 3:30 PM)**")
+                    st.write("**Afternoon Session Forecast (12:00 PM - 3:00 PM)**")
                     
                     # Generate afternoon session intraday data
                     afternoon_data = generate_afternoon_session_data(current_price)
@@ -840,7 +845,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         )
                         
                         fig.update_layout(
-                            title="📈 Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
+                            title="📈 Afternoon Session Intraday Chart (12:00 PM - 3:00 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Price (PKR)",
                             height=500,
@@ -868,7 +873,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         st.error("Unable to generate afternoon session data")
                 
                 with tab3:
-                    st.write("**Full Day Forecast (9:30 AM - 3:30 PM)**")
+                    st.write("**Today's Full Day Forecast (9:45 AM - 3:00 PM)**")
                     
                     # Generate full day intraday data
                     full_day_data = generate_full_day_data(current_price)
@@ -897,7 +902,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         )
                         
                         fig.update_layout(
-                            title="📈 Full Trading Day Forecast (9:30 AM - 3:30 PM)",
+                            title="📈 Today's Full Trading Day Forecast (9:45 AM - 3:00 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -925,6 +930,54 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     else:
                         st.error("Unable to generate full day data")
 
+                with tab4:
+                    st.write("**Next Day Full Forecast (9:45 AM - 3:00 PM)**")
+                    
+                    # Generate next day full data
+                    next_day_full_data = generate_next_day_full_data(current_price)
+                    
+                    if next_day_full_data is not None and not next_day_full_data.empty:
+                        # Create next day chart
+                        fig = go.Figure()
+                        
+                        # Next day price movement
+                        fig.add_trace(go.Scatter(
+                            x=next_day_full_data['time'],
+                            y=next_day_full_data['price'],
+                            mode='lines+markers',
+                            name='Next Day Full Forecast',
+                            line=dict(color='cyan', width=3),
+                            marker=dict(size=4, color='cyan')
+                        ))
+                        
+                        fig.update_layout(
+                            title="📈 Next Day Full Trading Day Forecast (9:45 AM - 3:00 PM)",
+                            xaxis_title="Time (PKT)",
+                            yaxis_title="Predicted Price (PKR)",
+                            height=500,
+                            showlegend=True,
+                            xaxis=dict(tickformat='%H:%M', tickangle=45)
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Metrics
+                        day_high = next_day_full_data['price'].max()
+                        day_low = next_day_full_data['price'].min()
+                        day_change = next_day_full_data['price'].iloc[-1] - next_day_full_data['price'].iloc[0]
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("Predicted Open", f"{next_day_full_data['price'].iloc[0]:,.2f} PKR")
+                        with col2:
+                            st.metric("Predicted High", f"{day_high:,.2f} PKR")
+                        with col3:
+                            st.metric("Predicted Low", f"{day_low:,.2f} PKR")
+                        with col4:
+                            st.metric("Predicted Day Change", f"{day_change:+.2f} PKR", f"{(day_change/next_day_full_data['price'].iloc[0])*100:+.2f}%")
+                    else:
+                        st.error("Unable to generate next day full forecast data")
+
 def generate_morning_session_data(current_price):
     """Generate realistic morning session intraday data"""
     try:
@@ -935,14 +988,14 @@ def generate_morning_session_data(current_price):
         # Use seeded random generator for consistent daily graph
         rng = random.Random(f"{today}_morning")
 
-        # Morning session: 9:30 AM to 12:00 PM (2.5 hours = 30 intervals of 5 minutes)
-        start_time = datetime(today.year, today.month, today.day, 9, 30, 0)
+        # Morning session: 9:45 AM to 12:00 PM (2.25 hours = 27 intervals of 5 minutes)
+        start_time = datetime(today.year, today.month, today.day, 9, 45, 0)
         times = []
         prices = []
 
         base_price = current_price
 
-        for i in range(31):  # 31 intervals for 30 periods
+        for i in range(28):  # 28 intervals for 27 periods
             current_time = start_time + timedelta(minutes=5 * i)
             times.append(current_time.strftime('%H:%M'))
 
@@ -973,14 +1026,14 @@ def generate_afternoon_session_data(current_price):
         # Use seeded random generator for consistent daily graph
         rng = random.Random(f"{today}_afternoon")
 
-        # Afternoon session: 12:00 PM to 3:30 PM (3.5 hours = 42 intervals of 5 minutes)
+        # Afternoon session: 12:00 PM to 3:00 PM (3 hours = 36 intervals of 5 minutes)
         start_time = datetime.combine(today, dt_time(12, 0))
         times = []
         prices = []
 
         base_price = current_price
 
-        for i in range(43):  # 43 intervals for 42 periods
+        for i in range(37):  # 37 intervals for 36 periods
             current_time = start_time + timedelta(minutes=5 * i)
             times.append(current_time.strftime('%H:%M'))
 
@@ -1001,7 +1054,7 @@ def generate_afternoon_session_data(current_price):
         return None
 
 def generate_full_day_data(current_price):
-    """Generate realistic full day intraday data (9:30 AM - 3:30 PM)"""
+    """Generate realistic full day intraday data (9:45 AM - 3:00 PM)"""
     try:
         import pytz
         pkt = pytz.timezone('Asia/Karachi')
@@ -1010,14 +1063,14 @@ def generate_full_day_data(current_price):
         # Use seeded random generator for consistent daily graph
         rng = random.Random(f"{today}_full_day")
         
-        # Full day: 9:30 AM to 3:30 PM (6 hours = 72 intervals of 5 minutes)
-        start_time = datetime.combine(today, datetime.strptime("09:30", "%H:%M").time())
+        # Full day: 9:45 AM to 3:00 PM (5.25 hours = 63 intervals of 5 minutes)
+        start_time = datetime(today.year, today.month, today.day, 9, 45, 0)
         times = []
         prices = []
         
         base_price = current_price
         
-        for i in range(73): # 73 points
+        for i in range(64): # 64 points for 63 intervals
             current_time = start_time + timedelta(minutes=5 * i)
             times.append(current_time.strftime('%H:%M'))
             
@@ -1042,6 +1095,43 @@ def generate_full_day_data(current_price):
         st.error(f"Error generating full day data: {e}")
         return None
 
+def generate_next_day_full_data(current_price):
+    """Generate realistic full day intraday data for the next day"""
+    try:
+        import pytz
+        pkt = pytz.timezone('Asia/Karachi')
+        tomorrow = (datetime.now(pkt) + timedelta(days=1)).date()
+        
+        rng = random.Random(f"{tomorrow}_full_day")
+        
+        start_time = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 45, 0)
+        times = []
+        prices = []
+        
+        base_price = current_price
+        
+        for i in range(64): # 64 points for 63 intervals
+            current_time = start_time + timedelta(minutes=5 * i)
+            times.append(current_time.strftime('%H:%M'))
+            
+            if i == 0:
+                price = base_price * rng.uniform(0.99, 1.01) # Next day opening gap
+            else:
+                hour = current_time.hour
+                if hour < 11:
+                    volatility = rng.uniform(-0.008, 0.010)
+                elif hour < 14:
+                    volatility = rng.uniform(-0.005, 0.005)
+                else:
+                    volatility = rng.uniform(-0.007, 0.008)
+                price = prices[-1] * (1 + volatility)
+            
+            prices.append(price)
+            
+        return pd.DataFrame({'time': times, 'price': prices})
+    except Exception as e:
+        st.error(f"Error generating next day full forecast data: {e}")
+        return None
 def display_all_companies_live_prices():
     """Display live prices for all KSE-100 companies with sector-wise organization"""
     
