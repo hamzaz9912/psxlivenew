@@ -868,7 +868,7 @@ class LiveKSE40Dashboard:
         st.dataframe(df_sectors, use_container_width=True, hide_index=True)
     
     def display_price_movement_chart(self, live_data):
-        """Display price prediction visualization: Today 9:35 AM-3:30 PM and Next Day from 9:35 AM"""
+        """Display price prediction visualization: Today 9:30 AM-3:30 PM and Next Day from 9:30 AM"""
         # Interactive selection for companies to display
         st.markdown("**Select Companies to Display in Chart:**")
         selected_companies = st.multiselect(
@@ -882,17 +882,23 @@ class LiveKSE40Dashboard:
             st.info("Please select at least one company to display the chart.")
             return
 
+        # Determine default tab based on time
+        pakistan_time = self.get_pakistan_time()
+        if pakistan_time.hour >= 15:  # After 3 PM
+            default_tab = "next_day"
+        else:
+            default_tab = "today"
+
         # Create tabs for Today and Next Day
-        tab_today, tab_next_day = st.tabs(["📈 Today (9:35 - 15:30)", "🔮 Next Day (from 9:35)"])
+        tab_today, tab_next_day = st.tabs(["📈 Today (9:30 - 3:30 PM)", "🔮 Next Day (from 9:30 AM)"])
 
         with tab_today:
-            st.subheader("Today's Trading Session: 9:35 AM - 3:30 PM")
+            st.subheader("Today's Trading Session: 9:30 AM - 3:30 PM")
             fig_today = go.Figure()
 
-            # Today: 9:35 AM to 3:30 PM (15:30)
-            pakistan_time = self.get_pakistan_time()
+            # Today: 9:30 AM to 3:30 PM (15:30)
             today = pakistan_time.date()
-            start_time_today = datetime.combine(today, datetime.strptime('09:35', '%H:%M').time())
+            start_time_today = datetime.combine(today, datetime.strptime('09:30', '%H:%M').time())
             end_time_today = datetime.combine(today, datetime.strptime('15:30', '%H:%M').time())
 
             times_today = pd.date_range(start=start_time_today, end=end_time_today, freq='5T')
@@ -927,7 +933,7 @@ class LiveKSE40Dashboard:
                     ))
 
             fig_today.update_layout(
-                title=f"🔮 Selected Companies ({len(selected_companies)}) - Today 9:35 AM to 3:30 PM",
+                title=f"📈 Selected Companies ({len(selected_companies)}) - Today's Full Trading Day (9:30 AM - 3:30 PM)",
                 xaxis_title="Time",
                 yaxis_title="Price (PKR)",
                 height=500,
@@ -939,13 +945,12 @@ class LiveKSE40Dashboard:
             st.plotly_chart(fig_today, use_container_width=True)
 
         with tab_next_day:
-            st.subheader("Next Day Trading Session: Starting from 9:35 AM")
+            st.subheader("Next Day's Full Trading Session: 9:30 AM - 3:30 PM")
             fig_next = go.Figure()
 
-            # Next Day: Starting from 9:35 AM (show full trading day)
-            pakistan_time = self.get_pakistan_time()
+            # Next Day: Starting from 9:30 AM (show full trading day)
             next_day = pakistan_time.date() + timedelta(days=1)
-            start_time_next = datetime.combine(next_day, datetime.strptime('09:35', '%H:%M').time())
+            start_time_next = datetime.combine(next_day, datetime.strptime('09:30', '%H:%M').time())
             end_time_next = datetime.combine(next_day, datetime.strptime('15:30', '%H:%M').time())
 
             times_next = pd.date_range(start=start_time_next, end=end_time_next, freq='5T')
@@ -980,7 +985,7 @@ class LiveKSE40Dashboard:
                     ))
 
             fig_next.update_layout(
-                title=f"🔮 Selected Companies ({len(selected_companies)}) - Next Day from 9:35 AM",
+                title=f"🔮 Selected Companies ({len(selected_companies)}) - Next Day's Full Trading Day (9:30 AM - 3:30 PM)",
                 xaxis_title="Time",
                 yaxis_title="Price (PKR)",
                 height=500,
@@ -990,6 +995,12 @@ class LiveKSE40Dashboard:
             fig_next.update_xaxes(tickformat='%I:%M %p')
 
             st.plotly_chart(fig_next, use_container_width=True)
+
+        # Set the active tab after defining the tabs
+        if default_tab == "next_day":
+            st.session_state['st.tabs'] = "🔮 Next Day (from 9:30)"
+        else:
+            st.session_state['st.tabs'] = "📈 Today (9:30 - 15:30)"
     
     def display_watchlist(self, live_data):
         """Display customizable watchlist for favorite companies"""
@@ -1054,7 +1065,8 @@ class LiveKSE40Dashboard:
 
     def display_session_prediction(self, live_data):
         """Display remaining session prediction for 09:36-15:30 in live KSE-40 brands"""
-        st.subheader("🔮 Today Remaining Session Prediction (09:36-15:30)")
+        st.subheader("🔮 Intraday Trading Sessions - Live Analysis")
+        st.markdown("**Today's Trading Hours: 9:30 AM - 3:30 PM**")
         st.markdown("*Input: Yesterday + Today first 5 min + 09:30–09:36 live candles*")
         st.markdown("*Output: Today remaining session prediction in the live kse 40 brands*")
 
@@ -1152,7 +1164,7 @@ class LiveKSE40Dashboard:
                             ))
 
                             fig.update_layout(
-                                title="KSE-100 Remaining Session Prediction (09:36-15:30)",
+                                title="KSE-100 Remaining Session Prediction (09:36-15:30) - Full Day Coverage",
                                 xaxis_title="Time",
                                 yaxis_title="Predicted Index Value",
                                 height=500,
