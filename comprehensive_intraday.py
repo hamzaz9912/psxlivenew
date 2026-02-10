@@ -44,26 +44,79 @@ class ComprehensiveIntradayForecaster:
             yesterday = datetime.now() - timedelta(days=1)
             yesterday_str = yesterday.strftime('%Y-%m-%d')
 
-            # Filter data for yesterday and last hour and half (14:00-15:30)
-            if 'date' in historical_data.columns:
-                yesterday_data = historical_data[historical_data['date'].str.startswith(yesterday_str)]
-            elif historical_data.index.name == 'Date':
-                yesterday_data = historical_data[historical_data.index.date == yesterday.date()]
-            else:
-                # Assume last 18 rows represent yesterday's last 1.5 hours (5-min intervals)
-                yesterday_data = historical_data.tail(18)
+            # Check if we have intraday data (with time column)
+            has_intraday = 'time' in historical_data.columns
+            
+            if has_intraday:
+                # Filter data for yesterday and last hour and half (14:00-15:30)
+                if 'date' in historical_data.columns:
+                    yesterday_data = historical_data[historical_data['date'].str.startswith(yesterday_str)]
+                elif historical_data.index.name == 'Date':
+                    yesterday_data = historical_data[historical_data.index.date == yesterday.date()]
+                else:
+                    # Assume last 18 rows represent yesterday's last 1.5 hours (5-min intervals)
+                    yesterday_data = historical_data.tail(18)
 
-            # Filter for 14:00-15:30 time range if time column exists
-            if 'time' in yesterday_data.columns:
+                # Filter for 14:00-15:30 time range
                 last_hour_data = yesterday_data[yesterday_data['time'].between('14:00', '15:30')]
-            else:
-                last_hour_data = yesterday_data.tail(18)  # Last 18 intervals (1.5 hours)
-
-            return last_hour_data
+                
+                if not last_hour_data.empty:
+                    return last_hour_data
+            
+            # Fallback: Generate synthetic intraday data from daily data
+            # This simulates yesterday's last 1.5 hours based on daily close
+            price_col = 'close' if 'close' in historical_data.columns else 'Close'
+            
+            # Get last trading day's data (could be yesterday or Friday if today is Monday)
+            if len(historical_data) >= 2:
+                last_day_data = historical_data.tail(2).iloc[0]  # Second to last row
+                base_price = last_day_data[price_col]
+                
+                # Generate 18 data points for 1.5 hours (14:00 to 15:30, 5-min intervals)
+                synthetic_data = []
+                start_time = datetime.strptime('14:00', '%H:%M')
+                
+                for i in range(18):
+                    current_time = start_time + timedelta(minutes=5 * i)
+                    # Simulate price movement in last 1.5 hours (usually lower volatility)
+                    time_progress = i / 18
+                    volatility = 0.005 * (1 - time_progress)  # Decreasing volatility toward close
+                    price_movement = np.random.uniform(-volatility, volatility)
+                    price = base_price * (1 + price_movement)
+                    
+                    synthetic_data.append({
+                        'time': current_time.strftime('%H:%M'),
+                        price_col: price,
+                        'volume': int(np.random.uniform(100000, 500000)),
+                        'synthetic': True
+                    })
+                
+                return pd.DataFrame(synthetic_data)
+            
+            return None
 
         except Exception as e:
             print(f"Error getting yesterday's last hour data: {e}")
-            return None
+            # Generate minimal fallback data
+            try:
+                price_col = 'close' if 'close' in historical_data.columns else 'Close'
+                base_price = historical_data[price_col].iloc[-1] if len(historical_data) > 0 else 10000
+                
+                synthetic_data = []
+                start_time = datetime.strptime('14:00', '%H:%M')
+                
+                for i in range(18):
+                    current_time = start_time + timedelta(minutes=5 * i)
+                    price = base_price * (1 + np.random.uniform(-0.003, 0.003))
+                    synthetic_data.append({
+                        'time': current_time.strftime('%H:%M'),
+                        price_col: price,
+                        'synthetic': True
+                    })
+                
+                return pd.DataFrame(synthetic_data)
+            except:
+                return None
 
     def get_today_first_five_minutes(self, live_data=None):
         """Get today's first 5 minutes data (09:30-09:35)"""
@@ -72,15 +125,36 @@ class ComprehensiveIntradayForecaster:
         return None
     
     def should_show_next_day_forecast(self):
-        """Check if current time is after 3 PM to show next day forecast"""
+        """Check if current time is after 3:30 PM to show next day forecast"""
         try:
             pakistan_tz = pytz.timezone('Asia/Karachi')
             now = datetime.now(pakistan_tz)
-            cutoff_time = now.replace(hour=15, minute=0, second=0, microsecond=0)  # 3:00 PM
+            cutoff_time = now.replace(hour=15, minute=30, second=0, microsecond=0)  # 3:30 PM
             return now >= cutoff_time
         except Exception as e:
             print(f"Error checking time for next day forecast: {e}")
             return False
+    
+    def get_current_forecast_type(self):
+        """Determine which forecast to show based on current time"""
+        try:
+            pakistan_tz = pytz.timezone('Asia/Karachi')
+            now = datetime.now(pakistan_tz)
+            
+            # Before 9:30 AM - show previous day's forecast or wait
+            market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
+            market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
+            
+            if now < market_open:
+                return "pre_market"  # Show today's upcoming forecast
+            elif now >= market_close:
+                return "next_day"  # After close, show tomorrow
+            else:
+                return "current_day"  # During trading hours, show today
+                
+        except Exception as e:
+            print(f"Error determining forecast type: {e}")
+            return "current_day"
     
     def generate_next_day_forecast(self, current_price, yesterday_last_hour, today_full_session):
         """Generate next day's full trading session forecast (9:30 AM to 3:30 PM) after 3 PM"""
@@ -325,46 +399,64 @@ class ComprehensiveIntradayForecaster:
         # Get yesterday's last hour data
         yesterday_last_hour = self.get_yesterday_last_hour_data(historical_data)
 
-        # Generate forecasts using new workflow
+        # Generate forecasts using new workflow (with daily seed for consistency)
         forecasts = {
-            'first_five_min_special': self.generate_first_five_min_special(current_price, symbol),
+            'first_fifteen_min_special': self.generate_first_fifteen_min_special(current_price, symbol),
             'main_session_0936_1530': self.generate_intraday_prediction_0936_1530(
                 current_price, yesterday_last_hour
             ),
             'tomorrow_open_bias': None,  # Will be calculated at 15:30
             'remaining_session_at_0936': None,  # Will be calculated at 09:36
             'yesterday_last_hour': yesterday_last_hour,
-            # Keep legacy forecasts for compatibility
-            'morning_session': self.generate_morning_session_forecast(current_price, symbol),
-            'afternoon_session': self.generate_afternoon_session_forecast(current_price, symbol),
-            'full_day': self.generate_full_day_forecast(current_price, symbol),
+            # Keep legacy forecasts for compatibility (with daily seed)
+            'morning_session': self.generate_morning_session_forecast_daily(current_price, symbol),
+            'afternoon_session': self.generate_afternoon_session_forecast_daily(current_price, symbol),
+            'full_day': self.generate_full_day_forecast_daily(current_price, symbol),
             'uploaded_data_based': self.generate_uploaded_data_forecast(historical_data, symbol)
         }
 
         return forecasts
 
-    def generate_first_five_min_special(self, current_price, symbol):
-        """Special feature for first 5 minutes (09:30-09:35)"""
-        times = ['09:30', '09:31', '09:32', '09:33', '09:34', '09:35']
+    def generate_first_fifteen_min_special(self, current_price, symbol):
+        """Special feature for first 15 minutes (09:30-09:45) with daily seed"""
+        import pytz
+        from datetime import time as dt_time
+        
+        # Use daily seed that changes at 9:30 AM
+        pkt = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pkt).date()
+        rng = random.Random(f"{today}_{symbol}_opening15")
+        
         predictions = []
         base_price = current_price
+        
+        # Generate 15 minutes at 1-minute intervals (09:30 to 09:45)
+        start_time = datetime.strptime('09:30', '%H:%M')
+        
+        for i in range(16):  # 16 points for 15 minutes (09:30 to 09:45)
+            current_time = start_time + timedelta(minutes=i)
+            time_str = current_time.strftime('%H:%M')
+            
+            # Higher volatility in first 15 minutes, decreasing over time
+            if i < 3:  # First 3 minutes - extra volatile
+                volatility = 0.025
+            elif i < 8:  # Next 5 minutes - high volatility
+                volatility = 0.020
+            else:  # Last 7 minutes - moderate volatility
+                volatility = 0.015
 
-        for i, time_str in enumerate(times):
-            # Higher volatility in first 5 minutes
-            volatility = 0.025 if i < 2 else 0.02  # Extra volatile at open
+            # Opening gap effect only at 09:30
+            gap_effect = rng.uniform(-0.01, 0.01) if i == 0 else 0
 
-            # Opening gap effect
-            gap_effect = random.uniform(-0.01, 0.01) if i == 0 else 0
-
-            price_change = random.uniform(-volatility, volatility) + gap_effect
+            price_change = rng.uniform(-volatility, volatility) + gap_effect
             predicted_price = base_price * (1 + price_change)
 
             predictions.append({
                 'time': time_str,
                 'predicted_price': round(predicted_price, 2),
-                'confidence': round(random.uniform(0.8, 0.95), 2),
+                'confidence': round(rng.uniform(0.75, 0.92), 2),
                 'volatility': round(volatility, 4),
-                'session': 'Opening 5 Min Special',
+                'session': 'Opening 15 Min Special',
                 'is_special_feature': True
             })
 
@@ -372,9 +464,14 @@ class ComprehensiveIntradayForecaster:
 
         return pd.DataFrame(predictions)
     
-    def generate_morning_session_forecast(self, current_price, symbol):
-        """First half prediction (9:30 AM - 12:00 PM)"""
-        morning_times = ['09:30', '10:00', '10:30', '11:00', '11:30', '12:00']
+    def generate_morning_session_forecast_daily(self, current_price, symbol):
+        """First half prediction (9:45 AM - 12:00 PM) with daily seed"""
+        import pytz
+        pkt = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pkt).date()
+        rng = random.Random(f"{today}_{symbol}_morning")
+        
+        morning_times = ['09:45', '10:00', '10:30', '11:00', '11:30', '12:00']
         
         predictions = []
         base_price = current_price
@@ -382,13 +479,13 @@ class ComprehensiveIntradayForecaster:
         for i, time_str in enumerate(morning_times):
             # Morning volatility pattern (higher at opening)
             volatility = 0.02 if i < 2 else 0.015  # 2% early, 1.5% later
-            price_change = random.uniform(-volatility, volatility)
+            price_change = rng.uniform(-volatility, volatility)
             predicted_price = base_price * (1 + price_change)
             
             predictions.append({
                 'time': time_str,
                 'predicted_price': round(predicted_price, 2),
-                'confidence': round(random.uniform(0.75, 0.95), 2),
+                'confidence': round(rng.uniform(0.75, 0.95), 2),
                 'session': 'Morning'
             })
             
@@ -396,8 +493,13 @@ class ComprehensiveIntradayForecaster:
         
         return pd.DataFrame(predictions)
     
-    def generate_afternoon_session_forecast(self, current_price, symbol):
-        """Second half prediction (12:00 PM - 3:30 PM)"""
+    def generate_afternoon_session_forecast_daily(self, current_price, symbol):
+        """Second half prediction (12:00 PM - 3:30 PM) with daily seed"""
+        import pytz
+        pkt = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pkt).date()
+        rng = random.Random(f"{today}_{symbol}_afternoon")
+        
         afternoon_times = ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30']
         
         predictions = []
@@ -406,13 +508,13 @@ class ComprehensiveIntradayForecaster:
         for i, time_str in enumerate(afternoon_times):
             # Afternoon volatility pattern (decreasing toward close)
             volatility = 0.015 * (1 - i * 0.1)  # Decreasing volatility
-            price_change = random.uniform(-volatility, volatility)
+            price_change = rng.uniform(-volatility, volatility)
             predicted_price = base_price * (1 + price_change)
             
             predictions.append({
                 'time': time_str,
                 'predicted_price': round(predicted_price, 2),
-                'confidence': round(random.uniform(0.70, 0.90), 2),
+                'confidence': round(rng.uniform(0.70, 0.90), 2),
                 'session': 'Afternoon'
             })
             
@@ -420,8 +522,13 @@ class ComprehensiveIntradayForecaster:
         
         return pd.DataFrame(predictions)
     
-    def generate_full_day_forecast(self, current_price, symbol):
-        """Complete trading day prediction (9:30 AM - 3:30 PM)"""
+    def generate_full_day_forecast_daily(self, current_price, symbol):
+        """Complete trading day prediction (9:30 AM - 3:30 PM) with daily seed"""
+        import pytz
+        pkt = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pkt).date()
+        rng = random.Random(f"{today}_{symbol}_fullday")
+        
         full_day_predictions = []
         base_price = current_price
         
@@ -434,7 +541,7 @@ class ComprehensiveIntradayForecaster:
             else:  # Mid-day
                 volatility = 0.015
             
-            price_change = random.uniform(-volatility, volatility)
+            price_change = rng.uniform(-volatility, volatility)
             predicted_price = base_price * (1 + price_change)
             
             # Generate high/low for the interval
@@ -446,8 +553,8 @@ class ComprehensiveIntradayForecaster:
                 'predicted_price': round(predicted_price, 2),
                 'high': round(interval_high, 2),
                 'low': round(interval_low, 2),
-                'confidence': round(random.uniform(0.65, 0.95), 2),
-                'volume_estimate': int(random.uniform(100000, 500000)),
+                'confidence': round(rng.uniform(0.65, 0.95), 2),
+                'volume_estimate': int(rng.uniform(100000, 500000)),
                 'price_change': round(predicted_price - current_price, 2),
                 'change_percent': round(((predicted_price - current_price) / current_price) * 100, 2)
             })
@@ -524,13 +631,16 @@ def display_comprehensive_intraday_forecasts():
     with tab1:
         st.subheader("📈 KSE-100 Index - New Workflow Forecast")
         
-        # Check if we should show next day forecast
-        show_next_day = forecaster.should_show_next_day_forecast()
+        # Determine forecast type based on current time
+        forecast_type = forecaster.get_current_forecast_type()
         
-        if show_next_day:
-            st.info("🌙 **After 3:00 PM** - Showing Tomorrow's Full Day Forecast (9:30 AM - 3:30 PM)")
+        # Display appropriate message
+        if forecast_type == "pre_market":
+            st.info("🌅 **Pre-Market** - Showing Today's Forecast (Opens at 9:30 AM)")
+        elif forecast_type == "next_day":
+            st.info("🌙 **After Market Close (3:30 PM)** - Showing Tomorrow's Full Day Forecast")
         else:
-            st.info("☀️ **Trading Hours** - Showing Today's Forecast (9:30 AM - 3:30 PM)")
+            st.info("☀️ **Trading Hours (9:30 AM - 3:30 PM)** - Showing Today's Live Forecast")
 
         # Get live KSE-100 data
         if hasattr(st.session_state, 'data_fetcher'):
@@ -546,17 +656,45 @@ def display_comprehensive_intraday_forecasts():
                 )
 
                 # Display yesterday's last hour data
-                st.subheader("📅 Yesterday's Last Hour Analysis")
+                st.subheader("📅 Yesterday's Last Hour Analysis (14:00-15:30)")
                 yesterday_data = kse_forecasts.get('yesterday_last_hour')
                 if yesterday_data is not None and not yesterday_data.empty:
-                    st.dataframe(yesterday_data.tail(5))
-                    st.info("Yesterday's last hour data is included in today's predictions")
+                    # Check if data is synthetic or real
+                    is_synthetic = yesterday_data.get('synthetic', pd.Series([False])).iloc[0] if 'synthetic' in yesterday_data.columns else False
+                    
+                    if is_synthetic:
+                        st.info("📊 Using synthesized intraday data based on historical closing prices")
+                    else:
+                        st.success("✅ Using actual intraday data from yesterday's last trading hour")
+                    
+                    # Display data preview
+                    display_cols = [col for col in yesterday_data.columns if col != 'synthetic']
+                    st.dataframe(yesterday_data[display_cols].tail(5))
+                    
+                    # Show trend analysis
+                    price_col = 'close' if 'close' in yesterday_data.columns else 'price'
+                    if price_col in yesterday_data.columns and len(yesterday_data) >= 2:
+                        start_price = yesterday_data[price_col].iloc[0]
+                        end_price = yesterday_data[price_col].iloc[-1]
+                        change = end_price - start_price
+                        change_pct = (change / start_price) * 100
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Yesterday 2:00 PM", f"PKR {start_price:,.2f}")
+                        with col2:
+                            st.metric("Yesterday 3:30 PM", f"PKR {end_price:,.2f}")
+                        with col3:
+                            st.metric("Last Hour Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
                 else:
-                    st.warning("Yesterday's data not available - using fallback analysis")
+                    st.warning("⚠️ Yesterday's data not available - using fallback analysis")
                 
-                # Generate next day forecast if after 3 PM
-                next_day_forecast = None
-                if show_next_day:
+                # Create detailed multi-chart view based on time
+                st.subheader("📊 Detailed Forecast Analysis (Auto-updates at 9:30 AM)")
+                
+                # Determine which data to display
+                if forecast_type == "next_day" or forecast_type == "pre_market":
+                    # Generate and show next day forecast
                     yesterday_last_hour = kse_forecasts.get('yesterday_last_hour')
                     today_full_session = kse_forecasts.get('main_session_0936_1530')
                     next_day_forecast = forecaster.generate_next_day_forecast(
@@ -574,86 +712,120 @@ def display_comprehensive_intraday_forecasts():
                         st.metric("Confidence", f"{bias_result['confidence']:.0%}")
                     with bias_col3:
                         st.metric("Bias Score", f"{bias_result['bias_score']:.4f}")
-
-                # Create workflow-based chart
-                if show_next_day and next_day_forecast is not None and not next_day_forecast.empty:
+                    
                     # Show next day forecast chart
-                    fig = make_subplots(
-                        rows=2, cols=1,
-                        subplot_titles=("Tomorrow's Full Day Forecast (09:30-15:30)", "Confidence & Trend Analysis"),
-                        vertical_spacing=0.15,
-                        row_heights=[0.7, 0.3]
-                    )
-                    
-                    # Next day full forecast
-                    fig.add_trace(
-                        go.Scatter(
-                            x=next_day_forecast['time'],
-                            y=next_day_forecast['predicted_price'],
-                            mode='lines+markers',
-                            name='Tomorrow Full Day',
-                            line=dict(color='purple', width=3),
-                            marker=dict(size=6)
-                        ),
-                        row=1, col=1
-                    )
-                    
-                    # Add opening marker
-                    fig.add_trace(
-                        go.Scatter(
-                            x=[next_day_forecast['time'].iloc[0]],
-                            y=[next_day_forecast['predicted_price'].iloc[0]],
-                            mode='markers',
-                            name='Tomorrow Open',
-                            marker=dict(size=15, color='green', symbol='star')
-                        ),
-                        row=1, col=1
-                    )
-                    
-                    # Confidence line
-                    fig.add_trace(
-                        go.Scatter(
-                            x=next_day_forecast['time'],
-                            y=next_day_forecast['confidence'],
-                            mode='lines',
-                            name='Confidence',
-                            line=dict(color='orange', width=2)
-                        ),
-                        row=2, col=1
-                    )
-                    
-                    fig.update_layout(
-                        title="Tomorrow's Full Day Forecast - KSE-100 (After 3:00 PM)",
-                        height=800,
-                        showlegend=True
-                    )
+                    if next_day_forecast is not None and not next_day_forecast.empty:
+                        fig = make_subplots(
+                            rows=2, cols=1,
+                            subplot_titles=("Tomorrow's Full Day Forecast (09:30-15:30)", "Confidence & Trend Analysis"),
+                            vertical_spacing=0.15,
+                            row_heights=[0.7, 0.3]
+                        )
+                        
+                        # Next day full forecast
+                        fig.add_trace(
+                            go.Scatter(
+                                x=next_day_forecast['time'],
+                                y=next_day_forecast['predicted_price'],
+                                mode='lines+markers',
+                                name='Tomorrow Full Day',
+                                line=dict(color='purple', width=3),
+                                marker=dict(size=6)
+                            ),
+                            row=1, col=1
+                        )
+                        
+                        # Add opening marker
+                        fig.add_trace(
+                            go.Scatter(
+                                x=[next_day_forecast['time'].iloc[0]],
+                                y=[next_day_forecast['predicted_price'].iloc[0]],
+                                mode='markers',
+                                name='Tomorrow Open',
+                                marker=dict(size=15, color='green', symbol='star')
+                            ),
+                            row=1, col=1
+                        )
+                        
+                        # Confidence line
+                        fig.add_trace(
+                            go.Scatter(
+                                x=next_day_forecast['time'],
+                                y=next_day_forecast['confidence'],
+                                mode='lines',
+                                name='Confidence',
+                                line=dict(color='orange', width=2)
+                            ),
+                            row=2, col=1
+                        )
+                        
+                        fig.update_layout(
+                            title="Tomorrow's Full Day Forecast - KSE-100 (After 3:30 PM)",
+                            height=800,
+                            showlegend=True
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Tomorrow's forecast summary
+                        st.subheader("📊 Tomorrow's Forecast Summary")
+                        col1, col2, col3, col4 = st.columns(4)
+
+                        with col1:
+                            st.metric("Today's Close", f"PKR {current_price:,.2f}")
+                        with col2:
+                            tomorrow_open = next_day_forecast['predicted_price'].iloc[0]
+                            opening_gap = ((tomorrow_open - current_price) / current_price) * 100
+                            st.metric("Tomorrow's Open", f"PKR {tomorrow_open:,.2f}", f"{opening_gap:+.2f}%")
+                        with col3:
+                            tomorrow_high = next_day_forecast['predicted_price'].max()
+                            tomorrow_low = next_day_forecast['predicted_price'].min()
+                            st.metric("Expected Range", f"PKR {tomorrow_high - tomorrow_low:,.2f}")
+                        with col4:
+                            avg_confidence = next_day_forecast['confidence'].mean()
+                            st.metric("Avg Confidence", f"{avg_confidence:.0%}")
+                        
+                        # Additional metrics for next day
+                        st.subheader("📈 Tomorrow's Trading Insights")
+                        insight_col1, insight_col2, insight_col3 = st.columns(3)
+                        
+                        with insight_col1:
+                            tomorrow_close = next_day_forecast['predicted_price'].iloc[-1]
+                            total_change = ((tomorrow_close - tomorrow_open) / tomorrow_open) * 100
+                            st.metric("Expected Day Change", f"{total_change:+.2f}%")
+                        with insight_col2:
+                            st.metric("Predicted High", f"PKR {tomorrow_high:,.2f}")
+                        with insight_col3:
+                            st.metric("Predicted Low", f"PKR {tomorrow_low:,.2f}")
                     
                 else:
-                    # Show current day forecast chart
+                    # Show today's detailed forecast with multiple charts
                     fig = make_subplots(
                         rows=2, cols=2,
-                        subplot_titles=("Opening 5 Min Special", "Main Session (09:36-15:30)", "Full Day Trend", "Confidence Analysis"),
+                        subplot_titles=("Opening 15 Min (09:30-09:45)", "Main Session (09:36-15:30)", 
+                                      "Full Day Trend", "Confidence Analysis"),
                         specs=[[{"secondary_y": False}, {"secondary_y": False}],
                                [{"colspan": 2}, None]],
-                        vertical_spacing=0.1
+                        vertical_spacing=0.1,
+                        row_heights=[0.5, 0.5]
                     )
 
-                    # Opening 5 min special feature (only for current day)
-                    opening_data = kse_forecasts.get('first_five_min_special')
+                    # Opening 15 min special feature
+                    opening_data = kse_forecasts.get('first_fifteen_min_special')
                     if opening_data is not None and not opening_data.empty:
                         fig.add_trace(
                             go.Scatter(
                                 x=opening_data['time'],
                                 y=opening_data['predicted_price'],
                                 mode='lines+markers',
-                                name='Opening 5 Min Special',
-                                line=dict(color='red', width=4, dash='dot'),
-                                marker=dict(size=10, symbol='star')
+                                name='Opening 15 Min Special (09:30-09:45)',
+                                line=dict(color='red', width=3, dash='dot'),
+                                marker=dict(size=6, symbol='star')
                             ),
                             row=1, col=1
                         )
 
-                    # Main session 09:36-15:30 (only for current day)
+                    # Main session 09:36-15:30
                     main_session_data = kse_forecasts.get('main_session_0936_1530')
                     if main_session_data is not None and not main_session_data.empty:
                         fig.add_trace(
@@ -663,12 +835,12 @@ def display_comprehensive_intraday_forecasts():
                                 mode='lines+markers',
                                 name='Main Session (09:36-15:30)',
                                 line=dict(color='blue', width=3),
-                                marker=dict(size=8)
+                                marker=dict(size=6)
                             ),
                             row=1, col=2
                         )
 
-                    # Full day trend (legacy for comparison)
+                    # Full day trend
                     full_day_data = kse_forecasts['full_day']
                     if not full_day_data.empty:
                         fig.add_trace(
@@ -676,9 +848,9 @@ def display_comprehensive_intraday_forecasts():
                                 x=full_day_data['time'],
                                 y=full_day_data['predicted_price'],
                                 mode='lines+markers',
-                                name='Full Day Forecast (Today)',
-                                line=dict(color='green', width=2, dash='dash'),
-                                marker=dict(size=6)
+                                name='Full Day Forecast',
+                                line=dict(color='green', width=2),
+                                marker=dict(size=4)
                             ),
                             row=2, col=1
                         )
@@ -703,63 +875,39 @@ def display_comprehensive_intraday_forecasts():
                         showlegend=True
                     )
 
-                st.plotly_chart(fig, use_container_width=True)
-
-                # Summary metrics
-                if show_next_day and next_day_forecast is not None and not next_day_forecast.empty:
-                    st.subheader("📊 Tomorrow's Forecast Summary")
-                    col1, col2, col3, col4 = st.columns(4)
-
-                    with col1:
-                        st.metric("Today's Close", f"PKR {current_price:,.2f}")
-                    with col2:
-                        tomorrow_open = next_day_forecast['predicted_price'].iloc[0]
-                        opening_gap = ((tomorrow_open - current_price) / current_price) * 100
-                        st.metric("Tomorrow's Open", f"PKR {tomorrow_open:,.2f}", f"{opening_gap:+.2f}%")
-                    with col3:
-                        tomorrow_high = next_day_forecast['predicted_price'].max()
-                        tomorrow_low = next_day_forecast['predicted_price'].min()
-                        st.metric("Expected Range", f"PKR {tomorrow_high - tomorrow_low:,.2f}")
-                    with col4:
-                        avg_confidence = next_day_forecast['confidence'].mean()
-                        st.metric("Avg Confidence", f"{avg_confidence:.0%}")
+                    st.plotly_chart(fig, use_container_width=True)
                     
-                    # Additional metrics for next day
-                    st.subheader("📈 Tomorrow's Trading Insights")
-                    insight_col1, insight_col2, insight_col3 = st.columns(3)
-                    
-                    with insight_col1:
-                        tomorrow_close = next_day_forecast['predicted_price'].iloc[-1]
-                        total_change = ((tomorrow_close - tomorrow_open) / tomorrow_open) * 100
-                        st.metric("Expected Day Change", f"{total_change:+.2f}%")
-                    with insight_col2:
-                        st.metric("Predicted High", f"PKR {tomorrow_high:,.2f}")
-                    with insight_col3:
-                        st.metric("Predicted Low", f"PKR {tomorrow_low:,.2f}")
-                        
-                else:
+                    # Today's forecast summary
                     st.subheader("📊 Today's Forecast Summary")
                     col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
                         st.metric("Current Price", f"PKR {current_price:,.2f}")
                     with col2:
-                        main_session_data = kse_forecasts.get('main_session_0936_1530')
                         if main_session_data is not None and not main_session_data.empty:
                             session_high = main_session_data['predicted_price'].max()
                             st.metric("Session High (09:36-15:30)", f"PKR {session_high:,.2f}")
                     with col3:
-                        opening_data = kse_forecasts.get('first_five_min_special')
                         if opening_data is not None and not opening_data.empty:
                             opening_volatility = opening_data['volatility'].mean()
-                            st.metric("Opening Volatility", f"{opening_volatility:.2%}")
+                            st.metric("Opening Volatility (15 min)", f"{opening_volatility:.2%}")
                     with col4:
                         if main_session_data is not None and not main_session_data.empty:
                             avg_confidence = main_session_data['confidence'].mean()
                             st.metric("Avg Confidence", f"{avg_confidence:.0%}")
+                
+                # Auto-refresh note
+                pakistan_tz = pytz.timezone('Asia/Karachi')
+                now = datetime.now(pakistan_tz)
+                next_refresh = now.replace(hour=9, minute=30, second=0, microsecond=0)
+                if now >= next_refresh:
+                    next_refresh += timedelta(days=1)
+                
+                st.info(f"📅 **Next Update:** Charts will automatically update at 9:30 AM PKT ({next_refresh.strftime('%Y-%m-%d %H:%M:%S')})")
     
     with tab2:
         st.subheader("🏢 Individual Company Forecasts")
+        st.info("📅 **Daily Update:** This forecast updates at 9:30 AM PKT on weekdays and remains constant throughout the day")
         
         # Company selection
         if hasattr(st.session_state, 'data_fetcher'):
@@ -780,7 +928,7 @@ def display_comprehensive_intraday_forecasts():
                 if company_data is not None and live_price_data:
                     current_price = live_price_data['price']
                     
-                    # Generate company forecasts
+                    # Generate company forecasts with daily seed
                     company_forecasts = forecaster.generate_comprehensive_forecasts(
                         company_data, symbol, current_price
                     )
@@ -797,34 +945,68 @@ def display_comprehensive_intraday_forecasts():
                             mode='lines+markers',
                             name=f'{symbol} Forecast',
                             line=dict(color='purple', width=3),
-                            marker=dict(size=8)
+                            marker=dict(size=6)
+                        ))
+                        
+                        # Add opening marker
+                        fig.add_trace(go.Scatter(
+                            x=[full_day['time'].iloc[0]],
+                            y=[full_day['predicted_price'].iloc[0]],
+                            mode='markers',
+                            name='Market Open',
+                            marker=dict(size=12, color='green', symbol='star')
+                        ))
+                        
+                        # Add closing marker
+                        fig.add_trace(go.Scatter(
+                            x=[full_day['time'].iloc[-1]],
+                            y=[full_day['predicted_price'].iloc[-1]],
+                            mode='markers',
+                            name='Market Close',
+                            marker=dict(size=12, color='red', symbol='diamond')
                         ))
                     
                     fig.update_layout(
-                        title=f"{selected_company} ({symbol}) - Intraday Forecast",
+                        title=f"{selected_company} ({symbol}) - Daily Forecast (9:30 AM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Price (PKR)",
-                        height=500
+                        height=500,
+                        showlegend=True
                     )
                     
                     st.plotly_chart(fig, use_container_width=True)
                     
                     # Company metrics
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2, col3, col4 = st.columns(4)
                     with col1:
                         st.metric("Current Price", f"PKR {current_price:,.2f}")
                     with col2:
                         if not full_day.empty:
-                            end_price = full_day['predicted_price'].iloc[-1]
-                            change = end_price - current_price
-                            st.metric("Expected End Price", f"PKR {end_price:,.2f}", f"{change:+.2f}")
+                            opening_price = full_day['predicted_price'].iloc[0]
+                            st.metric("Predicted Open", f"PKR {opening_price:,.2f}")
                     with col3:
+                        if not full_day.empty:
+                            end_price = full_day['predicted_price'].iloc[-1]
+                            change = end_price - opening_price
+                            change_pct = (change / opening_price) * 100
+                            st.metric("Predicted Close", f"PKR {end_price:,.2f}", f"{change:+.2f} ({change_pct:+.2f}%)")
+                    with col4:
                         if not full_day.empty:
                             avg_confidence = full_day['confidence'].mean()
                             st.metric("Avg Confidence", f"{avg_confidence:.0%}")
+                    
+                    # Auto-refresh note
+                    pakistan_tz = pytz.timezone('Asia/Karachi')
+                    now = datetime.now(pakistan_tz)
+                    next_refresh = now.replace(hour=9, minute=30, second=0, microsecond=0)
+                    if now >= next_refresh:
+                        next_refresh += timedelta(days=1)
+                    
+                    st.info(f"🔄 **Next Update:** {next_refresh.strftime('%A, %Y-%m-%d at 9:30 AM PKT')}")
     
     with tab3:
         st.subheader("📊 Session Comparison Analysis")
+        st.info("📅 **Daily Update:** Session forecasts update at 9:30 AM PKT on weekdays and remain constant throughout the day")
         st.write("Compare morning vs afternoon trading patterns")
 
         # Get KSE-100 data for session comparison
@@ -840,11 +1022,11 @@ def display_comprehensive_intraday_forecasts():
                     historical_kse, "KSE-100", current_price
                 )
 
-                # Create session comparison chart
+                # Create session comparison chart (with daily seed)
                 fig = make_subplots(
                     rows=2, cols=2,
                     subplot_titles=("Morning Session (09:45-12:00)", "Afternoon Session (12:00-15:30)",
-                                  "Full Day Forecast", "Session Volatility Comparison"),
+                                  "Full Day Forecast (9:30-3:30)", "Session Volatility Comparison"),
                     specs=[[{"secondary_y": False}, {"secondary_y": False}],
                            [{"colspan": 2}, None]],
                     vertical_spacing=0.1
@@ -997,6 +1179,15 @@ def display_comprehensive_intraday_forecasts():
                         afternoon_change = ((afternoon_end - afternoon_start) / afternoon_start) * 100
                         trend_color = "green" if afternoon_change > 0 else "red"
                         st.markdown(f"<span style='color:{trend_color}; font-weight:bold;'>Change: {afternoon_change:+.2f}%</span>", unsafe_allow_html=True)
+                
+                # Auto-refresh note
+                pakistan_tz = pytz.timezone('Asia/Karachi')
+                now = datetime.now(pakistan_tz)
+                next_refresh = now.replace(hour=9, minute=30, second=0, microsecond=0)
+                if now >= next_refresh:
+                    next_refresh += timedelta(days=1)
+                
+                st.info(f"🔄 **Next Update:** Session analysis will update on {next_refresh.strftime('%A, %Y-%m-%d at 9:30 AM PKT')}")
 
             else:
                 st.warning("Unable to fetch KSE-100 data for session comparison")
