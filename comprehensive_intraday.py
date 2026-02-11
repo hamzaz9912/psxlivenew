@@ -4,6 +4,8 @@ Provides detailed predictions for KSE-100 and individual companies
 Updated with specific workflow: Yesterday last hour + Today session predictions
 Full trading day coverage: 9:30 AM to 3:30 PM
 After 3:00 PM: Automatically shows next day's forecast (9:30 AM to 3:30 PM)
+
+Version: 2.0.1 - Fixed method naming consistency (2026-02-11)
 """
 
 import streamlit as st
@@ -1308,7 +1310,7 @@ def display_comprehensive_intraday_forecasts():
                     if historical_kse is not None:
                         # Simulate inputs
                         yesterday_data = forecaster.get_yesterday_last_hour_data(historical_kse)
-                        today_first_five = forecaster.generate_first_five_min_special(10000, "KSE-100")  # Placeholder price
+                        today_first_five = forecaster.generate_first_fifteen_min_special(10000, "KSE-100")  # Placeholder price
 
                         # Simulate live candles 09:30-09:36
                         live_candles = pd.DataFrame({

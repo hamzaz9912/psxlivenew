@@ -1103,7 +1103,7 @@ class LiveKSE40Dashboard:
                         yesterday_data = forecaster.get_yesterday_last_hour_data(historical_kse)
 
                         # Simulate today's first 5 minutes
-                        today_first_five = forecaster.generate_first_five_min_special(188000, "KSE-100")
+                        today_first_five = forecaster.generate_first_fifteen_min_special(188000, "KSE-100")
 
                         # Get current live price as starting point
                         current_kse_price = 188000  # Default
