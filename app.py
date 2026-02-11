@@ -733,7 +733,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                 tab1, tab2, tab3, tab4 = st.tabs([
                     "Morning Session (9:45-12:00)", 
                     "Afternoon Session (12:00-3:30)", 
-                    "Today's Full Day (9:30-3:30)",
+                    "Today's Full Day (9:45-3:30)",
                     "Next Day Full Forecast"
                 ])
                 
@@ -816,64 +816,144 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             st.error("Unable to generate morning session data")
                 
                 with tab2:
-                    st.write("**Afternoon Session Forecast (12:00 PM - 3:30 PM)**")
+                    # Check current time to determine what to show
+                    current_time = datetime.now(pytz.timezone('Asia/Karachi'))
+                    eleven_am = current_time.replace(hour=11, minute=0, second=0, microsecond=0)
+                    twelve_pm = current_time.replace(hour=12, minute=0, second=0, microsecond=0)
                     
-                    # Generate afternoon session intraday data
-                    afternoon_data = generate_afternoon_session_data(current_price)
+                    # After 11:00 AM, show half-day graph; after 12:00 PM, show afternoon session
+                    if current_time >= twelve_pm:
+                        st.write("**Afternoon Session Forecast (12:00 PM - 3:30 PM)**")
+                        
+                        # Generate afternoon session intraday data
+                        afternoon_data = generate_afternoon_session_data(current_price)
+                        
+                        if afternoon_data is not None and not afternoon_data.empty:
+                            # Create afternoon session chart
+                            fig = go.Figure()
+                            
+                            # Afternoon session price movement
+                            fig.add_trace(go.Scatter(
+                                x=afternoon_data['time'],
+                                y=afternoon_data['price'],
+                                mode='lines+markers',
+                                name='Afternoon Session Prices',
+                                line=dict(color='orange', width=3),
+                                marker=dict(size=6, color='orange')
+                            ))
+                            
+                            # Add current price reference
+                            fig.add_hline(
+                                y=current_price,
+                                line_dash="dash",
+                                line_color="red",
+                                annotation_text=f"Current: {current_price:,.2f}",
+                                annotation_position="top right"
+                            )
+                            
+                            fig.update_layout(
+                                title="📈 Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
+                                xaxis_title="Time (PKT)",
+                                yaxis_title="Price (PKR)",
+                                height=500,
+                                showlegend=True,
+                                xaxis=dict(tickformat='%H:%M', tickangle=45)
+                            )
+                            
+                            st.plotly_chart(fig, use_container_width=True)
+                            
+                            # Metrics
+                            afternoon_high = afternoon_data['price'].max()
+                            afternoon_low = afternoon_data['price'].min()
+                            afternoon_change = afternoon_data['price'].iloc[-1] - afternoon_data['price'].iloc[0]
+                            
+                            col1, col2, col3, col4 = st.columns(4)
+                            with col1:
+                                st.metric("Session Start", f"{afternoon_data['price'].iloc[0]:,.2f} PKR")
+                            with col2:
+                                st.metric("Session High", f"{afternoon_high:,.2f} PKR")
+                            with col3:
+                                st.metric("Session Low", f"{afternoon_low:,.2f} PKR")
+                            with col4:
+                                st.metric("Session Change", f"{afternoon_change:+.2f} PKR", f"{(afternoon_change/afternoon_data['price'].iloc[0])*100:+.2f}%")
+                        else:
+                            st.error("Unable to generate afternoon session data")
                     
-                    if afternoon_data is not None and not afternoon_data.empty:
-                        # Create afternoon session chart
-                        fig = go.Figure()
+                    elif current_time >= eleven_am:
+                        # After 11:00 AM but before 12:00 PM - show half day completed message and graph
+                        st.info("✅ **After 1st Half Completed (11:00 AM)** - Showing Half Day Graph")
+                        st.write("**Half Day Analysis (9:45 AM - 12:00 PM)**")
                         
-                        # Afternoon session price movement
-                        fig.add_trace(go.Scatter(
-                            x=afternoon_data['time'],
-                            y=afternoon_data['price'],
-                            mode='lines+markers',
-                            name='Afternoon Session Prices',
-                            line=dict(color='orange', width=3),
-                            marker=dict(size=6, color='orange')
-                        ))
+                        # Generate half day data
+                        half_day_data = generate_half_day_data(current_price)
                         
-                        # Add current price reference
-                        fig.add_hline(
-                            y=current_price,
-                            line_dash="dash",
-                            line_color="red",
-                            annotation_text=f"Current: {current_price:,.2f}",
-                            annotation_position="top right"
-                        )
-                        
-                        fig.update_layout(
-                            title="📈 Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
-                            xaxis_title="Time (PKT)",
-                            yaxis_title="Price (PKR)",
-                            height=500,
-                            showlegend=True,
-                            xaxis=dict(tickformat='%H:%M', tickangle=45)
-                        )
-                        
-                        st.plotly_chart(fig, use_container_width=True)
-                        
-                        # Metrics
-                        afternoon_high = afternoon_data['price'].max()
-                        afternoon_low = afternoon_data['price'].min()
-                        afternoon_change = afternoon_data['price'].iloc[-1] - afternoon_data['price'].iloc[0]
-                        
-                        col1, col2, col3, col4 = st.columns(4)
-                        with col1:
-                            st.metric("Session Start", f"{afternoon_data['price'].iloc[0]:,.2f} PKR")
-                        with col2:
-                            st.metric("Session High", f"{afternoon_high:,.2f} PKR")
-                        with col3:
-                            st.metric("Session Low", f"{afternoon_low:,.2f} PKR")
-                        with col4:
-                            st.metric("Session Change", f"{afternoon_change:+.2f} PKR", f"{(afternoon_change/afternoon_data['price'].iloc[0])*100:+.2f}%")
+                        if half_day_data is not None and not half_day_data.empty:
+                            # Create half day chart
+                            fig = go.Figure()
+                            
+                            # Half day price movement
+                            fig.add_trace(go.Scatter(
+                                x=half_day_data['time'],
+                                y=half_day_data['price'],
+                                mode='lines+markers',
+                                name='Half Day Prices (First Half)',
+                                line=dict(color='green', width=3),
+                                marker=dict(size=6, color='green')
+                            ))
+                            
+                            # Add opening price reference
+                            opening_price = half_day_data['price'].iloc[0]
+                            fig.add_hline(
+                                y=opening_price,
+                                line_dash="dot",
+                                line_color="blue",
+                                annotation_text=f"Opening: {opening_price:,.2f}",
+                                annotation_position="bottom right"
+                            )
+                            
+                            # Add current price
+                            fig.add_hline(
+                                y=current_price,
+                                line_dash="dash",
+                                line_color="red",
+                                annotation_text=f"Current: {current_price:,.2f}",
+                                annotation_position="top right"
+                            )
+                            
+                            fig.update_layout(
+                                title="📈 Half Day Chart - First Half Completed (9:45 AM - 12:00 PM)",
+                                xaxis_title="Time (PKT)",
+                                yaxis_title="Price (PKR)",
+                                height=500,
+                                showlegend=True,
+                                xaxis=dict(tickformat='%H:%M', tickangle=45)
+                            )
+                            
+                            st.plotly_chart(fig, use_container_width=True)
+                            
+                            # Metrics
+                            half_day_high = half_day_data['price'].max()
+                            half_day_low = half_day_data['price'].min()
+                            half_day_change = half_day_data['price'].iloc[-1] - half_day_data['price'].iloc[0]
+                            
+                            col1, col2, col3, col4 = st.columns(4)
+                            with col1:
+                                st.metric("Opening Price", f"{opening_price:,.2f} PKR")
+                            with col2:
+                                st.metric("Half Day High", f"{half_day_high:,.2f} PKR")
+                            with col3:
+                                st.metric("Half Day Low", f"{half_day_low:,.2f} PKR")
+                            with col4:
+                                st.metric("Half Day Change", f"{half_day_change:+.2f} PKR", f"{(half_day_change/opening_price)*100:+.2f}%")
+                        else:
+                            st.error("Unable to generate half day data")
+                    
                     else:
-                        st.error("Unable to generate afternoon session data")
+                        # Before 11:00 AM - show waiting message
+                        st.info("🕐 Afternoon session forecast will be available after 11:00 AM PKT")
                 
                 with tab3:
-                    st.write("**Today's Full Day Forecast (9:30 AM - 3:30 PM)**")
+                    st.write("**Today's Full Day Forecast (9:45 AM - 3:30 PM)**")
                     
                     # Generate full day intraday data
                     full_day_data = generate_full_day_data(current_price)
@@ -902,7 +982,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         )
                         
                         fig.update_layout(
-                            title="📈 Today's Full Trading Day Forecast (9:30 AM - 3:30 PM)",
+                            title="📈 Today's Full Trading Day Forecast (9:45 AM - 3:30 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -931,7 +1011,16 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         st.error("Unable to generate full day data")
 
                 with tab4:
-                    st.write("**Next Day Full Forecast (9:30 AM - 3:30 PM)**")
+                    st.write("**Next Day Full Forecast (9:45 AM - 3:30 PM)**")
+                    
+                    # Check if it's after 3:00 PM for refresh indicator
+                    current_time = datetime.now(pytz.timezone('Asia/Karachi'))
+                    afternoon_cutoff = current_time.replace(hour=15, minute=0, second=0, microsecond=0)
+                    
+                    if current_time >= afternoon_cutoff:
+                        st.info("🔄 **Updated at 3:00 PM** - Fresh next day forecast generated daily after 3:00 PM")
+                    else:
+                        st.info("💡 **Note**: This forecast refreshes daily at 3:00 PM with updated predictions for tomorrow")
                     
                     # Generate next day full data
                     next_day_full_data = generate_next_day_full_data(current_price)
@@ -950,8 +1039,17 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             marker=dict(size=4, color='cyan')
                         ))
                         
+                        # Add current price reference
+                        fig.add_hline(
+                            y=current_price, 
+                            line_dash="dash", 
+                            line_color="orange",
+                            annotation_text=f"Today's Price: {current_price:,.2f}",
+                            annotation_position="top right"
+                        )
+                        
                         fig.update_layout(
-                            title="📈 Next Day Full Trading Day Forecast (9:30 AM - 3:00 PM)",
+                            title="📈 Next Day Full Trading Day Forecast (9:45 AM - 3:30 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -1015,6 +1113,44 @@ def generate_morning_session_data(current_price):
         st.error(f"Error generating morning session data: {e}")
         return None
 
+def generate_half_day_data(current_price):
+    """Generate half day data from 9:45 AM to 12:00 PM (first half completed)"""
+    try:
+        import pytz
+        from datetime import time as dt_time
+        pkt = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pkt).date()
+        
+        # Use seeded random generator for consistent daily graph
+        rng = random.Random(f"{today}_half_day")
+        
+        # Half day: 9:45 AM to 12:00 PM (2.25 hours = 27 intervals of 5 minutes)
+        start_time = datetime(today.year, today.month, today.day, 9, 45, 0)
+        times = []
+        prices = []
+        
+        base_price = current_price
+        
+        for i in range(28):  # 28 points for 27 intervals (9:45 to 12:00)
+            current_time = start_time + timedelta(minutes=5 * i)
+            times.append(current_time.strftime('%H:%M'))
+            
+            if i == 0:
+                # Opening price with slight gap
+                price = base_price * rng.uniform(0.995, 1.005)
+            else:
+                # Progressive morning movement
+                volatility = rng.uniform(-0.008, 0.010)
+                price = prices[-1] * (1 + volatility)
+            
+            prices.append(price)
+        
+        return pd.DataFrame({'time': times, 'price': prices})
+    
+    except Exception as e:
+        st.error(f"Error generating half day data: {e}")
+        return None
+
 def generate_afternoon_session_data(current_price):
     """Generate realistic afternoon session intraday data"""
     try:
@@ -1054,7 +1190,7 @@ def generate_afternoon_session_data(current_price):
         return None
 
 def generate_full_day_data(current_price):
-    """Generate realistic full day intraday data (9:30 AM - 3:30 PM)"""
+    """Generate realistic full day intraday data (9:45 AM - 3:30 PM)"""
     try:
         import pytz
         pkt = pytz.timezone('Asia/Karachi')
@@ -1063,14 +1199,14 @@ def generate_full_day_data(current_price):
         # Use seeded random generator for consistent daily graph
         rng = random.Random(f"{today}_full_day")
         
-        # Full day: 9:30 AM to 3:30 PM (6 hours = 72 intervals of 5 minutes)
-        start_time = datetime(today.year, today.month, today.day, 9, 30, 0)
+        # Full day: 9:45 AM to 3:30 PM (5 hours 45 minutes = 69 intervals of 5 minutes)
+        start_time = datetime(today.year, today.month, today.day, 9, 45, 0)
         times = []
         prices = []
         
         base_price = current_price
         
-        for i in range(73): # 73 points for 72 intervals
+        for i in range(70): # 70 points for 69 intervals (9:45 to 15:30)
             current_time = start_time + timedelta(minutes=5 * i)
             times.append(current_time.strftime('%H:%M'))
             
@@ -1096,21 +1232,31 @@ def generate_full_day_data(current_price):
         return None
 
 def generate_next_day_full_data(current_price):
-    """Generate realistic full day intraday data for the next day (9:30 AM - 3:30 PM)"""
+    """Generate realistic full day intraday data for the next day (9:45 AM - 3:30 PM)
+    Refreshes at 3:00 PM daily with new forecast"""
     try:
         import pytz
         pkt = pytz.timezone('Asia/Karachi')
-        tomorrow = (datetime.now(pkt) + timedelta(days=1)).date()
+        now = datetime.now(pkt)
+        tomorrow = (now + timedelta(days=1)).date()
         
-        rng = random.Random(f"{tomorrow}_full_day")
+        # Check if after 3:00 PM to determine seed (refreshes at 3:00 PM)
+        afternoon_cutoff = now.replace(hour=15, minute=0, second=0, microsecond=0)
+        is_after_3pm = now >= afternoon_cutoff
         
-        start_time = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 30, 0)
+        # Seed includes date and refresh indicator (changes at 3:00 PM)
+        seed_suffix = "post_3pm" if is_after_3pm else "pre_3pm"
+        rng = random.Random(f"{tomorrow}_full_day_{seed_suffix}")
+        
+        # Start at 9:45 AM for next day
+        start_time = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 45, 0)
         times = []
         prices = []
         
         base_price = current_price
         
-        for i in range(73): # 73 points for 72 intervals
+        # 70 points for 69 intervals (9:45 to 15:30)
+        for i in range(70):
             current_time = start_time + timedelta(minutes=5 * i)
             times.append(current_time.strftime('%H:%M'))
             
