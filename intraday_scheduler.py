@@ -192,39 +192,52 @@ class IntradayScheduler:
         return {'status': 'unknown', 'message': f'Unknown action: {action}'}
     
     def get_session_status(self) -> dict:
+        # Ensure session state is initialized
+        self._init_session_state()
+        
         now = self.get_pakistan_time()
         current_time = now.strftime('%H:%M:%S')
         current_session = self.get_current_session()
+        
+        # Safely access session state with fallback values
+        predictions = st.session_state.get('intraday_predictions', {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
+        
         return {
             'current_time': current_time,
             'current_session': current_session.value,
             'session_display': current_session.name.replace('_', ' ').title(),
             'timezone': 'Asia/Karachi (UTC+5)',
-            'predictions': st.session_state.intraday_predictions,
+            'predictions': predictions,
             'actions_status': {
-                'charts_reset': st.session_state.charts_reset_done,
-                'morning_session': st.session_state.morning_session_generated,
-                'full_day': st.session_state.full_day_generated,
-                'afternoon_session': st.session_state.afternoon_session_generated,
-                'next_day_pending': st.session_state.next_day_pending,
-                'sessions_hidden': st.session_state.sessions_hidden
+                'charts_reset': st.session_state.get('charts_reset_done', False),
+                'morning_session': st.session_state.get('morning_session_generated', False),
+                'full_day': st.session_state.get('full_day_generated', False),
+                'afternoon_session': st.session_state.get('afternoon_session_generated', False),
+                'next_day_pending': st.session_state.get('next_day_pending', False),
+                'sessions_hidden': st.session_state.get('sessions_hidden', False)
             }
         }
     
     def should_show_morning_session(self) -> bool:
-        return st.session_state.morning_session_generated and not st.session_state.sessions_hidden
+        self._init_session_state()
+        return st.session_state.get('morning_session_generated', False) and not st.session_state.get('sessions_hidden', False)
     
     def should_show_full_day(self) -> bool:
-        return st.session_state.full_day_generated
+        self._init_session_state()
+        return st.session_state.get('full_day_generated', False)
     
     def should_show_afternoon_session(self) -> bool:
-        return st.session_state.afternoon_session_generated and not st.session_state.sessions_hidden
+        self._init_session_state()
+        return st.session_state.get('afternoon_session_generated', False) and not st.session_state.get('sessions_hidden', False)
     
     def should_show_next_day(self) -> bool:
-        return st.session_state.sessions_hidden
+        self._init_session_state()
+        return st.session_state.get('sessions_hidden', False)
     
     def get_prediction(self, prediction_type: str) -> Optional[pd.DataFrame]:
-        return st.session_state.intraday_predictions.get(prediction_type)
+        self._init_session_state()
+        predictions = st.session_state.get('intraday_predictions', {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
+        return predictions.get(prediction_type)
     
     def display_session_status(self):
         status = self.get_session_status()
@@ -258,7 +271,7 @@ def show_intraday_predictions():
     scheduler = get_intraday_scheduler()
     status = scheduler.get_session_status()
     scheduler.display_session_status()
-    predictions = status['predictions']
+    predictions = status.get('predictions', {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
     
     if scheduler.should_show_morning_session() and predictions['morning_session'] is not None:
         st.subheader("Morning Session Prediction (9:45 AM)")
