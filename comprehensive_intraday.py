@@ -53,6 +53,32 @@ def cache_kse_forecast(symbol, forecast_data):
     st.session_state[cache_key] = forecast_data
 
 
+def is_trading_day():
+    """Check if today is a trading day (weekday, not weekend)"""
+    import pytz
+    
+    pakistan_tz = pytz.timezone('Asia/Karachi')
+    now = datetime.now(pakistan_tz)
+    
+    # weekday() returns 0=Monday, 1=Tuesday, ..., 4=Friday, 5=Saturday, 6=Sunday
+    return now.weekday() < 5  # Monday-Friday are trading days
+
+
+def get_next_trading_day():
+    """Get the next trading day date"""
+    import pytz
+    
+    pakistan_tz = pytz.timezone('Asia/Karachi')
+    today = datetime.now(pakistan_tz).date()
+    
+    # Find next weekday
+    next_day = today + timedelta(days=1)
+    while next_day.weekday() >= 5:  # Skip Saturday(5) and Sunday(6)
+        next_day += timedelta(days=1)
+    
+    return next_day
+
+
 class ComprehensiveIntradayForecaster:
     """Enhanced intraday forecasting with specific workflow: Yesterday last hour + Today session predictions
     Trading hours: 9:30 AM to 3:30 PM
@@ -340,7 +366,7 @@ class ComprehensiveIntradayForecaster:
             else:
                 bias = "NEUTRAL"
                 confidence = 0.5
-
+    
             return {
                 'bias': bias,
                 'confidence': round(confidence, 2),
@@ -695,16 +721,43 @@ def display_comprehensive_intraday_forecasts():
     with tab1:
         st.subheader("📈 KSE-100 Index - New Workflow Forecast")
         
+        # Check if today is a trading day
+        trading_day = is_trading_day()
+        pakistan_tz = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pakistan_tz).date()
+        
+        # If not a trading day, show market closed status
+        if not trading_day:
+            next_trading_day = get_next_trading_day()
+            
+            # Show clear market closed status
+            st.error("🔴 **MARKET CLOSED** - Today is {}".format(today.strftime('%A, %Y-%m-%d')))
+            st.warning("📅 **Next Trading Day:** {} ({})".format(
+                next_trading_day.strftime('%Y-%m-%d'),
+                next_trading_day.strftime('%A')
+            ))
+            
+            # Show next trading day's forecast
+            show_forecast_for = next_trading_day
+            st.info("🌐 **Showing Forecast for Next Trading Day:** {}".format(show_forecast_for.strftime('%A, %Y-%m-%d')))
+        
         # Determine forecast type based on current time
         forecast_type = forecaster.get_current_forecast_type()
         
-        # Display appropriate message
-        if forecast_type == "pre_market":
+        # Determine which forecast to show based on trading day and time
+        if not trading_day:
+            # Show next trading day's forecast for weekends
+            show_forecast_for = next_trading_day
+            st.info(f"🌐 **Weekend Forecast** - Showing predictions for {show_forecast_for.strftime('%A, %Y-%m-%d')}")
+        elif forecast_type == "pre_market":
             st.info("🌅 **Pre-Market** - Showing Today's Forecast (Opens at 9:30 AM)")
+            show_forecast_for = today
         elif forecast_type == "next_day":
             st.info("🌙 **After Market Close (3:30 PM)** - Showing Tomorrow's Full Day Forecast")
+            show_forecast_for = today
         else:
             st.info("☀️ **Trading Hours (9:30 AM - 3:30 PM)** - Showing Today's Live Forecast")
+            show_forecast_for = today
 
         # Get live KSE-100 data
         if hasattr(st.session_state, 'data_fetcher'):
@@ -715,14 +768,12 @@ def display_comprehensive_intraday_forecasts():
                 current_price = live_kse_data['price']
 
                 # Check for cached forecast
-                pakistan_tz = pytz.timezone('Asia/Karachi')
-                today = datetime.now(pakistan_tz).date()
-                cache_key = f"kse100_forecast_{today}"
+                cache_key = f"kse100_forecast_{show_forecast_for}"
                 
-                # Check if we have cached forecast for today
+                # Check if we have cached forecast for the target date
                 if cache_key in st.session_state and 'kse_forecasts' in st.session_state[cache_key]:
                     kse_forecasts = st.session_state[cache_key]
-                    st.info(f"📅 **Forecast cached for:** {today} - Same predictions all day until 9:30 AM")
+                    st.info(f"📅 **Forecast cached for:** {show_forecast_for} - Same predictions all day")
                 else:
                     # Generate new forecast and cache it
                     kse_forecasts = forecaster.generate_comprehensive_forecasts(
@@ -730,7 +781,7 @@ def display_comprehensive_intraday_forecasts():
                     )
                     # Store in session state with full data
                     st.session_state[cache_key] = kse_forecasts
-                    st.info(f"📅 **New forecast generated for:** {today}")
+                    st.info(f"📅 **New forecast generated for:** {show_forecast_for}")
 
                 # Display yesterday's last hour data
                 st.subheader("📅 Yesterday's Last Hour Analysis (14:00-15:30)")
@@ -769,18 +820,18 @@ def display_comprehensive_intraday_forecasts():
                 # Create SINGLE comprehensive graph for 9:30-15:30
                 st.subheader("📊 KSE-100 Forecast (9:30 AM - 3:30 PM)")
                 
-                # Determine which data to display based on forecast type
-                if forecast_type == "next_day" or forecast_type == "pre_market":
-                    # Show next day forecast
+                # Determine which data to display based on forecast type and trading day
+                if not trading_day or forecast_type == "next_day" or forecast_type == "pre_market":
+                    # Show next day/weekend forecast
                     yesterday_last_hour = kse_forecasts.get('yesterday_last_hour')
                     today_full_session = kse_forecasts.get('main_session_0936_1530')
                     next_day_forecast = forecaster.generate_next_day_forecast(
                         current_price, yesterday_last_hour, today_full_session
                     )
                     
-                    # Show tomorrow's bias
+                    # Show opening bias
                     bias_result = forecaster.generate_tomorrow_open_bias(yesterday_last_hour, today_full_session)
-                    st.subheader("🔮 Tomorrow's Opening Bias")
+                    st.subheader("🔮 Opening Bias")
                     bias_col1, bias_col2, bias_col3 = st.columns(3)
                     with bias_col1:
                         bias_color = "green" if bias_result['bias'] == "UP" else "red" if bias_result['bias'] == "DOWN" else "gray"
@@ -790,7 +841,7 @@ def display_comprehensive_intraday_forecasts():
                     with bias_col3:
                         st.metric("Bias Score", f"{bias_result['bias_score']:.4f}")
                     
-                    # SINGLE GRAPH - Next Day Full Forecast
+                    # SINGLE GRAPH - Forecast for next trading day
                     if next_day_forecast is not None and not next_day_forecast.empty:
                         fig = go.Figure()
                         
@@ -799,7 +850,7 @@ def display_comprehensive_intraday_forecasts():
                             x=next_day_forecast['time'],
                             y=next_day_forecast['predicted_price'],
                             mode='lines+markers',
-                            name='Next Day Price',
+                            name='Price Forecast',
                             line=dict(color='purple', width=3),
                             marker=dict(size=6)
                         ))
@@ -823,7 +874,7 @@ def display_comprehensive_intraday_forecasts():
                         ))
                         
                         fig.update_layout(
-                            title=f"Next Day Forecast - KSE-100 ({today})",
+                            title=f"Forecast - KSE-100 ({show_forecast_for.strftime('%Y-%m-%d')})",
                             xaxis_title="Trading Time (09:30 - 15:30)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -833,19 +884,19 @@ def display_comprehensive_intraday_forecasts():
                         st.plotly_chart(fig, use_container_width=True)
                         
                         # Forecast summary metrics
-                        st.subheader("📊 Next Day Forecast Summary")
+                        st.subheader("📊 Forecast Summary")
                         col1, col2, col3, col4 = st.columns(4)
                         
                         with col1:
-                            st.metric("Today's Close", f"PKR {current_price:,.2f}")
+                            st.metric("Current Price", f"PKR {current_price:,.2f}")
                         with col2:
-                            tomorrow_open = next_day_forecast['predicted_price'].iloc[0]
-                            opening_gap = ((tomorrow_open - current_price) / current_price) * 100
-                            st.metric("Tomorrow's Open", f"PKR {tomorrow_open:,.2f}", f"{opening_gap:+.2f}%")
+                            forecast_open = next_day_forecast['predicted_price'].iloc[0]
+                            opening_gap = ((forecast_open - current_price) / current_price) * 100
+                            st.metric("Expected Open", f"PKR {forecast_open:,.2f}", f"{opening_gap:+.2f}%")
                         with col3:
-                            tomorrow_high = next_day_forecast['predicted_price'].max()
-                            tomorrow_low = next_day_forecast['predicted_price'].min()
-                            st.metric("Expected Range", f"PKR {tomorrow_high - tomorrow_low:,.2f}")
+                            forecast_high = next_day_forecast['predicted_price'].max()
+                            forecast_low = next_day_forecast['predicted_price'].min()
+                            st.metric("Expected Range", f"PKR {forecast_high - forecast_low:,.2f}")
                         with col4:
                             avg_confidence = next_day_forecast['confidence'].mean()
                             st.metric("Avg Confidence", f"{avg_confidence:.0%}")
@@ -913,7 +964,10 @@ def display_comprehensive_intraday_forecasts():
                             st.metric("Avg Confidence", f"{avg_confidence:.0%}")
                 
                 # Note about forecast stability
-                st.info(f"📅 **Forecast Date:** {today} | Predictions remain constant until next trading day 9:30 AM")
+                if not trading_day:
+                    st.info(f"📅 **Forecast for:** {show_forecast_for.strftime('%A, %Y-%m-%d')} | Market is closed today ({today.strftime('%A')})")
+                else:
+                    st.info(f"📅 **Forecast Date:** {show_forecast_for} | Predictions remain constant until next trading day 9:30 AM")
     
     with tab2:
         st.subheader("🏢 Individual Company Forecasts")
