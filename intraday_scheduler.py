@@ -43,9 +43,9 @@ class IntradayScheduler:
         (9, 0): {"action": "charts_reset", "session": IntradaySession.CHARTS_RESET, "description": "Charts Reset + Activate Next Day"},
         (9, 45): {"action": "morning_session_generate", "session": IntradaySession.MORNING_SESSION, "description": "Morning Session Prediction"},
         (10, 30): {"action": "full_day_generate", "session": IntradaySession.FULL_DAY, "description": "Full Day Prediction"},
-        (11, 0): {"action": "afternoon_session_generate", "session": IntradaySession.AFTERNOON_SESSION, "description": "Afternoon Session Prediction"},
-        (15, 0): {"action": "next_day_generate_pending", "session": IntradaySession.NEXT_DAY_PENDING, "description": "Next Day Pending"},
-        (15, 30): {"action": "sessions_hide", "session": IntradaySession.SESSIONS_HIDDEN, "description": "Sessions Hide"}
+        (11, 30): {"action": "afternoon_session_generate", "session": IntradaySession.AFTERNOON_SESSION, "description": "Afternoon Session Prediction (12:00-15:30)"},
+        (15, 0): {"action": "next_day_generate_refresh", "session": IntradaySession.NEXT_DAY_PENDING, "description": "Next Day Refresh + Market Close Preview"},
+        (15, 30): {"action": "sessions_hide", "session": IntradaySession.SESSIONS_HIDDEN, "description": "Market Closed - Sessions Hidden"}
     }
     
     def __init__(self):
@@ -94,13 +94,13 @@ class IntradayScheduler:
         elif hour == 11 and minute < 30:
             return IntradaySession.FULL_DAY
         elif hour == 11 and minute >= 30:
-            return IntradaySession.AFTERNOON_SESSION
+            return IntradaySession.AFTERNOON_SESSION  # Shows after 11:30 AM
         elif hour < 15:
             return IntradaySession.TRADING_HOURS
         elif hour == 15 and minute < 30:
             return IntradaySession.NEXT_DAY_PENDING
         elif hour >= 15 and minute >= 30:
-            return IntradaySession.SESSIONS_HIDDEN
+            return IntradaySession.SESSIONS_HIDDEN  # Market Closed
         else:
             return IntradaySession.POST_MARKET
     
@@ -152,6 +152,7 @@ class IntradayScheduler:
             st.session_state.sessions_hidden = False
             st.session_state.last_reset_time = now
             st.session_state.intraday_predictions = {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None}
+            st.session_state.forecast_accuracy_history = []  # Reset accuracy tracking
             return {'status': 'success', 'message': 'Charts reset at 9:00 AM'}
         elif action == "morning_session_generate":
             if forecaster and current_price:
@@ -179,16 +180,25 @@ class IntradayScheduler:
                     afternoon_df = forecaster.generate_afternoon_session_forecast_daily(current_price, "KSE-100")
                     st.session_state.intraday_predictions['afternoon_session'] = afternoon_df
                     st.session_state.afternoon_session_generated = True
-                    return {'status': 'success', 'message': 'Afternoon session prediction generated at 11:00 AM', 'predictions_count': len(afternoon_df) if afternoon_df is not None else 0}
+                    return {'status': 'success', 'message': 'Afternoon session prediction generated at 11:30 AM (12:00-15:30)', 'predictions_count': len(afternoon_df) if afternoon_df is not None else 0}
                 except Exception as e:
                     return {'status': 'error', 'message': str(e)}
             return {'status': 'skipped', 'message': 'Forecaster not available'}
-        elif action == "next_day_generate_pending":
+        elif action == "next_day_generate_refresh":
+            # At 3:00 PM - refresh next day forecast with all previous data
             st.session_state.next_day_pending = True
-            return {'status': 'success', 'message': 'Next day pending at 3:00 PM'}
+            # Store today's session data for next day accuracy
+            st.session_state.today_session_data = {
+                'morning': st.session_state.intraday_predictions.get('morning_session'),
+                'afternoon': st.session_state.intraday_predictions.get('afternoon_session'),
+                'full_day': st.session_state.intraday_predictions.get('full_day'),
+                'timestamp': now
+            }
+            return {'status': 'success', 'message': 'Next day refresh at 3:00 PM - all session data stored'}
         elif action == "sessions_hide":
             st.session_state.sessions_hidden = True
-            return {'status': 'success', 'message': 'Sessions hidden at 3:30 PM'}
+            st.session_state.market_close_time = now
+            return {'status': 'success', 'message': 'Market Closed at 3:30 PM - All sessions hidden'}
         return {'status': 'unknown', 'message': f'Unknown action: {action}'}
     
     def get_session_status(self) -> dict:
@@ -199,8 +209,28 @@ class IntradayScheduler:
         current_time = now.strftime('%H:%M:%S')
         current_session = self.get_current_session()
         
+        # Check if it's a weekday (Mon-Fri)
+        is_weekday = now.weekday() < 5
+        
         # Safely access session state with fallback values
         predictions = st.session_state.get('intraday_predictions', {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
+        
+        # Determine market status
+        if not is_weekday:
+            market_status = "CLOSED"
+            market_message = f"Weekend - {now.strftime('%A')}"
+        elif current_session == IntradaySession.SESSIONS_HIDDEN:
+            market_status = "CLOSED"
+            market_message = "Market Closed (After 3:30 PM)"
+        elif current_session == IntradaySession.POST_MARKET:
+            market_status = "CLOSED"
+            market_message = "Post Market"
+        elif current_session == IntradaySession.PRE_MARKET:
+            market_status = "OPENING SOON"
+            market_message = "Opens at 9:30 AM"
+        else:
+            market_status = "OPEN"
+            market_message = "Trading Hours (9:30 AM - 3:30 PM)"
         
         return {
             'current_time': current_time,
@@ -208,6 +238,11 @@ class IntradayScheduler:
             'session_display': current_session.name.replace('_', ' ').title(),
             'timezone': 'Asia/Karachi (UTC+5)',
             'predictions': predictions,
+            'market_status': market_status,
+            'market_message': market_message,
+            'is_weekday': is_weekday,
+            'today': now.strftime('%Y-%m-%d'),
+            'today_name': now.strftime('%A'),
             'actions_status': {
                 'charts_reset': st.session_state.get('charts_reset_done', False),
                 'morning_session': st.session_state.get('morning_session_generated', False),
@@ -243,7 +278,22 @@ class IntradayScheduler:
         status = self.get_session_status()
         session_colors = {IntradaySession.PRE_MARKET: '#2196f3', IntradaySession.CHARTS_RESET: '#9c27b0', IntradaySession.MORNING_SESSION: '#4caf50', IntradaySession.FULL_DAY: '#ff9800', IntradaySession.AFTERNOON_SESSION: '#e91e63', IntradaySession.TRADING_HOURS: '#00bcd4', IntradaySession.NEXT_DAY_PENDING: '#f44336', IntradaySession.SESSIONS_HIDDEN: '#673ab7', IntradaySession.POST_MARKET: '#607d8b'}
         color = session_colors.get(self.get_current_session(), '#607d8b')
-        st.markdown(f"""<div style='background: linear-gradient(135deg, {color} 0%, #333 100%); padding: 20px; border-radius: 10px; margin: 10px 0;'><h2 style='color: white; margin: 0;'>Intraday Trading Scheduler</h2><p style='color: #e8eaf6; margin: 10px 0 0 0;'>Current Session: {status['session_display']}<br>Current Time: {status['current_time']} PKT</p></div>""", unsafe_allow_html=True)
+        
+        # Market status color
+        if status['market_status'] == 'OPEN':
+            status_color = 'green'
+        elif status['market_status'] == 'OPENING SOON':
+            status_color = 'orange'
+        else:
+            status_color = 'red'
+        
+        st.markdown(f"""<div style='background: linear-gradient(135deg, {color} 0%, #333 100%); padding: 20px; border-radius: 10px; margin: 10px 0;'>
+        <h2 style='color: white; margin: 0;'>Intraday Trading Scheduler</h2>
+        <p style='color: #e8eaf6; margin: 10px 0 0 0;'>Current Session: {status['session_display']}<br>
+        Current Time: {status['current_time']} PKT<br>
+        <span style='color:{status_color}; font-weight:bold;'>Market Status: {status['market_status']}</span> - {status['market_message']}<br>
+        Today: {status['today_name']}, {status['today']}</p>
+        </div>""", unsafe_allow_html=True)
 
 
 _intraday_scheduler_instance = None
@@ -265,6 +315,47 @@ def display_intraday_session_status():
 def get_intraday_session_info() -> dict:
     scheduler = get_intraday_scheduler()
     return scheduler.get_session_status()
+
+def record_forecast_accuracy(predicted_price, actual_price, session_type, time_slot):
+    """Record forecast accuracy for tracking"""
+    if 'forecast_accuracy_history' not in st.session_state:
+        st.session_state.forecast_accuracy_history = []
+    
+    error = abs(predicted_price - actual_price)
+    error_pct = (error / actual_price) * 100 if actual_price > 0 else 0
+    
+    record = {
+        'timestamp': datetime.now(),
+        'session_type': session_type,
+        'time_slot': time_slot,
+        'predicted': predicted_price,
+        'actual': actual_price,
+        'error': error,
+        'error_pct': error_pct
+    }
+    st.session_state.forecast_accuracy_history.append(record)
+
+def get_accuracy_stats(days=7):
+    """Get accuracy statistics for the past N days"""
+    if 'forecast_accuracy_history' not in st.session_state or not st.session_state.forecast_accuracy_history:
+        return None
+    
+    cutoff = datetime.now() - timedelta(days=days)
+    recent_records = [r for r in st.session_state.forecast_accuracy_history if r['timestamp'] > cutoff]
+    
+    if not recent_records:
+        return None
+    
+    total = len(recent_records)
+    errors = [r['error_pct'] for r in recent_records]
+    
+    return {
+        'total_predictions': total,
+        'avg_error_pct': sum(errors) / total,
+        'max_error_pct': max(errors),
+        'min_error_pct': min(errors),
+        'records': recent_records
+    }
 
 def show_intraday_predictions():
     st.header("Intraday Trading Session Predictions")
@@ -318,12 +409,12 @@ def show_intraday_predictions():
                 scheduler._execute_action("full_day_generate", None, 10000)
                 st.rerun()
         with col2:
-            if st.button("Afternoon (11:00 AM)"):
+            if st.button("Afternoon Session (11:30 AM)"):
                 scheduler._execute_action("afternoon_session_generate", None, 10000)
                 st.rerun()
-            if st.button("Next Day Pending (3:00 PM)"):
-                scheduler._execute_action("next_day_generate_pending")
+            if st.button("Next Day Refresh (3:00 PM)"):
+                scheduler._execute_action("next_day_generate_refresh", None, 10000)
                 st.rerun()
-            if st.button("Hide Sessions (3:30 PM)"):
+            if st.button("Market Close (3:30 PM)"):
                 scheduler._execute_action("sessions_hide")
                 st.rerun()
