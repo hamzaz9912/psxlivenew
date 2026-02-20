@@ -122,6 +122,44 @@ def main():
             st.session_state.last_update = None
             st.rerun()
 
+        # Auto-refresh timer display in sidebar
+        st.markdown("---")
+        st.markdown("**⏱️ 5-Minute Auto-Refresh Timer**")
+        
+        # Check if we're in the 15-minute live predictions section
+        # This will be shown based on session state
+        if 'auto_refresh_start_time' in st.session_state and st.session_state.auto_refresh_start_time is not None:
+            start_time = st.session_state.auto_refresh_start_time
+            
+            # Ensure timezone awareness
+            pkt = pytz.timezone('Asia/Karachi')
+            now_pkt = datetime.now(pkt)
+            
+            if start_time.tzinfo is None:
+                start_time = pkt.localize(start_time)
+            
+            time_since_start = (now_pkt - start_time).total_seconds()
+            time_left = max(0, 300 - time_since_start)
+            minutes_left = int(time_left // 60)
+            seconds_left = int(time_left % 60)
+            
+            # Progress bar
+            progress_val = min(1.0, time_since_start / 300)
+            st.progress(progress_val)
+            
+            # Timer display
+            st.markdown(f"""
+            <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; text-align: center;'>
+                <h3 style='margin: 0; color: #1565c0;'>⏱️ {minutes_left:02d}:{seconds_left:02d}</h3>
+                <small style='color: #1976d2;'>Next refresh</small>
+            </div>
+            <div style='margin-top: 5px; font-size: 12px; color: #666;'>
+                Started: {start_time.strftime('%H:%M:%S')}
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.info("Enable auto-refresh in the 15-Minute Live Predictions section")
+
         # Show last update time with better styling
         if st.session_state.last_update:
             st.markdown(f"""
@@ -2171,10 +2209,24 @@ def display_five_minute_live_predictions():
     from utils import format_market_status
     from datetime import datetime, timedelta
     import pytz
+    
+    # Initialize current_time_pkt at the beginning for use throughout the function
+    pkt = pytz.timezone('Asia/Karachi')
+    current_time_pkt = datetime.now(pkt)
 
     # Auto-refresh logic
     if 'last_refresh_15min' not in st.session_state:
-        st.session_state.last_refresh_15min = datetime.now()
+        pkt = pytz.timezone('Asia/Karachi')
+        st.session_state.last_refresh_15min = datetime.now(pkt)
+    
+    # Initialize 15-minute session refresh timer
+    if 'last_15min_session_refresh' not in st.session_state:
+        pkt = pytz.timezone('Asia/Karachi')
+        st.session_state.last_15min_session_refresh = datetime.now(pkt)
+    
+    # Initialize auto-refresh start time tracking
+    if 'auto_refresh_start_time' not in st.session_state:
+        st.session_state.auto_refresh_start_time = None
 
     st.title("⚡ 15-Minute Live Predictions - Complete KSE-100 Brands")
     st.markdown("**Real-time market data scraping with continuous 15-minute predictions for all 100 KSE-100 companies**")
@@ -2186,11 +2238,30 @@ def display_five_minute_live_predictions():
     # Auto-refresh checkbox
     auto_refresh_enabled = st.checkbox("🔄 Enable Auto-Refresh (every 5 minutes)", key="auto_refresh_checkbox")
 
+    # Track auto-refresh start time
+    if auto_refresh_enabled:
+        # Record start time when auto-refresh is first enabled
+        if st.session_state.auto_refresh_start_time is None:
+            pkt = pytz.timezone('Asia/Karachi')
+            st.session_state.auto_refresh_start_time = datetime.now(pkt)
+            st.session_state.last_refresh_15min = datetime.now(pkt)
+    else:
+        # Reset start time when auto-refresh is disabled
+        st.session_state.auto_refresh_start_time = None
+
     # Check for auto-refresh
     if auto_refresh_enabled:
-        time_since_last_refresh = (datetime.now() - st.session_state.last_refresh_15min).total_seconds()
+        pkt = pytz.timezone('Asia/Karachi')
+        now_pkt = datetime.now(pkt)
+        
+        # Ensure last_refresh_15min is timezone-aware
+        last_refresh = st.session_state.last_refresh_15min
+        if last_refresh.tzinfo is None:
+            last_refresh = pkt.localize(last_refresh)
+        
+        time_since_last_refresh = (now_pkt - last_refresh).total_seconds()
         if time_since_last_refresh > 300:  # 5 minutes
-            st.session_state.last_refresh_15min = datetime.now()
+            st.session_state.last_refresh_15min = now_pkt
             st.rerun()
 
     # Status indicators
@@ -2202,19 +2273,27 @@ def display_five_minute_live_predictions():
             st.info(f"🔴 **{market_status['status']}**")
     
     with col2:
-        pkt = pytz.timezone('Asia/Karachi')
-        current_time_pkt = datetime.now(pkt)
+        # Use the already defined current_time_pkt
         st.info(f"📅 **PKT Time:** {current_time_pkt.strftime('%H:%M:%S')}")
     
     with col3:
         if auto_refresh_enabled:
-            time_since_last = (datetime.now() - st.session_state.last_refresh_15min).total_seconds()
+            pkt = pytz.timezone('Asia/Karachi')
+            now_pkt = datetime.now(pkt)
+            
+            # Ensure last_refresh_15min is timezone-aware
+            last_refresh = st.session_state.last_refresh_15min
+            if last_refresh.tzinfo is None:
+                last_refresh = pkt.localize(last_refresh)
+            
+            time_since_last = (now_pkt - last_refresh).total_seconds()
             minutes_left = max(0, (300 - time_since_last) / 60)
             st.success(f"🔄 **Auto-refresh enabled** ({minutes_left:.1f} min left)")
         else:
             # Manual refresh button
             if st.button("🔄 Refresh Market Data", type="primary", key="manual_refresh_15min"):
-                st.session_state.last_refresh_15min = datetime.now()
+                pkt = pytz.timezone('Asia/Karachi')
+                st.session_state.last_refresh_15min = datetime.now(pkt)
                 st.rerun()
             st.info("📊 **Manual Refresh Mode**")
     
@@ -2716,6 +2795,183 @@ def display_five_minute_live_predictions():
     
     st.markdown("---")
     
+    # ==========================================
+    # 15-MINUTE LIVE PREDICTION SESSION GRAPH
+    # ==========================================
+    st.subheader("⏱️ 15-Minute Live Prediction Session")
+    
+    # Auto-refresh status display with start time
+    col_15min_1, col_15min_2, col_15min_3 = st.columns([2, 2, 1])
+    
+    with col_15min_1:
+        if auto_refresh_enabled:
+            # Show start time
+            start_time = st.session_state.auto_refresh_start_time
+            if start_time:
+                st.success(f"▶️ Auto-Refresh Started: {start_time.strftime('%H:%M:%S')}")
+            else:
+                st.success("▶️ Auto-Refresh Active")
+        else:
+            st.info("📌 Auto-Refresh: OFF")
+    
+    with col_15min_2:
+        if auto_refresh_enabled:
+            # Show countdown timer - use timezone-aware datetime
+            pkt = pytz.timezone('Asia/Karachi')
+            now_pkt = datetime.now(pkt)
+            start_time_pkt = st.session_state.auto_refresh_start_time
+            
+            # Ensure start_time is timezone-aware
+            if start_time_pkt:
+                if start_time_pkt.tzinfo is None:
+                    start_time_pkt = pkt.localize(start_time_pkt)
+                time_since_start = (now_pkt - start_time_pkt).total_seconds()
+            else:
+                time_since_start = 0
+            
+            time_left = max(0, 300 - time_since_start)
+            minutes_left = int(time_left // 60)
+            seconds_left = int(time_left % 60)
+            
+            # Calculate progress percentage
+            progress_pct = min(100, (time_since_start / 300) * 100)
+            
+            st.progress(progress_pct / 100)
+            st.markdown(f"**⏰ Next refresh in: {minutes_left:02d}:{seconds_left:02d}**")
+        else:
+            st.markdown("**⏰ Refresh every 5 minutes when enabled**")
+    
+    with col_15min_3:
+        if not auto_refresh_enabled:
+            if st.button("🔄 Refresh", key="refresh_15min_session_btn"):
+                pkt = pytz.timezone('Asia/Karachi')
+                st.session_state.last_15min_session_refresh = datetime.now(pkt)
+                st.rerun()
+        else:
+            # Show refresh now button
+            if st.button("🔄 Refresh Now", key="refresh_now_15min_btn"):
+                pkt = pytz.timezone('Asia/Karachi')
+                st.session_state.last_refresh_15min = datetime.now(pkt)
+                st.session_state.auto_refresh_start_time = datetime.now(pkt)  # Reset timer
+                st.rerun()
+    
+    # Generate and display 15-minute prediction session graph
+    # First ensure we have the required variables available
+    if 'current_price' not in locals():
+        if live_price:
+            current_price = live_price.get('price', 0)
+        else:
+            current_price = 0
+    if 'price_change_pct' not in locals():
+        if live_price:
+            price_change_pct = live_price.get('change_pct', 0)
+        else:
+            price_change_pct = 0
+    
+    if live_price and current_price > 0:
+        try:
+            # Create time points for next 15 minutes (at 5-minute intervals)
+            prediction_times = []
+            prediction_prices = []
+            prediction_intervals = ['Now', '+5 min', '+10 min', '+15 min']
+            
+            start_time = current_time_pkt
+            base_price = current_price
+            
+            for i, interval in enumerate(prediction_intervals):
+                # Calculate time point
+                minutes_to_add = timedelta(minutes=5 * i)
+                time_point = start_time + minutes_to_add
+                prediction_times.append(time_point)
+                
+                # Generate price prediction with decreasing volatility
+                if i == 0:
+                    # Current price
+                    prediction_prices.append(base_price)
+                else:
+                    # Predicted price with volatility
+                    volatility = 0.012 - (i * 0.002)  # Decreasing volatility
+                    price_change = random.uniform(-volatility, volatility)
+                    # Add trend influence
+                    trend = price_change_pct / 100 if price_change_pct != 0 else 0
+                    predicted_price = base_price * (1 + (price_change * 0.5 + trend * 0.1))
+                    prediction_prices.append(predicted_price)
+                    base_price = predicted_price
+            
+            # Create the 15-minute prediction session graph
+            fig_15min = go.Figure()
+            
+            # Add current price marker
+            fig_15min.add_trace(go.Scatter(
+                x=[prediction_times[0]],
+                y=[prediction_prices[0]],
+                mode='markers',
+                name='Current Price',
+                marker=dict(size=14, color='red', symbol='star')
+            ))
+            
+            # Add prediction line
+            fig_15min.add_trace(go.Scatter(
+                x=prediction_times,
+                y=prediction_prices,
+                mode='lines+markers',
+                name='15-Min Predictions',
+                line=dict(color='#00CC96', width=3),
+                marker=dict(size=10, symbol='diamond')
+            ))
+            
+            # Add annotations for each prediction point
+            for i, (time, price) in enumerate(zip(prediction_times, prediction_prices)):
+                if i > 0:  # Skip current price
+                    change = price - current_price
+                    change_pct = (change / current_price) * 100
+                    fig_15min.add_annotation(
+                        x=time,
+                        y=price,
+                        text=f"{price:.2f}<br>({change_pct:+.2f}%)",
+                        showarrow=True,
+                        arrowhead=2,
+                        arrowsize=1,
+                        arrowwidth=1,
+                        ax=0,
+                        ay=-30
+                    )
+            
+            fig_15min.update_layout(
+                title=f"{selected_symbol} - 15-Minute Live Prediction Session",
+                xaxis_title="Time (PKT)",
+                yaxis_title="Price (PKR)",
+                height=400,
+                showlegend=True,
+                hovermode='x unified',
+                xaxis=dict(
+                    tickformat='%H:%M',
+                    dtick=5 * 60 * 1000  # 5 minutes in milliseconds
+                )
+            )
+            
+            st.plotly_chart(fig_15min, use_container_width=True)
+            
+            # Display prediction metrics for 15-minute session
+            st.markdown("**📊 15-Minute Session Prediction Summary:**")
+            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+            
+            with metric_col1:
+                st.metric("Current Price", f"{current_price:.2f} PKR")
+            with metric_col2:
+                st.metric("+5 Min Prediction", f"{prediction_prices[1]:.2f} PKR", f"{prediction_prices[1] - current_price:+.2f}")
+            with metric_col3:
+                st.metric("+10 Min Prediction", f"{prediction_prices[2]:.2f} PKR", f"{prediction_prices[2] - current_price:+.2f}")
+            with metric_col4:
+                st.metric("+15 Min Prediction", f"{prediction_prices[3]:.2f} PKR", f"{prediction_prices[3] - current_price:+.2f}")
+                
+        except Exception as e:
+            st.error(f"Error generating 15-minute prediction graph: {e}")
+    else:
+        st.info("Select a symbol and fetch live data to see the 15-minute prediction session graph.")
+    
+    st.markdown("---")
+    
     # Trading Sessions Analysis
     st.subheader("🕐 Intraday Trading Sessions")
     
@@ -2961,8 +3217,22 @@ def display_five_minute_live_predictions():
     with session_tab3:
         st.markdown("**Full Trading Day Analysis**")
         
+        # Ensure current_price is defined
+        if 'current_price' not in locals() or current_price is None:
+            if live_price and 'price' in live_price:
+                current_price = live_price['price']
+            else:
+                current_price = 0
+        
+        # Ensure price_change_pct is defined
+        if 'price_change_pct' not in locals() or price_change_pct is None:
+            if live_price and 'change_pct' in live_price:
+                price_change_pct = live_price.get('change_pct', 0)
+            else:
+                price_change_pct = 0
+        
         # Full day metrics
-        if live_price:
+        if live_price and current_price > 0:
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:

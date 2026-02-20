@@ -20,6 +20,18 @@ class ComprehensiveBrandPredictor:
         self.forecaster = StockForecaster()
         self.companies_mapping = self.data_fetcher.get_kse100_companies()
         
+        # Try to get enhanced fetcher for live PSX data
+        try:
+            from enhanced_psx_fetcher import EnhancedPSXFetcher
+            self.enhanced_fetcher = EnhancedPSXFetcher()
+            self.use_live_data = True
+        except ImportError:
+            self.enhanced_fetcher = None
+            self.use_live_data = False
+        
+        # Get base prices from data fetcher
+        self.base_prices = self.data_fetcher.base_prices
+        
     def generate_sample_historical_data(self, current_price, symbol, days=30):
         """Generate realistic historical data for prediction"""
         
@@ -166,6 +178,21 @@ class ComprehensiveBrandPredictor:
         # Get all companies data
         # Load all companies data with realistic simulation
         all_companies_data = self.data_fetcher.fetch_all_companies_live_data()
+        
+        # If we have enhanced fetcher, try to get more live data
+        if self.use_live_data and self.enhanced_fetcher:
+            for symbol in self.base_prices.keys():
+                try:
+                    live_price = self.enhanced_fetcher.get_live_price(symbol)
+                    if live_price and live_price.get('price'):
+                        # Update with live data
+                        all_companies_data[symbol] = {
+                            'price': float(live_price['price']),
+                            'timestamp': live_price.get('timestamp', datetime.now()),
+                            'source': live_price.get('source', 'psx_official')
+                        }
+                except Exception:
+                    continue
         
         if not all_companies_data:
             st.error("Unable to fetch company data. Please try again later.")
@@ -314,11 +341,16 @@ class ComprehensiveBrandPredictor:
                         if company_name:
                             data = all_companies_data[symbol]
                             if data:
+                                source = data.get('source', 'unknown')
+                                # Check if it's live data from PSX official
+                                is_live = source in ['psx_official', 'psx_official_direct_match', 'psx_official_name_match', 'psx_market_summary']
+                                status = '🟢 Live' if is_live else '🟡 Estimated'
                                 sector_companies.append({
                                     'Company': company_name,
                                     'Symbol': symbol,
                                     'Price': f"₨{data['price']:,.2f}",
-                                    'Status': '🟢 Live' if data.get('source') != 'estimated_range_fallback' else '🟡 Estimated'
+                                    'Status': status,
+                                    'Source': source
                                 })
                 
                 if sector_companies:
@@ -329,8 +361,8 @@ class ComprehensiveBrandPredictor:
         # Add summary statistics
         st.subheader("📊 Summary Statistics")
         
-        live_count = sum(1 for data in all_companies_data.values() if data and data.get('source') != 'estimated_range_fallback')
-        estimated_count = sum(1 for data in all_companies_data.values() if data and data.get('source') == 'estimated_range_fallback')
+        live_count = sum(1 for data in all_companies_data.values() if data and data.get('source') != 'estimated_fallback')
+        estimated_count = sum(1 for data in all_companies_data.values() if data and data.get('source') == 'estimated_fallback')
         total_companies = len(all_companies_data)
         
         col1, col2, col3 = st.columns(3)
@@ -346,7 +378,7 @@ class ComprehensiveBrandPredictor:
         **Data Information:**
         - 5-minute prediction intervals for all companies
         - Historical data analysis for accurate forecasting
-        - Live data from Pakistani financial sources
+        - Live data from PSX official sources
         - Estimated data when live sources are unavailable
         - Last refreshed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         """)
