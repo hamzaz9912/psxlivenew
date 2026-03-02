@@ -117,8 +117,20 @@ class StockForecaster:
             future_x = np.arange(len(historical_data), len(historical_data) + days_ahead)
             future_y = slope * future_x + intercept
             
-            # Create forecast dataframe
-            last_date = pd.to_datetime(historical_data['date'].max())
+            # Safely get the last date from the data
+            if 'date' in historical_data.columns:
+                last_date = pd.to_datetime(historical_data['date'].max(), errors='coerce')
+            elif hasattr(historical_data.index, 'max'):
+                # Try to get from index
+                last_date = pd.to_datetime(historical_data.index.max(), errors='coerce')
+            else:
+                last_date = pd.Timestamp.now()
+            
+            # Handle NaT (Not a Time) values
+            if pd.isna(last_date):
+                last_date = pd.Timestamp.now()
+            
+            # Use Timedelta for proper datetime addition
             start_date = last_date + pd.Timedelta(days=1)
             future_dates = pd.date_range(
                 start=start_date,

@@ -328,14 +328,28 @@ class AdvancedForecaster:
                 return None
             
             # Convert date column
-            df['date'] = pd.to_datetime(df['date'])
+            df['date'] = pd.to_datetime(df['date'], errors='coerce')
+            
+            # Handle any NaT values by dropping them
+            df = df.dropna(subset=['date'])
+            
+            # Ensure date column is proper datetime type for timedelta operations
+            if df['date'].dtype != 'datetime64[ns]':
+                df['date'] = pd.to_datetime(df['date'])
             
             # Get current live price for the selected brand
             live_data = self.get_comprehensive_live_price(selected_brand)
             current_live_price = live_data['price']
             
+            # Safely get the max date and convert to datetime
+            max_date = df['date'].max()
+            if pd.isna(max_date):
+                max_date = pd.Timestamp.now()
+            elif not isinstance(max_date, (pd.Timestamp, datetime)):
+                max_date = pd.to_datetime(max_date)
+            
             # Add current live price as the latest data point
-            latest_date = df['date'].max() + timedelta(days=1)
+            latest_date = max_date + timedelta(days=1)
             new_row = {
                 'date': latest_date,
                 'close': current_live_price,

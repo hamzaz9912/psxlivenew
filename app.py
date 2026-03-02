@@ -4739,20 +4739,62 @@ def generate_forecast_for_company(historical_data, symbol, days):
     try:
         from datetime import datetime, timedelta
 
-        # Prepare data for forecasting
-        df = historical_data[['close']].reset_index()
-        df.columns = ['ds', 'y']
+        # Prepare data for forecasting - handle both column and index-based dates
+        if 'close' in historical_data.columns:
+            df = historical_data[['close']].copy()
+        else:
+            return None
+        
+        # Check if index is datetime
+        if isinstance(historical_data.index, pd.DatetimeIndex):
+            df['ds'] = historical_data.index
+        elif 'date' in historical_data.columns:
+            df['ds'] = historical_data['date']
+        elif 'ds' in historical_data.columns:
+            df['ds'] = historical_data['ds']
+        else:
+            # Use default datetime index
+            df['ds'] = pd.date_range(end=pd.Timestamp.now(), periods=len(df), freq='D')
+        
+        df = df.reset_index(drop=True)
+        df.columns = ['y', 'ds']
+        if len(df.columns) == 1:
+            df['ds'] = pd.date_range(end=pd.Timestamp.now(), periods=len(df), freq='D')
+            df.columns = ['y', 'ds']
 
         # Ensure ds column is datetime
-        df['ds'] = pd.to_datetime(df['ds'])
+        df['ds'] = pd.to_datetime(df['ds'], errors='coerce')
+        
+        # Handle NaT values
+        df = df.dropna(subset=['ds'])
+        
+        if len(df) < 2:
+            return None
 
         # Simple trend calculation
-        recent_trend = (df['y'].iloc[-1] - df['y'].iloc[-7]) / 7  # Weekly trend
+        recent_trend = (df['y'].iloc[-1] - df['y'].iloc[min(-7, -len(df))]) / 7  # Weekly trend
 
         # Generate forecast dates - ensure proper datetime handling
         last_date = df['ds'].iloc[-1]
-        if isinstance(last_date, pd.Timestamp):
+        
+        # Handle all possible date types
+        if isinstance(last_date, (int, float, np.integer, np.floating)):
+            # If it's a numeric timestamp (Unix timestamp)
+            last_date = datetime.fromtimestamp(last_date)
+        elif isinstance(last_date, pd.Timestamp):
             last_date = last_date.to_pydatetime()
+        elif hasattr(last_date, 'to_pydatetime'):
+            # Handle other pandas datetime types
+            last_date = last_date.to_pydatetime()
+        elif isinstance(last_date, datetime):
+            pass  # Already a datetime object
+        else:
+            # Try to convert from string or other types
+            try:
+                last_date = pd.to_datetime(last_date).to_pydatetime()
+            except:
+                # Fallback to current date
+                last_date = datetime.now()
 
         forecast_dates = []
         for i in range(days):

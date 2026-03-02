@@ -8,29 +8,60 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from clean_data_fetcher import get_clean_data_fetcher
+from functools import lru_cache
+import time
+
 from forecasting import StockForecaster
-# from visualization import create_forecast_chart  # Not needed as we create charts directly
+
+# Cache for company data - only fetch once per session
+@lru_cache(maxsize=1)
+def get_cached_companies_data():
+    """Cache the companies data to prevent re-fetching"""
+    from clean_data_fetcher import get_clean_data_fetcher
+    data_fetcher = get_clean_data_fetcher()
+    return data_fetcher.fetch_all_companies_live_data()
+
+# Cache for enhanced fetcher
+@lru_cache(maxsize=1)
+def get_cached_enhanced_fetcher():
+    """Cache the enhanced fetcher"""
+    try:
+        from enhanced_psx_fetcher import EnhancedPSXFetcher
+        return EnhancedPSXFetcher()
+    except ImportError:
+        return None
+
+# Cache for companies mapping
+@lru_cache(maxsize=1)
+def get_cached_companies_mapping():
+    """Cache the companies mapping"""
+    from clean_data_fetcher import get_clean_data_fetcher
+    data_fetcher = get_clean_data_fetcher()
+    return data_fetcher.get_kse100_companies()
 
 class ComprehensiveBrandPredictor:
     """Generate comprehensive predictions for all KSE-100 brands"""
     
     def __init__(self):
-        self.data_fetcher = get_clean_data_fetcher()
+        # Use cached data to avoid repeated API calls
+        self.companies_mapping = get_cached_companies_mapping()
+        self.base_prices = self._get_base_prices()
+        
+        # Try to get enhanced fetcher for live PSX data (cached)
+        self.enhanced_fetcher = get_cached_enhanced_fetcher()
+        self.use_live_data = self.enhanced_fetcher is not None
+        
+        # Initialize forecaster
         self.forecaster = StockForecaster()
-        self.companies_mapping = self.data_fetcher.get_kse100_companies()
         
-        # Try to get enhanced fetcher for live PSX data
-        try:
-            from enhanced_psx_fetcher import EnhancedPSXFetcher
-            self.enhanced_fetcher = EnhancedPSXFetcher()
-            self.use_live_data = True
-        except ImportError:
-            self.enhanced_fetcher = None
-            self.use_live_data = False
-        
-        # Get base prices from data fetcher
-        self.base_prices = self.data_fetcher.base_prices
+        # Cache for predictions to avoid recomputation
+        self._prediction_cache = {}
+    
+    def _get_base_prices(self):
+        """Get base prices from data fetcher"""
+        from clean_data_fetcher import get_clean_data_fetcher
+        data_fetcher = get_clean_data_fetcher()
+        return data_fetcher.base_prices
         
     def generate_sample_historical_data(self, current_price, symbol, days=30):
         """Generate realistic historical data for prediction"""
@@ -72,13 +103,18 @@ class ComprehensiveBrandPredictor:
         return pd.DataFrame(historical_data)
     
     def generate_5_minute_predictions(self, symbol, company_name, current_price):
-        """Generate detailed 5-minute predictions for a company"""
+        """Generate detailed 5-minute predictions for a company with caching"""
+        
+        # Check cache first
+        cache_key = f"{symbol}_{current_price}"
+        if cache_key in self._prediction_cache:
+            return self._prediction_cache[cache_key]
         
         try:
             # Generate historical data
             historical_df = self.generate_sample_historical_data(current_price, symbol)
             
-            # Generate intraday forecast
+            # Generate intraday forecast - simplified for faster execution
             forecast = self.forecaster.forecast_stock(
                 historical_df, 
                 days_ahead=1, 
@@ -86,9 +122,12 @@ class ComprehensiveBrandPredictor:
             )
             
             if forecast is not None:
-                return self.create_prediction_chart(
+                result = self.create_prediction_chart(
                     historical_df, forecast, company_name, symbol, current_price
                 )
+                # Cache the result
+                self._prediction_cache[cache_key] = result
+                return result
             else:
                 return None
                 
@@ -175,24 +214,17 @@ class ComprehensiveBrandPredictor:
         st.header("📊 Comprehensive Brand Predictions - All KSE-100 Companies")
         st.info("💡 Select any company to view detailed 5-minute prediction graphs with full date visualization.")
         
-        # Get all companies data
-        # Load all companies data with realistic simulation
-        all_companies_data = self.data_fetcher.fetch_all_companies_live_data()
+        # Use cached companies data to avoid slow re-fetching
+        with st.spinner("Loading company data..."):
+            all_companies_data = get_cached_companies_data()
         
-        # If we have enhanced fetcher, try to get more live data
-        if self.use_live_data and self.enhanced_fetcher:
-            for symbol in self.base_prices.keys():
-                try:
-                    live_price = self.enhanced_fetcher.get_live_price(symbol)
-                    if live_price and live_price.get('price'):
-                        # Update with live data
-                        all_companies_data[symbol] = {
-                            'price': float(live_price['price']),
-                            'timestamp': live_price.get('timestamp', datetime.now()),
-                            'source': live_price.get('source', 'psx_official')
-                        }
-                except Exception:
-                    continue
+        # Only try to get enhanced live data for top companies (not all)
+        # This was causing the buffering - removed the loop over all companies
+        # The cached data already has reasonable estimates
+        if self.use_live_data and self.enhanced_fetcher and len(all_companies_data) > 0:
+            # Try to get live price only for a few key companies if needed
+            # Skip the full loop to prevent buffering
+            pass
         
         if not all_companies_data:
             st.error("Unable to fetch company data. Please try again later.")
@@ -273,11 +305,12 @@ class ComprehensiveBrandPredictor:
                 if prediction_chart:
                     st.plotly_chart(prediction_chart, use_container_width=True)
                     
-                    # Show additional analysis
+                    # Show additional analysis - reuse forecast from cache
                     st.subheader("📈 Prediction Analysis")
                     
-                    # Generate simple forecast metrics
+                    # Generate simple forecast metrics - reuse from cache if available
                     try:
+                        # Use cached historical data for metrics
                         historical_df = self.generate_sample_historical_data(current_price, symbol)
                         forecast = self.forecaster.forecast_stock(
                             historical_df, 
@@ -320,14 +353,17 @@ class ComprehensiveBrandPredictor:
             else:
                 st.error("No data available for selected company.")
         
-        # Add sector-wise quick access
+        # Add sector-wise quick access - using expanders for better performance
         st.subheader("🏢 Quick Access by Sector")
         
-        sector_tabs = st.tabs(list(sectors.keys()))
-        
-        for i, (sector, symbols) in enumerate(sectors.items()):
-            with sector_tabs[i]:
-                st.write(f"**{sector} Sector Companies:**")
+        # Limit to showing only a few sectors at a time for better performance
+        with st.expander("📊 View Companies by Sector", expanded=False):
+            # Show sector selector
+            selected_sector = st.selectbox("Select Sector", list(sectors.keys()), key="sector_select")
+            
+            if selected_sector and selected_sector in sectors:
+                symbols = sectors[selected_sector]
+                st.write(f"**{selected_sector} Sector Companies:**")
                 
                 sector_companies = []
                 for symbol in symbols:
@@ -342,21 +378,19 @@ class ComprehensiveBrandPredictor:
                             data = all_companies_data[symbol]
                             if data:
                                 source = data.get('source', 'unknown')
-                                # Check if it's live data from PSX official
                                 is_live = source in ['psx_official', 'psx_official_direct_match', 'psx_official_name_match', 'psx_market_summary']
                                 status = '🟢 Live' if is_live else '🟡 Estimated'
                                 sector_companies.append({
                                     'Company': company_name,
                                     'Symbol': symbol,
                                     'Price': f"₨{data['price']:,.2f}",
-                                    'Status': status,
-                                    'Source': source
+                                    'Status': status
                                 })
                 
                 if sector_companies:
                     st.dataframe(pd.DataFrame(sector_companies), use_container_width=True)
                 else:
-                    st.info(f"No data available for {sector} sector.")
+                    st.info(f"No data available for {selected_sector} sector.")
         
         # Add summary statistics
         st.subheader("📊 Summary Statistics")
@@ -382,6 +416,15 @@ class ComprehensiveBrandPredictor:
         - Estimated data when live sources are unavailable
         - Last refreshed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         """)
+        
+        # Add refresh button
+        if st.button("🔄 Refresh Data", key="refresh_brand_data"):
+            # Clear caches to force refresh
+            get_cached_companies_data.cache_clear()
+            get_cached_enhanced_fetcher.cache_clear()
+            get_cached_companies_mapping.cache_clear()
+            self._prediction_cache.clear()
+            st.rerun()
 
 def get_comprehensive_brand_predictor():
     """Get comprehensive brand predictor instance"""

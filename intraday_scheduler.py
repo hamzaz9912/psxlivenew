@@ -27,6 +27,7 @@ class IntradaySession(Enum):
     """Intraday trading session states"""
     PRE_MARKET = "pre_market"
     CHARTS_RESET = "charts_reset"
+    MORNING_936_SESSION = "morning_936_session"  # New 9:36 AM session
     MORNING_SESSION = "morning_session"
     FULL_DAY = "full_day"
     AFTERNOON_SESSION = "afternoon_session"
@@ -41,6 +42,7 @@ class IntradayScheduler:
     
     TRADING_SCHEDULE = {
         (9, 0): {"action": "charts_reset", "session": IntradaySession.CHARTS_RESET, "description": "Charts Reset + Activate Next Day"},
+        (9, 36): {"action": "morning_936_session_generate", "session": IntradaySession.MORNING_936_SESSION, "description": "9:36 AM Session Prediction (9:36-15:00)"},
         (9, 45): {"action": "morning_session_generate", "session": IntradaySession.MORNING_SESSION, "description": "Morning Session Prediction"},
         (10, 30): {"action": "full_day_generate", "session": IntradaySession.FULL_DAY, "description": "Full Day Prediction"},
         (11, 30): {"action": "afternoon_session_generate", "session": IntradaySession.AFTERNOON_SESSION, "description": "Afternoon Session Prediction (12:00-15:30)"},
@@ -59,12 +61,13 @@ class IntradayScheduler:
             st.session_state.intraday_scheduler_initialized = True
             st.session_state.current_intraday_session = IntradaySession.PRE_MARKET.value
             st.session_state.charts_reset_done = False
+            st.session_state.morning_936_session_generated = False  # New 9:36 session
             st.session_state.morning_session_generated = False
             st.session_state.full_day_generated = False
             st.session_state.afternoon_session_generated = False
             st.session_state.next_day_pending = False
             st.session_state.sessions_hidden = False
-            st.session_state.intraday_predictions = {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None}
+            st.session_state.intraday_predictions = {'morning_936_session': None, 'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None}
             st.session_state.last_reset_time = None
             st.session_state.session_start_time = None
             st.session_state.market_open = False
@@ -145,15 +148,27 @@ class IntradayScheduler:
         now = self.get_pakistan_time()
         if action == "charts_reset":
             st.session_state.charts_reset_done = True
+            st.session_state.morning_936_session_generated = False  # Reset 9:36 session
             st.session_state.morning_session_generated = False
             st.session_state.full_day_generated = False
             st.session_state.afternoon_session_generated = False
             st.session_state.next_day_pending = False
             st.session_state.sessions_hidden = False
             st.session_state.last_reset_time = now
-            st.session_state.intraday_predictions = {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None}
+            st.session_state.intraday_predictions = {'morning_936_session': None, 'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None}
             st.session_state.forecast_accuracy_history = []  # Reset accuracy tracking
             return {'status': 'success', 'message': 'Charts reset at 9:00 AM'}
+        elif action == "morning_936_session_generate":
+            # 9:36 AM session - predict from 9:36 to 3:00 PM
+            if forecaster and current_price:
+                try:
+                    morning_936_df = forecaster.generate_morning_936_session_forecast_daily(current_price, "KSE-100")
+                    st.session_state.intraday_predictions['morning_936_session'] = morning_936_df
+                    st.session_state.morning_936_session_generated = True
+                    return {'status': 'success', 'message': '9:36 AM Session prediction generated (9:36-15:00)', 'predictions_count': len(morning_936_df) if morning_936_df is not None else 0}
+                except Exception as e:
+                    return {'status': 'error', 'message': str(e)}
+            return {'status': 'skipped', 'message': 'Forecaster not available'}
         elif action == "morning_session_generate":
             if forecaster and current_price:
                 try:
@@ -213,7 +228,7 @@ class IntradayScheduler:
         is_weekday = now.weekday() < 5
         
         # Safely access session state with fallback values
-        predictions = st.session_state.get('intraday_predictions', {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
+        predictions = st.session_state.get('intraday_predictions', {'morning_936_session': None, 'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
         
         # Determine market status
         if not is_weekday:
@@ -257,6 +272,11 @@ class IntradayScheduler:
         self._init_session_state()
         return st.session_state.get('morning_session_generated', False) and not st.session_state.get('sessions_hidden', False)
     
+    def should_show_morning_936_session(self) -> bool:
+        """Check if 9:36 AM session predictions should be shown"""
+        self._init_session_state()
+        return st.session_state.get('morning_936_session_generated', False) and not st.session_state.get('sessions_hidden', False)
+    
     def should_show_full_day(self) -> bool:
         self._init_session_state()
         return st.session_state.get('full_day_generated', False)
@@ -276,7 +296,7 @@ class IntradayScheduler:
     
     def display_session_status(self):
         status = self.get_session_status()
-        session_colors = {IntradaySession.PRE_MARKET: '#2196f3', IntradaySession.CHARTS_RESET: '#9c27b0', IntradaySession.MORNING_SESSION: '#4caf50', IntradaySession.FULL_DAY: '#ff9800', IntradaySession.AFTERNOON_SESSION: '#e91e63', IntradaySession.TRADING_HOURS: '#00bcd4', IntradaySession.NEXT_DAY_PENDING: '#f44336', IntradaySession.SESSIONS_HIDDEN: '#673ab7', IntradaySession.POST_MARKET: '#607d8b'}
+        session_colors = {IntradaySession.PRE_MARKET: '#2196f3', IntradaySession.CHARTS_RESET: '#9c27b0', IntradaySession.MORNING_936_SESSION: '#e91e63', IntradaySession.MORNING_SESSION: '#4caf50', IntradaySession.FULL_DAY: '#ff9800', IntradaySession.AFTERNOON_SESSION: '#e91e63', IntradaySession.TRADING_HOURS: '#00bcd4', IntradaySession.NEXT_DAY_PENDING: '#f44336', IntradaySession.SESSIONS_HIDDEN: '#673ab7', IntradaySession.POST_MARKET: '#607d8b'}
         color = session_colors.get(self.get_current_session(), '#607d8b')
         
         # Market status color
@@ -362,7 +382,17 @@ def show_intraday_predictions():
     scheduler = get_intraday_scheduler()
     status = scheduler.get_session_status()
     scheduler.display_session_status()
-    predictions = status.get('predictions', {'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
+    predictions = status.get('predictions', {'morning_936_session': None, 'morning_session': None, 'full_day': None, 'afternoon_session': None, 'next_day': None})
+    
+    # 9:36 AM Session (new)
+    if scheduler.should_show_morning_936_session() and predictions['morning_936_session'] is not None:
+        st.subheader("📊 9:36 AM Session Prediction (9:36 AM - 3:00 PM)")
+        st.dataframe(predictions['morning_936_session'])
+        morning_936_df = predictions['morning_936_session']
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=morning_936_df['time'], y=morning_936_df['predicted_price'], mode='lines+markers', name='9:36 Session', line=dict(color='#e91e63', width=3)))
+        fig.update_layout(title="9:36 AM Session Prediction (9:36 AM - 3:00 PM)", height=400)
+        st.plotly_chart(fig, use_container_width=True)
     
     if scheduler.should_show_morning_session() and predictions['morning_session'] is not None:
         st.subheader("Morning Session Prediction (9:45 AM)")
@@ -401,6 +431,9 @@ def show_intraday_predictions():
         with col1:
             if st.button("Reset Charts (9:00 AM)"):
                 scheduler._execute_action("charts_reset")
+                st.rerun()
+            if st.button("9:36 AM Session (9:36-15:00)"):
+                scheduler._execute_action("morning_936_session_generate", None, 10000)
                 st.rerun()
             if st.button("Morning Session (9:45 AM)"):
                 scheduler._execute_action("morning_session_generate", None, 10000)
