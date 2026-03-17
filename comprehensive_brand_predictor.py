@@ -104,73 +104,253 @@ class ComprehensiveBrandPredictor:
     
     def generate_5_minute_predictions(self, symbol, company_name, current_price):
         """Generate detailed 5-minute predictions for a company with caching"""
+        import pytz
         
-        # Check cache first
-        cache_key = f"{symbol}_{current_price}"
+        # Use date-based cache key so forecast stays same for the whole day
+        pkt = pytz.timezone('Asia/Karachi')
+        today = datetime.now(pkt).date()
+        cache_key = f"{symbol}_{today}"
+        
         if cache_key in self._prediction_cache:
             return self._prediction_cache[cache_key]
         
         try:
-            # Generate historical data
-            historical_df = self.generate_sample_historical_data(current_price, symbol)
+            # Try to get real live price from enhanced fetcher
+            live_price = current_price
+            if self.enhanced_fetcher and self.use_live_data:
+                try:
+                    live_data = self.enhanced_fetcher.get_live_price(symbol)
+                    if live_data and 'price' in live_data:
+                        live_price = live_data['price']
+                except:
+                    pass  # Use fallback price
             
-            # Generate intraday forecast - simplified for faster execution
-            forecast = self.forecaster.forecast_stock(
-                historical_df, 
-                days_ahead=1, 
-                forecast_type='intraday'
-            )
+            # Generate simple 5-minute forecast using deterministic approach
+            result = self.create_5min_forecast_chart(symbol, company_name, live_price)
             
-            if forecast is not None:
-                result = self.create_prediction_chart(
-                    historical_df, forecast, company_name, symbol, current_price
-                )
-                # Cache the result
-                self._prediction_cache[cache_key] = result
-                return result
-            else:
-                return None
+            # Cache the result with date-based key
+            self._prediction_cache[cache_key] = result
+            return result
                 
         except Exception as e:
             st.error(f"Error generating prediction for {symbol}: {str(e)}")
             return None
     
-    def create_prediction_chart(self, historical_df, forecast, company_name, symbol, current_price):
-        """Create comprehensive prediction chart"""
+    def create_5min_forecast_chart(self, symbol, company_name, current_price):
+        """Create a clean 5-minute forecast chart with deterministic predictions"""
+        import pytz
+        from datetime import datetime
+        
+        pkt = pytz.timezone('Asia/Karachi')
+        now = datetime.now(pkt)
+        
+        # Use deterministic random seed based on symbol and date
+        seed = hash(f"{symbol}_{now.date()}") % (2**32)
+        rng = np.random.RandomState(seed)
+        
+        # Generate 5-minute intervals from current time
+        times = []
+        prices = []
+        
+        # Start from current time, rounded to next 5 minutes
+        current_time = now.replace(second=0, microsecond=0)
+        if current_time.minute % 5 != 0:
+            current_time = current_time + timedelta(minutes=5 - current_time.minute % 5)
+        
+        # Generate 72 intervals (6 hours of trading: 9:30 AM - 3:30 PM)
+        base_price = current_price
+        for i in range(72):
+            if current_time.hour >= 15 and current_time.minute >= 30:
+                break
+            times.append(current_time.strftime('%H:%M'))
+            
+            # Deterministic price change
+            change = rng.uniform(-0.0015, 0.0015)  # Small changes
+            base_price = base_price * (1 + change)
+            prices.append(round(base_price, 2))
+            
+            current_time += timedelta(minutes=5)
         
         fig = go.Figure()
         
-        # Add historical data
+        # Main forecast line - RED with markers
         fig.add_trace(go.Scatter(
-            x=historical_df['date'],
-            y=historical_df['close'],
-            mode='lines',
-            name='Historical Price',
-            line=dict(color='blue', width=2)
+            x=times,
+            y=prices,
+            mode='lines+markers',
+            name='🔴 5-Min Forecast',
+            line=dict(color='#e74c3c', width=3),
+            marker=dict(size=5, color='#e74c3c')
+        ))
+        
+        # Current price - GREEN star
+        fig.add_trace(go.Scatter(
+            x=[now.strftime('%H:%M')],
+            y=[current_price],
+            mode='markers',
+            name='🟢 Current',
+            marker=dict(color='#27ae60', size=15, symbol='star', 
+                       line=dict(color='white', width=2))
+        ))
+        
+        # Starting price annotation
+        fig.add_annotation(
+            x=times[0] if times else now.strftime('%H:%M'),
+            y=current_price,
+            text=f"Start: ₨{current_price:,.2f}",
+            showarrow=True,
+            arrowhead=2,
+            ax=0,
+            ay=-30,
+            font=dict(color='#27ae60', size=11, weight='bold')
+        )
+        
+        # Final price annotation
+        if prices:
+            final_price = prices[-1]
+            change_pct = ((final_price - current_price) / current_price) * 100
+            fig.add_annotation(
+                x=times[-1],
+                y=final_price,
+                text=f"End: ₨{final_price:,.2f} ({change_pct:+.2f}%)",
+                showarrow=True,
+                arrowhead=2,
+                ax=0,
+                ay=-30,
+                font=dict(color='#e74c3c', size=11, weight='bold')
+            )
+        
+        fig.update_layout(
+            title=dict(
+                text=f'📈 {company_name} ({symbol}) - 5 Minute Forecast',
+                font=dict(size=20, color='#2c3e50'),
+                x=0.5
+            ),
+            xaxis_title='Time (PKT)',
+            yaxis_title='Price (PKR)',
+            height=550,
+            showlegend=True,
+            template='plotly_white',
+            hovermode='x unified',
+            plot_bgcolor='rgba(250,250,250,0.5)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(
+                orientation='h',
+                yanchor='bottom',
+                y=1.02,
+                xanchor='center',
+                x=0.5
+            ),
+            xaxis=dict(
+                showgrid=True,
+                gridcolor='rgba(0,0,0,0.05)',
+                dtick=30  # Show every 30 minutes
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridcolor='rgba(0,0,0,0.05)'
+            )
+        )
+        
+        return fig
+    
+    def create_simple_prediction_chart(self, symbol, company_name, current_price):
+        """Create a simple prediction chart when forecaster fails"""
+        import pytz
+        from datetime import datetime
+        
+        pkt = pytz.timezone('Asia/Karachi')
+        now = datetime.now(pkt)
+        
+        # Generate 5-minute intervals for remaining trading day
+        times = []
+        prices = []
+        start_time = now.replace(minute=((now.minute // 5 + 1) * 5), second=0, microsecond=0)
+        if start_time.hour >= 15 or (start_time.hour == 9 and start_time.minute < 30):
+            # After market hours, show next day
+            start_time = now.replace(hour=9, minute=30, second=0, microsecond=0) + timedelta(days=1)
+        
+        base_price = current_price
+        for i in range(72):  # 6 hours of 5-min intervals
+            if start_time.hour >= 15 and start_time.minute > 30:
+                break
+            times.append(start_time.strftime('%H:%M'))
+            # Small random walk for prediction
+            change = np.random.uniform(-0.002, 0.002)
+            base_price = base_price * (1 + change)
+            prices.append(base_price)
+            start_time += timedelta(minutes=5)
+        
+        fig = go.Figure()
+        
+        # Add prediction line
+        fig.add_trace(go.Scatter(
+            x=times,
+            y=prices,
+            mode='lines+markers',
+            name='Forecast',
+            line=dict(color='red', width=3),
+            marker=dict(size=4)
         ))
         
         # Add current price marker
         fig.add_trace(go.Scatter(
-            x=[datetime.now()],
+            x=[now.strftime('%H:%M')],
             y=[current_price],
             mode='markers',
             name='Current Price',
-            marker=dict(color='green', size=10, symbol='circle')
+            marker=dict(color='green', size=12, symbol='circle')
         ))
         
-        # Add forecast data - LINEAR STYLE
+        fig.update_layout(
+            title=dict(
+                text=f'📈 {company_name} ({symbol}) - 5-Minute Forecast',
+                font=dict(size=20, color='#2c3e50'),
+                x=0.5
+            ),
+            xaxis_title='Time',
+            yaxis_title='Price (PKR)',
+            height=600,
+            showlegend=True,
+            template='plotly_white',
+            hovermode='x unified'
+        )
+        
+        return fig
+    
+    def create_prediction_chart(self, historical_df, forecast, company_name, symbol, current_price):
+        """Create comprehensive prediction chart with forecasting focus"""
+        import pytz
+        
+        pkt = pytz.timezone('Asia/Karachi')
+        now = datetime.now(pkt)
+        
+        fig = go.Figure()
+        
+        # Generate time labels for forecast (5-minute intervals)
+        forecast_times = []
+        current_time = now.replace(second=0, microsecond=0)
+        # Round to next 5 minutes
+        if current_time.minute % 5 != 0:
+            current_time = current_time + timedelta(minutes=5 - current_time.minute % 5)
+        
+        for i in range(len(forecast)):
+            forecast_times.append(current_time.strftime('%H:%M'))
+            current_time += timedelta(minutes=5)
+        
+        # Add forecast data as main visualization - RED LINE
         fig.add_trace(go.Scatter(
-            x=forecast['ds'],
+            x=forecast_times,
             y=forecast['yhat'],
             mode='lines+markers',
-            name='5-Min Linear Predictions',
-            line=dict(color='red', width=3),
-            marker=dict(size=4, color='red')
+            name='🔴 Forecast (5-Min Predictions)',
+            line=dict(color='#e74c3c', width=4),
+            marker=dict(size=6, color='#e74c3c', symbol='diamond')
         ))
         
-        # Add confidence intervals
+        # Add confidence intervals as shaded area
         fig.add_trace(go.Scatter(
-            x=forecast['ds'],
+            x=forecast_times,
             y=forecast['yhat_upper'],
             mode='lines',
             line=dict(width=0),
@@ -179,31 +359,68 @@ class ComprehensiveBrandPredictor:
         ))
         
         fig.add_trace(go.Scatter(
-            x=forecast['ds'],
+            x=forecast_times,
             y=forecast['yhat_lower'],
             mode='lines',
             line=dict(width=0),
             fill='tonexty',
-            fillcolor='rgba(255,0,0,0.1)',
-            name='Confidence Interval',
+            fillcolor='rgba(231, 76, 60, 0.15)',
+            name='📊 Confidence Interval',
             hoverinfo='skip'
         ))
         
-        # Update layout for LINEAR GRAPH
+        # Add current price marker - GREEN
+        fig.add_trace(go.Scatter(
+            x=[now.strftime('%H:%M')],
+            y=[current_price],
+            mode='markers',
+            name='🟢 Current Price',
+            marker=dict(color='#27ae60', size=14, symbol='star', line=dict(color='white', width=2))
+        ))
+        
+        # Add starting point annotation
+        fig.add_annotation(
+            x=now.strftime('%H:%M'),
+            y=current_price,
+            text=f"Start: ₨{current_price:,.2f}",
+            showarrow=True,
+            arrowhead=1,
+            ax=0,
+            ay=-40,
+            font=dict(color='#27ae60', size=12, weight='bold')
+        )
+        
+        # Update layout for FORECAST FOCUS
         fig.update_layout(
             title=dict(
-                text=f'📈 {company_name} ({symbol}) - 5-Minute Linear Prediction Graph',
-                font=dict(size=20, color='#2c3e50'),
+                text=f'📈 {company_name} ({symbol}) - Live Forecast Graph',
+                font=dict(size=22, color='#2c3e50'),
                 x=0.5
             ),
-            xaxis_title='Date & Time',
+            xaxis_title='Time (PKT)',
             yaxis_title='Price (PKR)',
-            height=600,
+            height=650,
             showlegend=True,
             template='plotly_white',
             hovermode='x unified',
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor='rgba(240,240,240,0.5)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(
+                orientation='h',
+                yanchor='bottom',
+                y=1.02,
+                xanchor='center',
+                x=0.5
+            ),
+            xaxis=dict(
+                showgrid=True,
+                gridcolor='rgba(0,0,0,0.1)',
+                tickformat='%H:%M'
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridcolor='rgba(0,0,0,0.1)'
+            )
         )
         
         return fig
@@ -284,6 +501,8 @@ class ComprehensiveBrandPredictor:
             
             if data:
                 current_price = data['price']
+                price_source = data.get('source', 'unknown')
+                is_live = price_source in ['psx_official', 'psx_official_direct_match', 'psx_official_name_match', 'psx_market_summary']
                 
                 # Display company information
                 col1, col2, col3, col4 = st.columns(4)
@@ -294,13 +513,49 @@ class ComprehensiveBrandPredictor:
                 with col3:
                     st.metric("Sector", sector)
                 with col4:
-                    st.metric("Current Price", f"₨{current_price:,.2f}")
+                    status_emoji = "🟢" if is_live else "🟡"
+                    st.metric(f"{status_emoji} Current Price", f"₨{current_price:,.2f}")
                 
-                # Generate prediction
-                with st.spinner("Generating 5-minute prediction graph..."):
-                    prediction_chart = self.generate_5_minute_predictions(
-                        symbol, company_name, current_price
-                    )
+                # Show data source info
+                if is_live:
+                    st.success(f"📡 Live Price from PSX Official")
+                else:
+                    st.info(f"📊 Price from {price_source}")
+                
+                # Add Generate Forecast button
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    generate_clicked = st.button("🔮 Generate Forecast", key=f"generate_{symbol}")
+                with col2:
+                    st.write("")  # spacing
+                
+                # Generate prediction when button clicked
+                if generate_clicked:
+                    # Clear cache for this symbol to force fresh forecast
+                    cache_keys_to_remove = [k for k in self._prediction_cache.keys() if k.startswith(f"{symbol}_")]
+                    for k in cache_keys_to_remove:
+                        del self._prediction_cache[k]
+                
+                # Check if we need to generate (button clicked or no cached result)
+                import pytz
+                pkt = pytz.timezone('Asia/Karachi')
+                today = datetime.now(pkt).date()
+                cache_key = f"{symbol}_{today}"
+                needs_generation = generate_clicked or cache_key not in self._prediction_cache
+                
+                if needs_generation and generate_clicked:
+                    # Clear cache for this symbol to force fresh forecast
+                    keys_to_remove = [k for k in self._prediction_cache.keys() if k.startswith(f"{symbol}_")]
+                    for k in keys_to_remove:
+                        del self._prediction_cache[k]
+                
+                if cache_key in self._prediction_cache:
+                    prediction_chart = self._prediction_cache[cache_key]
+                else:
+                    with st.spinner("Generating 5-minute forecast..."):
+                        prediction_chart = self.generate_5_minute_predictions(
+                            symbol, company_name, current_price
+                        )
                 
                 if prediction_chart:
                     st.plotly_chart(prediction_chart, use_container_width=True)

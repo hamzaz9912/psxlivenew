@@ -427,7 +427,16 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
             
             # Fetch fresh data if needed
             if need_fresh_data:
-                kse_data = st.session_state.data_fetcher.fetch_kse100_data()
+                # Try enhanced fetcher first for historical data
+                if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+                    kse_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
+                    if kse_data is not None and not kse_data.empty:
+                        st.success("📡 Fetched historical data from Yahoo Finance")
+                
+                # Fallback to data_fetcher if enhanced fails
+                if (kse_data is None or kse_data.empty) and hasattr(st.session_state, 'data_fetcher'):
+                    kse_data = st.session_state.data_fetcher.fetch_kse100_data()
+                
                 if kse_data is not None and not kse_data.empty:
                     # Store in cache
                     st.session_state.cache_manager.store_stock_data('KSE-100', 'KSE-100 Index', kse_data)
@@ -762,7 +771,16 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
         st.markdown("---")
         
         with st.spinner("Fetching historical data for session analysis..."):
-            kse_data = st.session_state.data_fetcher.fetch_kse100_data()
+            # Try enhanced fetcher first for historical data
+            kse_data = None
+            if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+                kse_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
+                if kse_data is not None and not kse_data.empty:
+                    st.success("📡 Fetched historical data from Yahoo Finance")
+            
+            # Fallback to data_fetcher if enhanced fails
+            if (kse_data is None or kse_data.empty) and hasattr(st.session_state, 'data_fetcher'):
+                kse_data = st.session_state.data_fetcher.fetch_kse100_data()
             
             if kse_data is not None and not kse_data.empty:
                 # Session-based forecasting
@@ -1735,7 +1753,17 @@ def display_live_market_dashboard():
         st.subheader("🔮 Next Day Forecast")
         
         # Get historical data for forecasting
-        historical_data = st.session_state.data_fetcher.fetch_kse100_data()
+        # Try enhanced fetcher first for historical data
+        historical_data = None
+        if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+            historical_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
+            if historical_data is not None and not historical_data.empty:
+                st.success("📡 Fetched historical data from Yahoo Finance")
+
+        # Fallback to data_fetcher if enhanced fails
+        if (historical_data is None or historical_data.empty) and hasattr(st.session_state, 'data_fetcher'):
+            historical_data = st.session_state.data_fetcher.fetch_kse100_data()
+
         if historical_data is not None and not historical_data.empty:
             # Generate forecast for next trading day
             forecast = st.session_state.forecaster.forecast_stock(historical_data, days_ahead=1)

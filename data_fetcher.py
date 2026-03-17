@@ -1018,9 +1018,9 @@ class DataFetcher:
         except Exception as e:
             st.warning(f"Yahoo Finance source failed: {str(e)}")
         
-        # Source 4: Generate realistic sample data if all sources fail
-        st.info("Using simulated data for demonstration. Real-time data sources are currently unavailable.")
-        return _self._generate_sample_kse_data()
+        # Source 4: Return None if all sources fail - no simulated data
+        st.warning("All real-time data sources failed. Unable to fetch KSE-100 historical data.")
+        return None
     
     @st.cache_data(ttl=300)  # Cache for 5 minutes
     def fetch_company_data(_self, company_name):
@@ -1068,9 +1068,9 @@ class DataFetcher:
         except Exception as e:
             st.warning(f"Yahoo Finance source failed for {company_name}: {str(e)}")
         
-        # Source 3: Generate realistic sample data if sources fail
-        st.info(f"Using simulated data for {company_name}. Real-time data sources are currently unavailable.")
-        return _self._generate_sample_company_data(symbol)
+        # Return None if all sources fail - no simulated data
+        st.warning(f"All real-time data sources failed for {company_name}. Unable to fetch company data.")
+        return None
     
     def _fetch_from_investing_com(self, symbol):
         """Fetch data from investing.com (unofficial)"""

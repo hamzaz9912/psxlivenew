@@ -778,6 +778,32 @@ def display_comprehensive_intraday_forecasts():
 
     st.header("🔮 Comprehensive Intraday Forecasting Dashboard")
     
+    # Check and display real-time data status
+    def get_data_source_status():
+        """Check which data source is being used for real-time prices"""
+        if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+            try:
+                # Try to get live price to test data source
+                test_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
+                if test_data and test_data.get('price'):
+                    source = test_data.get('source', 'unknown')
+                    # Check if it's real-time or estimated
+                    if 'estimate' in source.lower() or 'sector' in source.lower():
+                        return 'estimated', source
+                    return 'live', source
+            except:
+                pass
+        return 'fallback', 'data_fetcher'
+    
+    # Display data source status
+    data_status, data_source = get_data_source_status()
+    if data_status == 'live':
+        st.success(f"📡 **REAL-TIME DATA ACTIVE** - Source: {data_source}")
+    elif data_status == 'estimated':
+        st.warning(f"📊 **ESTIMATED DATA** - Source: {data_source} (Live data unavailable)")
+    else:
+        st.info("ℹ️ Using standard data fetcher")
+    
     # Display intraday session status
     display_intraday_session_status()
     
@@ -854,63 +880,89 @@ def display_comprehensive_intraday_forecasts():
             st.info("☀️ **Trading Hours (9:30 AM - 3:30 PM)** - Showing Today's Live Forecast")
             show_forecast_for = today
 
-        # Get live KSE-100 data
-        if hasattr(st.session_state, 'data_fetcher'):
+        # Get live KSE-100 data using enhanced fetcher for real-time data
+        live_price = None
+        live_data_source = None
+        
+        # Try enhanced_psx_fetcher first for real-time data
+        if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+            try:
+                live_kse_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
+                if live_kse_data and live_kse_data.get('price'):
+                    live_price = live_kse_data['price']
+                    live_data_source = live_kse_data.get('source', 'enhanced_psx_fetcher')
+                    st.success(f"📡 Real-time KSE-100 Price: PKR {live_price:,.2f} (Source: {live_data_source})")
+            except Exception as e:
+                st.warning(f"Enhanced fetcher error: {e}")
+        
+        # Fallback to data_fetcher if enhanced fetcher not available
+        if live_price is None and hasattr(st.session_state, 'data_fetcher'):
             live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
             historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
+            if live_kse_data:
+                live_price = live_kse_data['price']
+                live_data_source = live_kse_data.get('source', 'data_fetcher')
+        elif live_price is not None:
+            # Get historical data
+            if hasattr(st.session_state, 'data_fetcher'):
+                historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
+            else:
+                historical_kse = None
+        else:
+            historical_kse = None
 
-            if live_kse_data and historical_kse is not None:
-                current_price = live_kse_data['price']
+        if live_price and historical_kse is not None:
+            current_price = live_price
 
-                # Check for cached forecast
-                cache_key = f"kse100_forecast_{show_forecast_for}"
+            # Check for cached forecast
+            cache_key = f"kse100_forecast_{show_forecast_for}"
+            
+            # Check if we have cached forecast for the target date
+            if cache_key in st.session_state and 'kse_forecasts' in st.session_state[cache_key]:
+                kse_forecasts = st.session_state[cache_key]
+                st.info(f"📅 **Forecast cached for:** {show_forecast_for} - Same predictions all day")
+            else:
+                # Generate new forecast and cache it
+                kse_forecasts = forecaster.generate_comprehensive_forecasts(
+                    historical_kse, "KSE-100", current_price
+                )
+                # Store in session state with full data
+                st.session_state[cache_key] = kse_forecasts
+                st.info(f"📅 **New forecast generated for:** {show_forecast_for}")
+
+            # Display yesterday's last hour data
+            st.subheader("📅 Yesterday's Last Hour Analysis (14:00-15:30)")
+            yesterday_data = kse_forecasts.get('yesterday_last_hour')
+            if yesterday_data is not None and not yesterday_data.empty:
+                # Check if data is synthetic or real
+                is_synthetic = yesterday_data.get('synthetic', pd.Series([False])).iloc[0] if 'synthetic' in yesterday_data.columns else False
                 
-                # Check if we have cached forecast for the target date
-                if cache_key in st.session_state and 'kse_forecasts' in st.session_state[cache_key]:
-                    kse_forecasts = st.session_state[cache_key]
-                    st.info(f"📅 **Forecast cached for:** {show_forecast_for} - Same predictions all day")
+                if is_synthetic:
+                    st.info("📊 Using synthesized intraday data based on historical closing prices")
                 else:
-                    # Generate new forecast and cache it
-                    kse_forecasts = forecaster.generate_comprehensive_forecasts(
-                        historical_kse, "KSE-100", current_price
-                    )
-                    # Store in session state with full data
-                    st.session_state[cache_key] = kse_forecasts
-                    st.info(f"📅 **New forecast generated for:** {show_forecast_for}")
-
-                # Display yesterday's last hour data
-                st.subheader("📅 Yesterday's Last Hour Analysis (14:00-15:30)")
-                yesterday_data = kse_forecasts.get('yesterday_last_hour')
-                if yesterday_data is not None and not yesterday_data.empty:
-                    # Check if data is synthetic or real
-                    is_synthetic = yesterday_data.get('synthetic', pd.Series([False])).iloc[0] if 'synthetic' in yesterday_data.columns else False
+                    st.success("✅ Using actual intraday data from yesterday's last trading hour")
+                
+                # Display data preview
+                display_cols = [col for col in yesterday_data.columns if col != 'synthetic']
+                st.dataframe(yesterday_data[display_cols].tail(5))
+                
+                # Show trend analysis
+                price_col = 'close' if 'close' in yesterday_data.columns else 'price'
+                if price_col in yesterday_data.columns and len(yesterday_data) >= 2:
+                    start_price = yesterday_data[price_col].iloc[0]
+                    end_price = yesterday_data[price_col].iloc[-1]
+                    change = end_price - start_price
+                    change_pct = (change / start_price) * 100
                     
-                    if is_synthetic:
-                        st.info("📊 Using synthesized intraday data based on historical closing prices")
-                    else:
-                        st.success("✅ Using actual intraday data from yesterday's last trading hour")
-                    
-                    # Display data preview
-                    display_cols = [col for col in yesterday_data.columns if col != 'synthetic']
-                    st.dataframe(yesterday_data[display_cols].tail(5))
-                    
-                    # Show trend analysis
-                    price_col = 'close' if 'close' in yesterday_data.columns else 'price'
-                    if price_col in yesterday_data.columns and len(yesterday_data) >= 2:
-                        start_price = yesterday_data[price_col].iloc[0]
-                        end_price = yesterday_data[price_col].iloc[-1]
-                        change = end_price - start_price
-                        change_pct = (change / start_price) * 100
-                        
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            st.metric("Yesterday 2:00 PM", f"PKR {start_price:,.2f}")
-                        with col2:
-                            st.metric("Yesterday 3:30 PM", f"PKR {end_price:,.2f}")
-                        with col3:
-                            st.metric("Last Hour Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
-                else:
-                    st.warning("⚠️ Yesterday's data not available - using fallback analysis")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Yesterday 2:00 PM", f"PKR {start_price:,.2f}")
+                    with col2:
+                        st.metric("Yesterday 3:30 PM", f"PKR {end_price:,.2f}")
+                    with col3:
+                        st.metric("Last Hour Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
+            else:
+                st.warning("⚠️ Yesterday's data not available - using fallback analysis")
                 
                 # Create SINGLE comprehensive graph for 9:30-15:30
                 st.subheader("📊 KSE-100 Forecast (9:30 AM - 3:30 PM)")
@@ -1124,7 +1176,20 @@ def display_comprehensive_intraday_forecasts():
                 
                 # Get company data
                 company_data = st.session_state.data_fetcher.fetch_company_data(selected_company)
-                live_price_data = st.session_state.data_fetcher.get_live_company_price(symbol)
+                
+                # Get live price using enhanced fetcher for real-time data
+                live_price_data = None
+                if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+                    try:
+                        live_price_data = st.session_state.enhanced_psx_fetcher.get_live_price(symbol)
+                        if live_price_data:
+                            st.success(f"📡 Live {symbol} Price: PKR {live_price_data.get('price', 0):,.2f} (Source: {live_price_data.get('source', 'enhanced')})")
+                    except Exception as e:
+                        st.warning(f"Enhanced fetcher error: {e}")
+                
+                # Fallback to data_fetcher if enhanced not available
+                if not live_price_data:
+                    live_price_data = st.session_state.data_fetcher.get_live_company_price(symbol)
                 
                 if company_data is not None and live_price_data:
                     current_price = live_price_data['price']
@@ -1210,13 +1275,28 @@ def display_comprehensive_intraday_forecasts():
         st.info("📅 **Daily Update:** Session forecasts update at 9:30 AM PKT on weekdays and remain constant throughout the day")
         st.write("Compare morning vs afternoon trading patterns")
 
-        # Get KSE-100 data for session comparison
-        if hasattr(st.session_state, 'data_fetcher'):
+        # Get KSE-100 data for session comparison (using enhanced fetcher for real-time data)
+        current_price = None
+        if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+            try:
+                live_kse_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
+                if live_kse_data and live_kse_data.get('price'):
+                    current_price = live_kse_data['price']
+                    st.success(f"📡 Real-time KSE-100: PKR {current_price:,.2f}")
+            except Exception:
+                pass
+        
+        if current_price is None and hasattr(st.session_state, 'data_fetcher'):
             live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
             historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
-
-            if live_kse_data and historical_kse is not None:
+            if live_kse_data:
                 current_price = live_kse_data['price']
+        elif current_price is not None and hasattr(st.session_state, 'data_fetcher'):
+            historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
+        else:
+            historical_kse = None
+
+        if current_price and historical_kse is not None:
 
                 # Generate comprehensive forecasts
                 kse_forecasts = forecaster.generate_comprehensive_forecasts(
@@ -1390,10 +1470,8 @@ def display_comprehensive_intraday_forecasts():
                 
                 st.info(f"🔄 **Next Update:** Session analysis will update on {next_refresh.strftime('%A, %Y-%m-%d at 9:30 AM PKT')}")
 
-            else:
-                st.warning("Unable to fetch KSE-100 data for session comparison")
         else:
-            st.error("Data fetcher not available")
+            st.warning("Unable to fetch KSE-100 data for session comparison")
     
     with tab4:
         st.subheader("📁 Upload-Based Forecasts")
@@ -1445,14 +1523,30 @@ def display_comprehensive_intraday_forecasts():
             st.markdown("*Output: Next Day Forecast (09:30-15:30) with improved accuracy*")
 
             if st.button("🔄 Generate Next Day Forecast (3:00 PM)", use_container_width=True):
-                # Get required data
+                # Get required data using enhanced fetcher for real-time data
+                current_price = None
+                if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+                    try:
+                        live_kse_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
+                        if live_kse_data and live_kse_data.get('price'):
+                            current_price = live_kse_data['price']
+                            st.success(f"📡 Real-time KSE-100: PKR {current_price:,.2f}")
+                    except Exception:
+                        pass
+                
                 if hasattr(st.session_state, 'data_fetcher'):
                     historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
-                    live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
+                    if current_price is None:
+                        live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
+                        if live_kse_data:
+                            current_price = live_kse_data['price']
+                else:
+                    historical_kse = None
 
-                    if historical_kse is not None and live_kse_data:
+                if historical_kse is not None and current_price:
+                        
+                        # Get yesterday's last hour data for prediction
                         yesterday_last_hour = forecaster.get_yesterday_last_hour_data(historical_kse)
-                        current_price = live_kse_data['price']
                         
                         # Generate today's full session
                         today_full_session = forecaster.generate_intraday_prediction_0936_1530(
