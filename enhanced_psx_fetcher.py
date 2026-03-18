@@ -960,6 +960,10 @@ class EnhancedPSXFetcher:
     def _fetch_live_price_from_multiple_sources(self, symbol):
         """Fetch live price from multiple sources"""
         
+        # Special handling for KSE-100 index
+        if symbol.upper() in ['KSE-100', 'KSE100', '^KSE100', 'KSE']:
+            return self._fetch_kse100_index_price()
+        
         # Source 1: Try Yahoo Finance (most reliable for PSX) - try multiple suffixes
         suffixes = [".KA", ".KAR", "", "-KAR"]
         for suffix in suffixes:
@@ -1013,6 +1017,45 @@ class EnhancedPSXFetcher:
                             'timestamp': self.get_pakistan_time()
                         }
 
+        return None
+    
+    def _fetch_kse100_index_price(self):
+        """Fetch KSE-100 index price from multiple sources"""
+        import yfinance as yf
+        
+        # Try multiple index ticker symbols
+        index_tickers = ["^KSE100", "KSE100.PK", "^KS100", "KSX", "KSE100"]
+        for ticker_symbol in index_tickers:
+            try:
+                ticker = yf.Ticker(ticker_symbol)
+                hist = ticker.history(period="1d", interval="1m")
+                if not hist.empty:
+                    latest_price = hist['Close'].iloc[-1]
+                    return {
+                        'price': float(latest_price),
+                        'source': f'yahoo_finance_index_{ticker_symbol}',
+                        'timestamp': self.get_pakistan_time()
+                    }
+            except Exception as e:
+                print(f"Yahoo Finance fetch failed for KSE-100 index {ticker_symbol}: {e}")
+                continue
+        
+        # Try PSX market summary for index
+        try:
+            market_data = self._fetch_psx_market_summary()
+            if market_data:
+                # Look for KSE-100 index in market data
+                for market_symbol, data in market_data.items():
+                    if 'kse-100' in market_symbol.lower() or 'kse100' in market_symbol.lower():
+                        return {
+                            'price': data['current'],
+                            'source': 'psx_official_index',
+                            'timestamp': self.get_pakistan_time()
+                        }
+        except Exception:
+            pass
+        
+        # Return None if all sources fail - let the main function handle fallback
         return None
 
     def _fetch_individual_company_price(self, symbol):
