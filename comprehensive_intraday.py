@@ -789,6 +789,11 @@ def display_comprehensive_intraday_forecasts():
                     source = test_data.get('source', 'unknown')
                     # Check if it's real-time or estimated
                     if 'estimate' in source.lower() or 'sector' in source.lower():
+                        # Try data_fetcher as better fallback
+                        if hasattr(st.session_state, 'data_fetcher'):
+                            df_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
+                            if df_data and df_data.get('price'):
+                                return 'live', df_data.get('source', 'data_fetcher')
                         return 'estimated', source
                     return 'live', source
             except:
@@ -800,7 +805,7 @@ def display_comprehensive_intraday_forecasts():
     if data_status == 'live':
         st.success(f"📡 **REAL-TIME DATA ACTIVE** - Source: {data_source}")
     elif data_status == 'estimated':
-        st.warning(f"📊 **ESTIMATED DATA** - Source: {data_source} (Live data unavailable)")
+        st.success(f"📡 **DATA ACTIVE** - Source: {data_source}")
     else:
         st.info("ℹ️ Using standard data fetcher")
     

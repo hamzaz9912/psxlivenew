@@ -609,6 +609,10 @@ class EnhancedPSXFetcher:
     def _get_sector_based_estimate(self, symbol):
         """Get realistic price estimate based on company sector for all 100 KSE-100 companies"""
         
+        # Add KSE-100 index handling
+        if symbol.upper() in ['KSE-100', 'KSE100', '^KSE100', 'KSE']:
+            return 135000.00  # Current KSE-100 index value (March 2026)
+        
         # Complete sector-based price estimates for all 100 KSE-100 companies (based on historical PSX data)
         sector_estimates = {
             # Banking Sector (16 companies) - CORRECTED with accurate current prices
@@ -937,6 +941,16 @@ class EnhancedPSXFetcher:
             individual_price = self._fetch_individual_company_price(symbol)
             if individual_price:
                 return individual_price
+
+            # Try using data_fetcher as fallback for better estimates
+            if hasattr(st, 'session_state') and 'data_fetcher' in st.session_state:
+                try:
+                    df_price = st.session_state.data_fetcher.get_live_psx_price(symbol)
+                    if df_price and df_price.get('price'):
+                        df_price['source'] = 'data_fetcher_fallback'
+                        return df_price
+                except Exception:
+                    pass
 
             # Final fallback to sector-based estimate
             estimated_price = self._get_sector_based_estimate(symbol)

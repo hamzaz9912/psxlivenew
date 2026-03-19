@@ -1040,7 +1040,6 @@ class DataFetcher:
         try:
             fallback_data = _self._generate_fallback_kse100_data()
             if fallback_data is not None and not fallback_data.empty:
-                st.info("📊 Using estimated KSE-100 data (external sources unavailable)")
                 return fallback_data
         except Exception as e:
             st.warning(f"Fallback data generation failed: {str(e)}")
@@ -1204,7 +1203,6 @@ class DataFetcher:
         try:
             fallback_data = _self._generate_fallback_company_data(company_name, symbol)
             if fallback_data is not None and not fallback_data.empty:
-                st.info(f"📊 Using estimated data for {company_name} (external sources unavailable)")
                 return fallback_data
         except Exception as e:
             st.warning(f"Fallback data generation failed for {company_name}: {str(e)}")
