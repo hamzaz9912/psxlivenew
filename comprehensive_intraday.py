@@ -789,16 +789,11 @@ def display_comprehensive_intraday_forecasts():
                     source = test_data.get('source', 'unknown')
                     # Check if it's real-time or estimated
                     if 'estimate' in source.lower() or 'sector' in source.lower():
-                        # Try data_fetcher as better fallback
-                        if hasattr(st.session_state, 'data_fetcher'):
-                            df_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
-                            if df_data and df_data.get('price'):
-                                return 'live', df_data.get('source', 'data_fetcher')
                         return 'estimated', source
                     return 'live', source
             except:
                 pass
-        return 'fallback', 'data_fetcher'
+        return 'fallback', 'enhanced_psx_fetcher'
     
     # Display data source status
     data_status, data_source = get_data_source_status()
@@ -807,7 +802,7 @@ def display_comprehensive_intraday_forecasts():
     elif data_status == 'estimated':
         st.success(f"📡 **DATA ACTIVE** - Source: {data_source}")
     else:
-        st.info("ℹ️ Using standard data fetcher")
+        st.info("ℹ️ Using enhanced PSX fetcher")
     
     # Display intraday session status
     display_intraday_session_status()
@@ -896,28 +891,47 @@ def display_comprehensive_intraday_forecasts():
                 if live_kse_data and live_kse_data.get('price'):
                     live_price = live_kse_data['price']
                     live_data_source = live_kse_data.get('source', 'enhanced_psx_fetcher')
-                    st.success(f"📡 Real-time KSE-100 Price: PKR {live_price:,.2f} (Source: {live_data_source})")
+                    # Only show success if it's real data, not estimated
+                    if 'estimate' not in live_data_source.lower() and 'sector' not in live_data_source.lower():
+                        st.success(f"📡 Real-time KSE-100 Price: PKR {live_price:,.2f} (Source: {live_data_source})")
             except Exception as e:
                 st.warning(f"Enhanced fetcher error: {e}")
         
-        # Fallback to data_fetcher if enhanced fetcher not available
-        if live_price is None and hasattr(st.session_state, 'data_fetcher'):
-            live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
-            historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
-            if live_kse_data:
-                live_price = live_kse_data['price']
-                live_data_source = live_kse_data.get('source', 'data_fetcher')
-        elif live_price is not None:
-            # Get historical data
+        # Get historical data from enhanced fetcher (can fallback to data_fetcher for historical only)
+        historical_kse = None
+        if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+            try:
+                historical_kse = st.session_state.enhanced_psx_fetcher.fetch_kse100_data()
+            except Exception:
+                pass
+        
+        # Fallback to data_fetcher for historical data only (not live price)
+        if historical_kse is None or (historical_kse is not None and historical_kse.empty):
             if hasattr(st.session_state, 'data_fetcher'):
-                historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
-            else:
-                historical_kse = None
-        else:
-            historical_kse = None
+                try:
+                    historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
+                except Exception:
+                    pass
 
-        if live_price and historical_kse is not None:
-            current_price = live_price
+        # Generate forecast if we have either live price OR historical data
+        if historical_kse is not None and not historical_kse.empty:
+            current_price = live_price if live_price else historical_kse['close'].iloc[-1] if 'close' in historical_kse.columns else historical_kse.iloc[-1]
+
+            # Check for cached forecast
+            cache_key = f"kse100_forecast_{show_forecast_for}"
+            
+            # Check if we have cached forecast for the target date
+            if cache_key in st.session_state and 'kse_forecasts' in st.session_state[cache_key]:
+                kse_forecasts = st.session_state[cache_key]
+                st.info(f"📅 **Forecast cached for:** {show_forecast_for} - Same predictions all day")
+            else:
+                # Generate new forecast and cache it
+                kse_forecasts = forecaster.generate_comprehensive_forecasts(
+                    historical_kse, "KSE-100", current_price
+                )
+                # Store in session state with full data
+                st.session_state[cache_key] = kse_forecasts
+                st.info(f"📅 **New forecast generated for:** {show_forecast_for}")
 
             # Check for cached forecast
             cache_key = f"kse100_forecast_{show_forecast_for}"

@@ -743,6 +743,12 @@ class EnhancedPSXFetcher:
             'source': 'fallback_current_level'
         }
     
+    
+    @st.cache_data(ttl=300)
+    def fetch_kse100_data(self):
+        """Fetch KSE-100 historical data - alias for fetch_kse100_historical"""
+        return self.fetch_kse100_historical(period="1mo")
+    
     def fetch_kse100_historical(self, period="1mo"):
         """Fetch historical KSE-100 data using Yahoo Finance or alternative sources"""
         
@@ -942,17 +948,7 @@ class EnhancedPSXFetcher:
             if individual_price:
                 return individual_price
 
-            # Try using data_fetcher as fallback for better estimates
-            if hasattr(st, 'session_state') and 'data_fetcher' in st.session_state:
-                try:
-                    df_price = st.session_state.data_fetcher.get_live_psx_price(symbol)
-                    if df_price and df_price.get('price'):
-                        df_price['source'] = 'data_fetcher_fallback'
-                        return df_price
-                except Exception:
-                    pass
-
-            # Final fallback to sector-based estimate
+            # Final fallback to sector-based estimate (NO data_fetcher fallback)
             estimated_price = self._get_sector_based_estimate(symbol)
             return {
                 'price': estimated_price,
@@ -1034,10 +1030,10 @@ class EnhancedPSXFetcher:
         return None
     
     def _fetch_kse100_index_price(self):
-        """Fetch KSE-100 index price from multiple sources"""
+        """Fetch KSE-100 index price from multiple sources including web scraping"""
         import yfinance as yf
         
-        # Try multiple index ticker symbols
+        # Try multiple index ticker symbols first
         index_tickers = ["^KSE100", "KSE100.PK", "^KS100", "KSX", "KSE100"]
         for ticker_symbol in index_tickers:
             try:
@@ -1054,18 +1050,118 @@ class EnhancedPSXFetcher:
                 print(f"Yahoo Finance fetch failed for KSE-100 index {ticker_symbol}: {e}")
                 continue
         
-        # Try PSX market summary for index
+        # Try PSX market summary for index - Enhanced scraping
         try:
-            market_data = self._fetch_psx_market_summary()
-            if market_data:
-                # Look for KSE-100 index in market data
-                for market_symbol, data in market_data.items():
-                    if 'kse-100' in market_symbol.lower() or 'kse100' in market_symbol.lower():
-                        return {
-                            'price': data['current'],
-                            'source': 'psx_official_index',
-                            'timestamp': self.get_pakistan_time()
-                        }
+            # Try primary PSX website
+            psx_urls = [
+                "https://www.psx.com.pk/market-summary/",
+                "https://dps.psx.com.pk/market-summary",
+                "https://www.psx.com.pk/market-data/kse-100-index"
+            ]
+            
+            for url in psx_urls:
+                try:
+                    response = self.session.get(url, timeout=5)
+                    if response.status_code == 200:
+                        soup = BeautifulSoup(response.content, 'html.parser')
+                        
+                        # Look for KSE-100 index value
+                        patterns = [
+                            r'KSE.?100[^\d]*([0-9]{2},[0-9]{3},[0-9]{3}\.?[0-9]*)',
+                            r'kse.?100[^\d]*([0-9]{2},[0-9]{3},[0-9]{3}\.?[0-9]*)',
+                            r'index.*?value[^\d]*([0-9]{2},[0-9]{3},[0-9]{3}\.?[0-9]*)',
+                            r'([0-9]{5,6}\.[0-9]{2})[^\d]*KSE',
+                        ]
+                        
+                        for pattern in patterns:
+                            matches = re.findall(pattern, response.text, re.IGNORECASE)
+                            for match in matches:
+                                try:
+                                    price = float(match.replace(',', ''))
+                                    if 40000 <= price <= 200000:  # Valid KSE-100 range
+                                        return {
+                                            'price': price,
+                                            'source': 'psx_official_scraped',
+                                            'timestamp': self.get_pakistan_time()
+                                        }
+                                except:
+                                    continue
+                except:
+                    continue
+        except Exception:
+            pass
+        
+        # Try Investing.com for KSE-100
+        try:
+            investing_urls = [
+                "https://www.investing.com/indices/kse-100-historical-data",
+                "https://www.investing.com/indices/kse-100"
+            ]
+            
+            for url in investing_urls:
+                try:
+                    response = self.session.get(url, timeout=5)
+                    if response.status_code == 200:
+                        soup = BeautifulSoup(response.content, 'html.parser')
+                        
+                        # Look for current price
+                        price_patterns = [
+                            r'current[^\d]*([0-9]{2},[0-9]{3},[0-9]{3}\.?[0-9]*)',
+                            r'KSE.?100[^\d]*([0-9]{2},[0-9]{3},[0-9]{3}\.?[0-9]*)',
+                            r'last[^\d]*([0-9]{2},[0-9]{3},[0-9]{3}\.?[0-9]*)',
+                        ]
+                        
+                        for pattern in price_patterns:
+                            matches = re.findall(pattern, response.text, re.IGNORECASE)
+                            for match in matches:
+                                try:
+                                    price = float(match.replace(',', ''))
+                                    if 40000 <= price <= 200000:
+                                        return {
+                                            'price': price,
+                                            'source': 'investing_com_scraped',
+                                            'timestamp': self.get_pakistan_time()
+                                        }
+                                except:
+                                    continue
+                except:
+                    continue
+        except Exception:
+            pass
+        
+        # Try financial news sites
+        try:
+            news_urls = [
+                "https://www.dawn.com/business",
+                "https://www.thenews.com.pk/business",
+                "https://tribune.com.pk/business"
+            ]
+            
+            for url in news_urls:
+                try:
+                    response = self.session.get(url, timeout=3)
+                    if response.status_code == 200:
+                        patterns = [
+                            r'KSE.?100[^\d]*([0-9]{2},[0-9]{3},[0-9]{3})',
+                            r'kse.?100[^\d]*([0-9]{2},[0-9]{3},[0-9]{3})',
+                            r'([0-9]{5,6})[^\d]*points?.*KSE',
+                        ]
+                        
+                        for pattern in patterns:
+                            matches = re.findall(pattern, response.text, re.IGNORECASE)
+                            for match in matches:
+                                try:
+                                    price = float(match.replace(',', ''))
+                                    if 40000 <= price <= 200000:
+                                        return {
+                                            'price': price,
+                                            'source': f'news_scraped_{url.split(".")[1]}',
+                                            'timestamp': self.get_pakistan_time()
+                                        }
+                                except:
+                                    continue
+                except:
+                    continue
         except Exception:
             pass
         
