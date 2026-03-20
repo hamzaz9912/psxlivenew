@@ -607,79 +607,10 @@ class EnhancedPSXFetcher:
             return 0.0
     
     def _get_sector_based_estimate(self, symbol):
-        """Get realistic price estimate based on company sector for all 100 KSE-100 companies"""
-        
-        # Add KSE-100 index handling
-        if symbol.upper() in ['KSE-100', 'KSE100', '^KSE100', 'KSE']:
-            return 135000.00  # Current KSE-100 index value (March 2026)
-        
-        # Complete sector-based price estimates for all 100 KSE-100 companies (based on historical PSX data)
-        sector_estimates = {
-            # Banking Sector (16 companies) - CORRECTED with accurate current prices
-            'HBL': 120.00, 'UBL': 375.00, 'MCB': 210.00, 'NBP': 35.00,
-            'ABL': 125.00, 'BAFL': 45.00, 'MEBL': 180.00, 'JSBL': 8.50,
-            'FABL': 28.50, 'BAHL': 85.00, 'AKBL': 22.50, 'SNBL': 12.00,
-            'BOP': 6.80, 'SCBPL': 68.00, 'SILK': 2.50, 'KASB': 8.00,
-            
-            # Oil & Gas Sector (15 companies)
-            'OGDC': 105.00, 'PPL': 85.00, 'POL': 380.00, 'MARI': 1850.00,
-            'PSO': 165.00, 'APL': 325.00, 'SNGP': 55.00, 'SSGC': 12.50,
-            'OGRA': 125.0, 'HASCOL': 12.5, 'BYCO': 15.8, 'SHEL': 145.0,
-            'TOTAL': 98.5, 'GASF': 22.0, 'APMJ': 35.5,
-            
-            # Cement Sector (13 companies)
-            'LUCK': 680.00, 'DGKC': 85.00, 'MLCF': 35.00, 'PIOC': 145.00,
-            'KOHC': 440.88, 'ACPL': 279.9, 'CHCC': 290.0, 'BWCL': 481.9,
-            'FCCL': 46.8, 'THCCL': 46.43, 'DSKC': 95.5, 'GWLC': 112.0,
-            'JVDC': 88.7,
-            
-            # Fertilizer Sector (8 companies)
-            'FFC': 473.0, 'EFERT': 216.35, 'FFBL': 24.5, 'FATIMA': 113.55,
-            'DAWH': 18.5, 'AGL': 60.74, 'EPCL': 185.0, 'ENGRO': 298.5,
-            
-            # Power & Energy Sector (12 companies)
-            'HUBC': 95.0, 'KEL': 5.2, 'KAPCO': 32.0, 'LOTTE': 20.7,
-            'ARL': 48.0, 'NRL': 235.0, 'PACE': 75.5, 'POWER': 55.2,
-            'TPEL': 185.5, 'NCPL': 42.8, 'GTYR': 385.0, 'WPIL': 125.5,
-            
-            # Technology Sector (7 companies)
-            'SYS': 650.0, 'TRG': 45.0, 'NETSOL': 82.0, 'AVN': 65.0,
-            'IBFL': 95.5, 'CMPL': 125.0, 'PTCL': 8.5,
-            
-            # Automobile Sector (8 companies)
-            'INDU': 2130.0, 'ATLH': 1225.0, 'PSMC': 340.0, 'AGTL': 420.0,
-            'MTL': 569.97, 'HINOON': 613.0, 'GHGL': 285.5, 'ATRL': 295.0,
-            
-            # Food & Beverages Sector (9 companies)
-            'NESTLE': 6800.0, 'UNILEVER': 15500.0, 'NATF': 48.0,
-            'COLG': 2550.0, 'UNITY': 19.0, 'ALNOOR': 85.5, 'WAVES': 125.0,
-            'SHIELD': 255.5, 'BIFO': 45.8,
-            
-            # Textiles Sector (10 companies)
-            'ILP': 45.0, 'NML': 65.0, 'GATM': 52.0, 'CTM': 38.0,
-            'KTML': 42.5, 'SPLC': 55.8, 'ASTL': 28.5, 'DSFL': 35.2,
-            'LOTCHEM': 25.8, 'YOUW': 48.5,
-            
-            # Pharmaceuticals Sector (6 companies)
-            'GSK': 155.0, 'SEARL': 235.0, 'HINOON': 285.0, 'GLAXO': 185.5,
-            'ORIX': 95.8, 'AGP': 125.5,
-            
-            # Chemicals Sector (7 companies)
-            'ICI': 485.0, 'BERGER': 114.26, 'SITARA': 604.99, 'LEINER': 225.5,
-            'LOADS': 85.8, 'RCML': 125.0, 'EFOODS': 155.5,
-            
-            # Paper & Board Sector (3 companies)
-            'PKGS': 580.0, 'PACE': 75.5, 'CPPL': 185.5,
-            
-            # Sugar & Allied Sector (4 companies)
-            'ASTL': 28.5, 'ALNOOR': 85.5, 'JDW': 125.8, 'SHFA': 315.0,
-            
-            # Miscellaneous Sector (6 companies)
-            'THAL': 445.5, 'PEL': 41.5, 'SIEM': 285.5, 'SAIF': 95.8,
-            'MACFL': 125.0, 'MARTIN': 185.5
-        }
-        
-        return sector_estimates.get(symbol, 85.0)  # Default fallback
+        """DEPRECATED: This function is no longer used. Live data is fetched directly from Yahoo Finance + PSX.
+        Returns None to indicate no estimated data should be used."""
+        # This function is deprecated - we no longer use estimated/simulated data
+        return None
     
     def get_kse100_index_value(self):
         """Get current KSE-100 index value from Yahoo Finance or PSX"""
@@ -736,15 +667,12 @@ class EnhancedPSXFetcher:
         except Exception as e:
             print(f"PSX website fetch failed: {e}")
         
-        # Fallback value
-        return {
-            'value': 140153.24,
-            'timestamp': self.get_pakistan_time(),
-            'source': 'fallback_current_level'
-        }
+        # NO FALLBACK - Return None if no live data available
+        # This forces the UI to show "unavailable" instead of fake estimates
+        return None
     
     
-    @st.cache_data(ttl=300)
+    @st.cache_data(ttl=60)
     def fetch_kse100_data(self):
         """Fetch KSE-100 historical data - alias for fetch_kse100_historical"""
         return self.fetch_kse100_historical(period="1mo")
@@ -916,59 +844,129 @@ class EnhancedPSXFetcher:
         })
 
     def get_live_price(self, symbol):
-        """Get live price for a specific company symbol with multiple fallback strategies"""
+        """Get live price for a specific company symbol using direct multi-source live feed (Yahoo Finance + PSX Scraper)"""
         try:
-            # First try to get from cached all_kse100_data if available
+            # First try to get from cached all_kse100_data if available (only if fresh)
+            cache_max_age = 60  # 60 seconds max cache age
             if hasattr(st, 'session_state') and 'all_kse100_data' in st.session_state:
                 if symbol in st.session_state.all_kse100_data:
                     company_data = st.session_state.all_kse100_data[symbol]
-                    return {
-                        'price': company_data['current_price'],
-                        'source': company_data['source'],
-                        'timestamp': company_data['timestamp']
-                    }
+                    # Check if cache is fresh (less than 60 seconds old)
+                    if 'timestamp' in company_data:
+                        try:
+                            cache_time = company_data['timestamp']
+                            if isinstance(cache_time, str):
+                                cache_time = datetime.fromisoformat(cache_time.replace('Z', '+00:00'))
+                            age = (datetime.now(pytz.timezone('Asia/Karachi')) - cache_time).total_seconds()
+                            if age < cache_max_age:
+                                return {
+                                    'price': company_data['current_price'],
+                                    'source': company_data['source'],
+                                    'timestamp': company_data['timestamp']
+                                }
+                        except:
+                            pass
 
-            # Try multiple data sources for live price
-            live_price = self._fetch_live_price_from_multiple_sources(symbol)
-
-            if live_price:
-                # Validate the live price before returning
-                sector_estimate = self._get_sector_based_estimate(symbol)
-                if not self._is_price_reasonable(live_price['price'], sector_estimate, symbol):
-                    return {
-                        'price': sector_estimate,
-                        'source': 'sector_estimate_validated',
-                        'timestamp': self.get_pakistan_time(),
-                        'note': f'Live price validated and corrected from {live_price["price"]:.2f} to {sector_estimate:.2f}'
-                    }
+            # DIRECT MULTI-SOURCE LIVE FEED: Yahoo Finance + PSX Scraper
+            # No estimated/simulated fallbacks - only real live data
+            
+            # Source 1: Yahoo Finance (primary)
+            live_price = self._fetch_live_price_from_yahoo(symbol)
+            if live_price and live_price.get('price', 0) > 0:
                 return live_price
-
-            # If no live data found, try individual company page
-            individual_price = self._fetch_individual_company_price(symbol)
-            if individual_price:
-                return individual_price
-
-            # Final fallback to sector-based estimate (NO data_fetcher fallback)
-            estimated_price = self._get_sector_based_estimate(symbol)
-            return {
-                'price': estimated_price,
-                'source': 'sector_based_estimate',
-                'timestamp': self.get_pakistan_time(),
-                'note': 'Live data not available - showing sector-based estimate'
-            }
+            
+            # Source 2: PSX Official Scraper
+            live_price = self._fetch_live_price_from_psx(symbol)
+            if live_price and live_price.get('price', 0) > 0:
+                return live_price
+            
+            # Source 3: Try individual company page from PSX
+            live_price = self._fetch_individual_company_price(symbol)
+            if live_price and live_price.get('price', 0) > 0:
+                return live_price
+            
+            # NO FALLBACK - Return None if no live data available
+            # This forces the UI to show "unavailable" instead of fake estimates
+            return None
 
         except Exception as e:
-            # Return sector-based estimate as final fallback
-            estimated_price = self._get_sector_based_estimate(symbol)
-            return {
-                'price': estimated_price,
-                'source': 'sector_based_estimate_fallback',
-                'timestamp': self.get_pakistan_time(),
-                'error': str(e)
-            }
+            # Return None instead of estimated data on error
+            return None
 
+    def _fetch_live_price_from_yahoo(self, symbol):
+        """Direct Yahoo Finance feed - Primary source for live PSX data"""
+        
+        # Special handling for KSE-100 index
+        if symbol.upper() in ['KSE-100', 'KSE100', '^KSE100', 'KSE']:
+            return self._fetch_kse100_index_price()
+        
+        # Try Yahoo Finance with multiple suffixes
+        suffixes = [".KA", ".KAR", "", "-KAR", ".KSE"]
+        
+        for suffix in suffixes:
+            try:
+                import yfinance as yf
+                yahoo_symbol = f"{symbol}{suffix}"
+                ticker = yf.Ticker(yahoo_symbol)
+                
+                # Get recent data with shorter interval for more current price
+                hist = ticker.history(period="1d", interval="1m")
+                if not hist.empty:
+                    latest_price = hist['Close'].iloc[-1]
+                    if latest_price and latest_price > 0:
+                        return {
+                            'price': float(latest_price),
+                            'source': f'yahoo_finance_{suffix}' if suffix else 'yahoo_finance',
+                            'timestamp': self.get_pakistan_time()
+                        }
+            except Exception as e:
+                continue
+        
+        return None
+    
+    def _fetch_live_price_from_psx(self, symbol):
+        """Direct PSX Official Website Scraper - Secondary source"""
+        
+        # Special handling for KSE-100 index
+        if symbol.upper() in ['KSE-100', 'KSE100', '^KSE100', 'KSE']:
+            return self._fetch_kse100_index_price()
+        
+        # Try to get from PSX official website
+        try:
+            # Get company name from symbol
+            company_name = self.kse100_companies.get(symbol, symbol)
+            
+            # Try market summary page first
+            url = "https://www.psx.com.pk/market-summary/"
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            response = self.session.get(url, headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Look for the specific company
+                for link in soup.find_all('a', href=True):
+                    if symbol.upper() in link.get_text().upper() or company_name.upper() in link.get_text().upper():
+                        parent = link.parent
+                        if parent:
+                            # Look for price in nearby elements
+                            price_elem = parent.find_next_sibling()
+                            if price_elem:
+                                price_text = price_elem.get_text(strip=True)
+                                price = self._extract_price(price_text)
+                                if price and price > 0:
+                                    return {
+                                        'price': price,
+                                        'source': 'psx_official_scraper',
+                                        'timestamp': self.get_pakistan_time()
+                                    }
+        except Exception as e:
+            pass
+        
+        return None
+    
     def _fetch_live_price_from_multiple_sources(self, symbol):
-        """Fetch live price from multiple sources"""
+        """Fetch live price from multiple sources - Legacy wrapper"""
         
         # Special handling for KSE-100 index
         if symbol.upper() in ['KSE-100', 'KSE100', '^KSE100', 'KSE']:

@@ -778,29 +778,94 @@ def display_comprehensive_intraday_forecasts():
 
     st.header("🔮 Comprehensive Intraday Forecasting Dashboard")
     
-    # Check and display real-time data status
+    # ==========================================
+    # LIVE KSE-100 PRICE DISPLAY (PROMINENT)
+    # ==========================================
+    
+    # Get live KSE-100 price
+    live_kse100_price = None
+    live_source = None
+    live_timestamp = None
+    
+    if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+        try:
+            live_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
+            if live_data and live_data.get('price'):
+                live_kse100_price = live_data['price']
+                live_source = live_data.get('source', 'unknown')
+                live_timestamp = live_data.get('timestamp')
+        except Exception as e:
+            pass
+    
+    # Display prominent live price banner
+    st.markdown("""
+    <style>
+    .live-price-banner {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .live-price-value {
+        font-size: 42px;
+        font-weight: bold;
+        color: white;
+    }
+    .live-price-label {
+        font-size: 16px;
+        color: white;
+        opacity: 0.9;
+    }
+    .live-price-source {
+        font-size: 12px;
+        color: white;
+        opacity: 0.8;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Show live price with prominent banner
+    if live_kse100_price and live_kse100_price > 0:
+        st.markdown(f"""
+        <div class="live-price-banner">
+            <div class="live-price-label">📊 LIVE KSE-100 INDEX</div>
+            <div class="live-price-value">PKR {live_kse100_price:,.2f}</div>
+            <div class="live-price-source">Source: {live_source} | Updated: {live_timestamp}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Show unavailable message
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 24px; color: white;">⚠️ Live Data Unavailable</div>
+            <div style="font-size: 14px; color: white; opacity: 0.9;">Unable to fetch live KSE-100 price</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # ==========================================
+    # DATA SOURCE STATUS
+    # ==========================================
+    
     def get_data_source_status():
         """Check which data source is being used for real-time prices"""
         if hasattr(st.session_state, 'enhanced_psx_fetcher'):
             try:
-                # Try to get live price to test data source
                 test_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
                 if test_data and test_data.get('price'):
                     source = test_data.get('source', 'unknown')
-                    # Check if it's real-time or estimated
                     if 'estimate' in source.lower() or 'sector' in source.lower():
                         return 'estimated', source
                     return 'live', source
             except:
                 pass
-        return 'fallback', 'enhanced_psx_fetcher'
+        return 'unavailable', 'no_data'
     
-    # Display data source status
     data_status, data_source = get_data_source_status()
     if data_status == 'live':
         st.success(f"📡 **REAL-TIME DATA ACTIVE** - Source: {data_source}")
-    elif data_status == 'estimated':
-        st.success(f"📡 **DATA ACTIVE** - Source: {data_source}")
+    elif data_status == 'unavailable':
+        st.warning("⚠️ **Live data currently unavailable** - Will retry on next refresh")
     else:
         st.info("ℹ️ Using enhanced PSX fetcher")
     
@@ -884,18 +949,46 @@ def display_comprehensive_intraday_forecasts():
         live_price = None
         live_data_source = None
         
-        # Try enhanced_psx_fetcher first for real-time data
+        # Force fresh data fetch - bypass session cache
         if hasattr(st.session_state, 'enhanced_psx_fetcher'):
             try:
+                # Clear any cached data for KSE-100 to force fresh fetch
+                if 'all_kse100_data' in st.session_state:
+                    if 'KSE-100' in st.session_state.all_kse100_data:
+                        del st.session_state.all_kse100_data['KSE-100']
+                
+                # Fetch fresh live data directly
                 live_kse_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
+                
                 if live_kse_data and live_kse_data.get('price'):
                     live_price = live_kse_data['price']
                     live_data_source = live_kse_data.get('source', 'enhanced_psx_fetcher')
-                    # Only show success if it's real data, not estimated
-                    if 'estimate' not in live_data_source.lower() and 'sector' not in live_data_source.lower():
-                        st.success(f"📡 Real-time KSE-100 Price: PKR {live_price:,.2f} (Source: {live_data_source})")
+                    
+                    # Check if this is real live data (not estimated)
+                    is_estimated = 'estimate' in str(live_data_source).lower() or 'sector' in str(live_data_source).lower()
+                    
+                    if is_estimated:
+                        st.warning(f"⚠️ Using fallback price: PKR {live_price:,.2f} (Source: {live_data_source})")
+                    else:
+                        # Show source info for real live data
+                        if 'yahoo' in live_data_source.lower():
+                            st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Yahoo Finance)")
+                        elif 'psx' in live_data_source.lower():
+                            st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (PSX Official)")
+                        else:
+                            st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} ({live_data_source})")
+                else:
+                    st.warning("⚠️ Live data unavailable - will use last closing price")
+                    # Try to get from KSE-100 index value
+                    try:
+                        index_data = st.session_state.enhanced_psx_fetcher.get_kse100_index_value()
+                        if index_data and index_data.get('value'):
+                            live_price = index_data['value']
+                            st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f}")
+                    except:
+                        pass
             except Exception as e:
-                st.warning(f"Enhanced fetcher error: {e}")
+                st.warning(f"Error fetching live data: {e}")
         
         # Get historical data from enhanced fetcher (can fallback to data_fetcher for historical only)
         historical_kse = None
@@ -1017,6 +1110,19 @@ def display_comprehensive_intraday_forecasts():
                 # Create combined figure with multiple traces
                 fig = go.Figure()
                 
+                # Add CURRENT LIVE PRICE reference line (like 152,700)
+                if live_price and live_price > 0:
+                    fig.add_hline(
+                        y=live_price, 
+                        line_dash="dash", 
+                        line_color="green",
+                        line_width=2,
+                        annotation_text=f"LIVE: {live_price:,.0f}",
+                        annotation_position="top left",
+                        annotation_font_size=14,
+                        annotation_font_color="green"
+                    )
+                
                 # Yesterday's last hour
                 if yesterday_last_hour is not None and not yesterday_last_hour.empty:
                     price_col = 'close' if 'close' in yesterday_last_hour.columns else 'price'
@@ -1116,6 +1222,19 @@ def display_comprehensive_intraday_forecasts():
                     if main_session_data is not None and not main_session_data.empty:
                         fig = go.Figure()
                         
+                        # Add CURRENT LIVE PRICE reference line (like 152,700)
+                        if live_price and live_price > 0:
+                            fig.add_hline(
+                                y=live_price, 
+                                line_dash="dash", 
+                                line_color="green",
+                                line_width=2,
+                                annotation_text=f"LIVE: {live_price:,.0f}",
+                                annotation_position="top left",
+                                annotation_font_size=14,
+                                annotation_font_color="green"
+                            )
+                        
                         # Main session forecast line (09:36-15:30)
                         fig.add_trace(go.Scatter(
                             x=main_session_data['time'],
@@ -1160,7 +1279,10 @@ def display_comprehensive_intraday_forecasts():
                         col1, col2, col3, col4 = st.columns(4)
 
                         with col1:
-                            st.metric("Current Price", f"PKR {current_price:,.2f}")
+                            if live_price and live_price > 0:
+                                st.metric("LIVE Price", f"PKR {live_price:,.2f}")
+                            else:
+                                st.metric("Current Price", f"PKR {current_price:,.2f}")
                         with col2:
                             session_high = main_session_data['predicted_price'].max()
                             st.metric("Session High", f"PKR {session_high:,.2f}")

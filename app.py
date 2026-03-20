@@ -70,6 +70,13 @@ def main():
         st.session_state.companies_data = {}
     if 'all_kse100_data' not in st.session_state:
         st.session_state.all_kse100_data = {}
+    
+    # Force clear cached data on page reload for fresh live prices
+    # This ensures we always get real-time data, not cached estimates
+    if 'force_refresh' not in st.session_state:
+        st.session_state.force_refresh = True
+        # Clear any old cached data
+        st.session_state.all_kse100_data = {}
     if 'live_kse40_dashboard' not in st.session_state:
         st.session_state.live_kse40_dashboard = LiveKSE40Dashboard()
     if 'enhanced_live_dashboard' not in st.session_state:
@@ -555,7 +562,6 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 # ==========================================
                 st.markdown("---")
                 st.subheader("📈 Comprehensive Intraday Forecast")
-                st.info("💡 **Quick View:** This shows the KSE-100 intraday forecast with the new workflow (Yesterday last hour + Today session)")
                 
                 # Import and display comprehensive intraday forecast
                 from comprehensive_intraday import ComprehensiveIntradayForecaster, is_trading_day, get_next_trading_day
@@ -589,96 +595,330 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 full_day = kse_forecasts.get('full_day')
                 morning_session = kse_forecasts.get('morning_session')
                 afternoon_session = kse_forecasts.get('afternoon_session')
+                yesterday_last_hour = kse_forecasts.get('yesterday_last_hour')
                 
-                # Display the intraday forecast graph
+                # ==========================================
+                # SIDEBAR FOR SESSION SELECTION
+                # ==========================================
+                st.markdown("""
+                <style>
+                .session-sidebar {
+                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                    padding: 15px;
+                    border-radius: 10px;
+                    margin-bottom: 20px;
+                }
+                .session-btn {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border: none;
+                    color: white;
+                    padding: 12px 20px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: block;
+                    font-size: 14px;
+                    margin: 8px 0;
+                    cursor: pointer;
+                    border-radius: 8px;
+                    width: 100%;
+                    font-weight: bold;
+                }
+                .session-btn.active {
+                    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                    border: 3px solid #2ecc71;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # Session selection in a container
+                col_graph_sel, col_graph_main = st.columns([1, 4])
+                
+                with col_graph_sel:
+                    st.markdown("### 📊 Select Session")
+                    
+                    # Use radio buttons for session selection
+                    selected_session = st.radio(
+                        "Choose Forecast Session:",
+                        options=["🌅 Full Day (9:30-15:30)", "🌅 Morning (9:45-12:00)", "☀️ Afternoon (12:00-15:30)", "📊 Main Session (9:36-15:30)", "📅 Yesterday Last Hour"],
+                        key="intraday_session_select",
+                        label_visibility="collapsed"
+                    )
+                
+                # Display the selected graph
                 import plotly.graph_objects as go
                 
-                if main_session is not None and not main_session.empty:
-                    fig_intraday = go.Figure()
+                if "Full Day" in selected_session and full_day is not None and not full_day.empty:
+                    st.info("💡 **Full Day Forecast:** Complete trading day from 9:30 AM to 3:30 PM")
+                    
+                    fig = go.Figure()
+                    
+                    # Full day forecast line
+                    fig.add_trace(go.Scatter(
+                        x=full_day['time'],
+                        y=full_day['predicted_price'],
+                        mode='lines+markers',
+                        name='Full Day Forecast',
+                        line=dict(color='#2196F3', width=3),
+                        marker=dict(size=6)
+                    ))
+                    
+                    # Add confidence bands
+                    fig.add_trace(go.Scatter(
+                        x=list(full_day['time']) + list(full_day['time'][::-1]),
+                        y=list(full_day['high']) + list(full_day['low'][::-1]),
+                        fill='toself',
+                        fillcolor='rgba(33, 150, 243, 0.2)',
+                        line=dict(color='rgba(255,255,255,0)'),
+                        name='Price Range'
+                    ))
+                    
+                    # Add current price line
+                    fig.add_hline(y=live_price, line_dash="dash", line_color="gray",
+                                  annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
+                    
+                    fig.update_layout(
+                        title="📈 KSE-100 Full Day Forecast (9:30 AM - 3:30 PM)",
+                        xaxis_title="Trading Time",
+                        yaxis_title="Predicted Price (PKR)",
+                        height=500,
+                        showlegend=True
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Metrics
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Current Price", f"PKR {live_price:,.2f}")
+                    with col2:
+                        st.metric("Expected High", f"PKR {full_day['high'].max():,.2f}")
+                    with col3:
+                        st.metric("Expected Low", f"PKR {full_day['low'].min():,.2f}")
+                    with col4:
+                        avg_conf = full_day['confidence'].mean()
+                        st.metric("Avg Confidence", f"{avg_conf:.0%}")
+                    
+                elif "Morning" in selected_session and morning_session is not None and not morning_session.empty:
+                    st.info("💡 **Morning Session Forecast:** 9:45 AM to 12:00 PM")
+                    
+                    fig = go.Figure()
+                    
+                    # Morning session forecast
+                    fig.add_trace(go.Scatter(
+                        x=morning_session['time'],
+                        y=morning_session['predicted_price'],
+                        mode='lines+markers',
+                        name='Morning Session',
+                        line=dict(color='#FF9800', width=3),
+                        marker=dict(size=10, symbol='circle')
+                    ))
+                    
+                    # Add markers for open and close
+                    fig.add_trace(go.Scatter(
+                        x=[morning_session['time'].iloc[0]],
+                        y=[morning_session['predicted_price'].iloc[0]],
+                        mode='markers',
+                        name='Session Open',
+                        marker=dict(size=18, color='green', symbol='star')
+                    ))
+                    
+                    fig.add_trace(go.Scatter(
+                        x=[morning_session['time'].iloc[-1]],
+                        y=[morning_session['predicted_price'].iloc[-1]],
+                        mode='markers',
+                        name='Session Close',
+                        marker=dict(size=18, color='red', symbol='diamond')
+                    ))
+                    
+                    # Current price line
+                    fig.add_hline(y=live_price, line_dash="dash", line_color="gray",
+                                  annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
+                    
+                    fig.update_layout(
+                        title="🌅 KSE-100 Morning Session Forecast (9:45 AM - 12:00 PM)",
+                        xaxis_title="Trading Time",
+                        yaxis_title="Predicted Price (PKR)",
+                        height=500,
+                        showlegend=True
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Metrics
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Current Price", f"PKR {live_price:,.2f}")
+                    with col2:
+                        session_high = morning_session['predicted_price'].max()
+                        st.metric("Session High", f"PKR {session_high:,.2f}")
+                    with col3:
+                        session_low = morning_session['predicted_price'].min()
+                        st.metric("Session Low", f"PKR {session_low:,.2f}")
+                    with col4:
+                        avg_conf = morning_session['confidence'].mean()
+                        st.metric("Avg Confidence", f"{avg_conf:.0%}")
+                    
+                elif "Afternoon" in selected_session and afternoon_session is not None and not afternoon_session.empty:
+                    st.info("💡 **Afternoon Session Forecast:** 12:00 PM to 3:30 PM")
+                    
+                    fig = go.Figure()
+                    
+                    # Afternoon session forecast
+                    fig.add_trace(go.Scatter(
+                        x=afternoon_session['time'],
+                        y=afternoon_session['predicted_price'],
+                        mode='lines+markers',
+                        name='Afternoon Session',
+                        line=dict(color='#F44336', width=3),
+                        marker=dict(size=10, symbol='square')
+                    ))
+                    
+                    # Add markers for open and close
+                    fig.add_trace(go.Scatter(
+                        x=[afternoon_session['time'].iloc[0]],
+                        y=[afternoon_session['predicted_price'].iloc[0]],
+                        mode='markers',
+                        name='Session Open',
+                        marker=dict(size=18, color='green', symbol='star')
+                    ))
+                    
+                    fig.add_trace(go.Scatter(
+                        x=[afternoon_session['time'].iloc[-1]],
+                        y=[afternoon_session['predicted_price'].iloc[-1]],
+                        mode='markers',
+                        name='Session Close',
+                        marker=dict(size=18, color='red', symbol='diamond')
+                    ))
+                    
+                    # Current price line
+                    fig.add_hline(y=live_price, line_dash="dash", line_color="gray",
+                                  annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
+                    
+                    fig.update_layout(
+                        title="☀️ KSE-100 Afternoon Session Forecast (12:00 PM - 3:30 PM)",
+                        xaxis_title="Trading Time",
+                        yaxis_title="Predicted Price (PKR)",
+                        height=500,
+                        showlegend=True
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Metrics
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Current Price", f"PKR {live_price:,.2f}")
+                    with col2:
+                        session_high = afternoon_session['predicted_price'].max()
+                        st.metric("Session High", f"PKR {session_high:,.2f}")
+                    with col3:
+                        session_low = afternoon_session['predicted_price'].min()
+                        st.metric("Session Low", f"PKR {session_low:,.2f}")
+                    with col4:
+                        avg_conf = afternoon_session['confidence'].mean()
+                        st.metric("Avg Confidence", f"{avg_conf:.0%}")
+                    
+                elif "Main Session" in selected_session and main_session is not None and not main_session.empty:
+                    st.info("💡 **Main Session Forecast:** 9:36 AM to 3:30 PM (New Workflow)")
+                    
+                    fig = go.Figure()
                     
                     # Main session forecast
-                    fig_intraday.add_trace(go.Scatter(
+                    fig.add_trace(go.Scatter(
                         x=main_session['time'],
                         y=main_session['predicted_price'],
                         mode='lines+markers',
-                        name='Main Session (09:36-15:30)',
-                        line=dict(color='#2196F3', width=3),
+                        name='Main Session (9:36-15:30)',
+                        line=dict(color='#9C27B0', width=3),
                         marker=dict(size=8)
                     ))
                     
-                    # Add opening marker
-                    if not main_session.empty:
-                        fig_intraday.add_trace(go.Scatter(
-                            x=[main_session['time'].iloc[0]],
-                            y=[main_session['predicted_price'].iloc[0]],
-                            mode='markers',
-                            name='Session Open',
-                            marker=dict(size=15, color='green', symbol='star')
-                        ))
-                        
-                        # Add closing marker
-                        fig_intraday.add_trace(go.Scatter(
-                            x=[main_session['time'].iloc[-1]],
-                            y=[main_session['predicted_price'].iloc[-1]],
-                            mode='markers',
-                            name='Session Close',
-                            marker=dict(size=15, color='red', symbol='diamond')
-                        ))
+                    # Add markers for open and close
+                    fig.add_trace(go.Scatter(
+                        x=[main_session['time'].iloc[0]],
+                        y=[main_session['predicted_price'].iloc[0]],
+                        mode='markers',
+                        name='Session Open',
+                        marker=dict(size=15, color='green', symbol='star')
+                    ))
                     
-                    # Add current price line
-                    fig_intraday.add_hline(
-                        y=live_price, 
-                        line_dash="dash", 
-                        line_color="gray",
-                        annotation_text=f"Current: {live_price:,.0f}",
-                        annotation_position="top left"
-                    )
+                    fig.add_trace(go.Scatter(
+                        x=[main_session['time'].iloc[-1]],
+                        y=[main_session['predicted_price'].iloc[-1]],
+                        mode='markers',
+                        name='Session Close',
+                        marker=dict(size=15, color='red', symbol='diamond')
+                    ))
                     
-                    fig_intraday.update_layout(
-                        title=f"KSE-100 Intraday Forecast ({forecast_type_intraday.replace('_', ' ').title()})",
+                    # Current price line
+                    fig.add_hline(y=live_price, line_dash="dash", line_color="gray",
+                                  annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
+                    
+                    fig.update_layout(
+                        title="📊 KSE-100 Main Session Forecast (9:36 AM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
-                        height=450,
-                        showlegend=True,
-                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                        height=500,
+                        showlegend=True
                     )
                     
-                    st.plotly_chart(fig_intraday, use_container_width=True)
+                    st.plotly_chart(fig, use_container_width=True)
                     
-                    # Summary metrics
-                    st.subheader("📊 Intraday Forecast Summary")
+                    # Metrics
                     col1, col2, col3, col4 = st.columns(4)
-                    
                     with col1:
                         st.metric("Current Price", f"PKR {live_price:,.2f}")
                     with col2:
                         session_high = main_session['predicted_price'].max()
-                        st.metric("Expected High", f"PKR {session_high:,.2f}")
+                        st.metric("Session High", f"PKR {session_high:,.2f}")
                     with col3:
                         session_low = main_session['predicted_price'].min()
-                        st.metric("Expected Low", f"PKR {session_low:,.2f}")
+                        st.metric("Session Low", f"PKR {session_low:,.2f}")
                     with col4:
                         avg_conf = main_session['confidence'].mean()
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
-                    # Show session comparison
-                    with st.expander("📊 View Session Comparisons (Morning vs Afternoon)"):
-                        if morning_session is not None and afternoon_session is not None:
-                            morning_start = morning_session['predicted_price'].iloc[0]
-                            morning_end = morning_session['predicted_price'].iloc[-1]
-                            morning_change = ((morning_end - morning_start) / morning_start) * 100
-                            
-                            afternoon_start = afternoon_session['predicted_price'].iloc[0]
-                            afternoon_end = afternoon_session['predicted_price'].iloc[-1]
-                            afternoon_change = ((afternoon_end - afternoon_start) / afternoon_start) * 100
-                            
-                            sess_col1, sess_col2 = st.columns(2)
-                            with sess_col1:
-                                st.write("**Morning Session (09:45-12:00)**")
-                                st.metric("Change", f"{morning_change:+.2f}%")
-                            with sess_col2:
-                                st.write("**Afternoon Session (12:00-15:30)**")
-                                st.metric("Change", f"{afternoon_change:+.2f}%")
+                elif "Yesterday" in selected_session and yesterday_last_hour is not None and not yesterday_last_hour.empty:
+                    st.info("💡 **Yesterday's Last Hour:** 2:00 PM to 3:30 PM (Used as input for today's forecast)")
+                    
+                    price_col = 'close' if 'close' in yesterday_last_hour.columns else 'price'
+                    
+                    fig = go.Figure()
+                    
+                    # Yesterday last hour
+                    fig.add_trace(go.Scatter(
+                        x=yesterday_last_hour['time'],
+                        y=yesterday_last_hour[price_col],
+                        mode='lines+markers',
+                        name="Yesterday Last Hour (14:00-15:30)",
+                        line=dict(color='#607D8B', width=3, dash='dot'),
+                        marker=dict(size=8, symbol='diamond')
+                    ))
+                    
+                    fig.update_layout(
+                        title="📅 KSE-100 Yesterday Last Hour (2:00 PM - 3:30 PM)",
+                        xaxis_title="Time",
+                        yaxis_title="Price (PKR)",
+                        height=500,
+                        showlegend=True
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Show trend analysis
+                    if len(yesterday_last_hour) >= 2:
+                        start_price = yesterday_last_hour[price_col].iloc[0]
+                        end_price = yesterday_last_hour[price_col].iloc[-1]
+                        change = end_price - start_price
+                        change_pct = (change / start_price) * 100
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("2:00 PM Price", f"PKR {start_price:,.2f}")
+                        with col2:
+                            st.metric("3:30 PM Price", f"PKR {end_price:,.2f}")
+                        with col3:
+                            st.metric("Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
                 
                 # Show next day forecast info
                 st.info("🌙 **After 3:00 PM:** View the 'Comprehensive Intraday Forecasts' option in sidebar for next day's full forecast")
