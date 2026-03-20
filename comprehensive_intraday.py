@@ -982,72 +982,72 @@ def display_comprehensive_intraday_forecasts():
                         st.metric("Last Hour Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
             else:
                 st.warning("⚠️ Yesterday's data not available - using fallback analysis")
+            
+            # ALWAYS show the forecast graph regardless of yesterday data availability
+            st.subheader("📈 KSE-100 Forecast Graph")
+            
+            # Determine which data to display based on forecast type and trading day
+            if not trading_day or forecast_type == "next_day" or forecast_type == "closing_session":
+                # Show next day/weekend forecast with all previous session data
+                yesterday_last_hour = kse_forecasts.get('yesterday_last_hour')
+                today_full_session = kse_forecasts.get('main_session_0936_1530')
+                morning_session = kse_forecasts.get('morning_session')
+                afternoon_session = kse_forecasts.get('afternoon_session')
+                full_day = kse_forecasts.get('full_day')
                 
-                # Create SINGLE comprehensive graph for 9:30-15:30
-                st.subheader("📊 KSE-100 Forecast (9:30 AM - 3:30 PM)")
+                next_day_forecast = forecaster.generate_next_day_forecast(
+                    current_price, yesterday_last_hour, today_full_session
+                )
                 
-                # Determine which data to display based on forecast type and trading day
-                if not trading_day or forecast_type == "next_day" or forecast_type == "closing_session":
-                    # Show next day/weekend forecast with all previous session data
-                    yesterday_last_hour = kse_forecasts.get('yesterday_last_hour')
-                    today_full_session = kse_forecasts.get('main_session_0936_1530')
-                    morning_session = kse_forecasts.get('morning_session')
-                    afternoon_session = kse_forecasts.get('afternoon_session')
-                    full_day = kse_forecasts.get('full_day')
-                    
-                    next_day_forecast = forecaster.generate_next_day_forecast(
-                        current_price, yesterday_last_hour, today_full_session
-                    )
-                    
-                    # Show opening bias
-                    bias_result = forecaster.generate_tomorrow_open_bias(yesterday_last_hour, today_full_session)
-                    st.subheader("🔮 Opening Bias")
-                    bias_col1, bias_col2, bias_col3 = st.columns(3)
-                    with bias_col1:
-                        bias_color = "green" if bias_result['bias'] == "UP" else "red" if bias_result['bias'] == "DOWN" else "gray"
-                        st.markdown(f"<h2 style='color:{bias_color};'>{bias_result['bias']}</h2>", unsafe_allow_html=True)
-                    with bias_col2:
-                        st.metric("Confidence", f"{bias_result['confidence']:.0%}")
-                    with bias_col3:
-                        st.metric("Bias Score", f"{bias_result['bias_score']:.4f}")
-                    
-                    # Show combined chart with all sessions
-                    st.subheader("📈 Combined Session Forecasts + Next Day")
-                    
-                    # Create combined figure with multiple traces
-                    fig = go.Figure()
-                    
-                    # Yesterday's last hour
-                    if yesterday_last_hour is not None and not yesterday_last_hour.empty:
-                        price_col = 'close' if 'close' in yesterday_last_hour.columns else 'price'
-                        fig.add_trace(go.Scatter(
-                            x=yesterday_last_hour['time'],
-                            y=yesterday_last_hour[price_col],
-                            mode='lines+markers',
-                            name="Yesterday Last Hour (14:00-15:30)",
-                            line=dict(color='gray', width=2, dash='dot'),
-                            marker=dict(size=4)
-                        ))
-                    
-                    # Morning session
-                    if morning_session is not None and not morning_session.empty:
-                        fig.add_trace(go.Scatter(
-                            x=morning_session['time'],
-                            y=morning_session['predicted_price'],
-                            mode='lines+markers',
-                            name='Morning Session (09:45-12:00)',
-                            line=dict(color='orange', width=3),
-                            marker=dict(size=6)
-                        ))
-                    
-                    # Afternoon session
-                    if afternoon_session is not None and not afternoon_session.empty:
-                        fig.add_trace(go.Scatter(
-                            x=afternoon_session['time'],
-                            y=afternoon_session['predicted_price'],
-                            mode='lines+markers',
-                            name='Afternoon Session (12:00-15:30)',
-                            line=dict(color='red', width=3),
+                # Show opening bias
+                bias_result = forecaster.generate_tomorrow_open_bias(yesterday_last_hour, today_full_session)
+                st.subheader("🔮 Opening Bias")
+                bias_col1, bias_col2, bias_col3 = st.columns(3)
+                with bias_col1:
+                    bias_color = "green" if bias_result['bias'] == "UP" else "red" if bias_result['bias'] == "DOWN" else "gray"
+                    st.markdown(f"<h2 style='color:{bias_color};'>{bias_result['bias']}</h2>", unsafe_allow_html=True)
+                with bias_col2:
+                    st.metric("Confidence", f"{bias_result['confidence']:.0%}")
+                with bias_col3:
+                    st.metric("Bias Score", f"{bias_result['bias_score']:.4f}")
+                
+                # Show combined chart with all sessions
+                st.subheader("📈 Combined Session Forecasts + Next Day")
+                
+                # Create combined figure with multiple traces
+                fig = go.Figure()
+                
+                # Yesterday's last hour
+                if yesterday_last_hour is not None and not yesterday_last_hour.empty:
+                    price_col = 'close' if 'close' in yesterday_last_hour.columns else 'price'
+                    fig.add_trace(go.Scatter(
+                        x=yesterday_last_hour['time'],
+                        y=yesterday_last_hour[price_col],
+                        mode='lines+markers',
+                        name="Yesterday Last Hour (14:00-15:30)",
+                        line=dict(color='gray', width=2, dash='dot'),
+                        marker=dict(size=4)
+                    ))
+                
+                # Morning session
+                if morning_session is not None and not morning_session.empty:
+                    fig.add_trace(go.Scatter(
+                        x=morning_session['time'],
+                        y=morning_session['predicted_price'],
+                        mode='lines+markers',
+                        name='Morning Session (09:45-12:00)',
+                        line=dict(color='orange', width=3),
+                        marker=dict(size=6)
+                    ))
+                
+                # Afternoon session
+                if afternoon_session is not None and not afternoon_session.empty:
+                    fig.add_trace(go.Scatter(
+                        x=afternoon_session['time'],
+                        y=afternoon_session['predicted_price'],
+                        mode='lines+markers',
+                        name='Afternoon Session (12:00-15:30)',
+                        line=dict(color='red', width=3),
                             marker=dict(size=6)
                         ))
                     

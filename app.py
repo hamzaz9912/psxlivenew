@@ -394,7 +394,33 @@ def main():
 def display_kse100_analysis(forecast_type, days_ahead, custom_date):
     """Display KSE-100 index analysis and forecasting"""
     
-    col1, col2 = st.columns([2, 1])
+    # Quick access to Comprehensive Intraday Forecast
+    st.markdown("""
+    <style>
+    .intraday-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 12px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin: 8px 0;
+        cursor: pointer;
+        border-radius: 8px;
+        width: 100%;
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    col0, col1, col2 = st.columns([1, 2, 1])
+    
+    with col0:
+        if st.button("📈 Comprehensive Intraday", use_container_width=True, key="kse100_intraday_btn"):
+            st.session_state['analysis_type'] = "Comprehensive Intraday Forecasts"
+            st.rerun()
     
     with col1:
         st.subheader("📊 KSE-100 Index Analysis")
@@ -523,6 +549,139 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                             
                     except Exception as e:
                         st.error(f"Forecasting error: {str(e)}")
+                
+                # ==========================================
+                # COMPREHENSIVE INTRADAY FORECAST SECTION
+                # ==========================================
+                st.markdown("---")
+                st.subheader("📈 Comprehensive Intraday Forecast")
+                st.info("💡 **Quick View:** This shows the KSE-100 intraday forecast with the new workflow (Yesterday last hour + Today session)")
+                
+                # Import and display comprehensive intraday forecast
+                from comprehensive_intraday import ComprehensiveIntradayForecaster, is_trading_day, get_next_trading_day
+                
+                # Initialize forecaster
+                intraday_forecaster = ComprehensiveIntradayForecaster()
+                
+                # Determine forecast type
+                forecast_type_intraday = intraday_forecaster.get_current_forecast_type()
+                
+                # Get live price for current KSE-100
+                live_price = None
+                if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+                    try:
+                        live_kse = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
+                        if live_kse and live_kse.get('price'):
+                            live_price = live_kse['price']
+                    except:
+                        pass
+                
+                if live_price is None:
+                    live_price = current_price
+                
+                # Generate comprehensive forecasts
+                kse_forecasts = intraday_forecaster.generate_comprehensive_forecasts(
+                    kse_data, "KSE-100", live_price
+                )
+                
+                # Get main session data
+                main_session = kse_forecasts.get('main_session_0936_1530')
+                full_day = kse_forecasts.get('full_day')
+                morning_session = kse_forecasts.get('morning_session')
+                afternoon_session = kse_forecasts.get('afternoon_session')
+                
+                # Display the intraday forecast graph
+                import plotly.graph_objects as go
+                
+                if main_session is not None and not main_session.empty:
+                    fig_intraday = go.Figure()
+                    
+                    # Main session forecast
+                    fig_intraday.add_trace(go.Scatter(
+                        x=main_session['time'],
+                        y=main_session['predicted_price'],
+                        mode='lines+markers',
+                        name='Main Session (09:36-15:30)',
+                        line=dict(color='#2196F3', width=3),
+                        marker=dict(size=8)
+                    ))
+                    
+                    # Add opening marker
+                    if not main_session.empty:
+                        fig_intraday.add_trace(go.Scatter(
+                            x=[main_session['time'].iloc[0]],
+                            y=[main_session['predicted_price'].iloc[0]],
+                            mode='markers',
+                            name='Session Open',
+                            marker=dict(size=15, color='green', symbol='star')
+                        ))
+                        
+                        # Add closing marker
+                        fig_intraday.add_trace(go.Scatter(
+                            x=[main_session['time'].iloc[-1]],
+                            y=[main_session['predicted_price'].iloc[-1]],
+                            mode='markers',
+                            name='Session Close',
+                            marker=dict(size=15, color='red', symbol='diamond')
+                        ))
+                    
+                    # Add current price line
+                    fig_intraday.add_hline(
+                        y=live_price, 
+                        line_dash="dash", 
+                        line_color="gray",
+                        annotation_text=f"Current: {live_price:,.0f}",
+                        annotation_position="top left"
+                    )
+                    
+                    fig_intraday.update_layout(
+                        title=f"KSE-100 Intraday Forecast ({forecast_type_intraday.replace('_', ' ').title()})",
+                        xaxis_title="Trading Time",
+                        yaxis_title="Predicted Price (PKR)",
+                        height=450,
+                        showlegend=True,
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                    )
+                    
+                    st.plotly_chart(fig_intraday, use_container_width=True)
+                    
+                    # Summary metrics
+                    st.subheader("📊 Intraday Forecast Summary")
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        st.metric("Current Price", f"PKR {live_price:,.2f}")
+                    with col2:
+                        session_high = main_session['predicted_price'].max()
+                        st.metric("Expected High", f"PKR {session_high:,.2f}")
+                    with col3:
+                        session_low = main_session['predicted_price'].min()
+                        st.metric("Expected Low", f"PKR {session_low:,.2f}")
+                    with col4:
+                        avg_conf = main_session['confidence'].mean()
+                        st.metric("Avg Confidence", f"{avg_conf:.0%}")
+                    
+                    # Show session comparison
+                    with st.expander("📊 View Session Comparisons (Morning vs Afternoon)"):
+                        if morning_session is not None and afternoon_session is not None:
+                            morning_start = morning_session['predicted_price'].iloc[0]
+                            morning_end = morning_session['predicted_price'].iloc[-1]
+                            morning_change = ((morning_end - morning_start) / morning_start) * 100
+                            
+                            afternoon_start = afternoon_session['predicted_price'].iloc[0]
+                            afternoon_end = afternoon_session['predicted_price'].iloc[-1]
+                            afternoon_change = ((afternoon_end - afternoon_start) / afternoon_start) * 100
+                            
+                            sess_col1, sess_col2 = st.columns(2)
+                            with sess_col1:
+                                st.write("**Morning Session (09:45-12:00)**")
+                                st.metric("Change", f"{morning_change:+.2f}%")
+                            with sess_col2:
+                                st.write("**Afternoon Session (12:00-15:30)**")
+                                st.metric("Change", f"{afternoon_change:+.2f}%")
+                
+                # Show next day forecast info
+                st.info("🌙 **After 3:00 PM:** View the 'Comprehensive Intraday Forecasts' option in sidebar for next day's full forecast")
                 
             else:
                 st.error("Unable to fetch KSE-100 data. Please try again later.")
