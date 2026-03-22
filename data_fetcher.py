@@ -1054,9 +1054,9 @@ class DataFetcher:
             import pytz
             from datetime import datetime
             
-            # KSE-100 typically trades in the range of 40,000-85,000
-            # Use a reasonable base price around 60,000 as default
-            base_price = 65000
+            # KSE-100 currently trades in the range of 120,000-160,000 (March 2026)
+            # Use a reasonable base price around 152,000 as default
+            base_price = 152000
             
             # Get Pakistan timezone
             pakistan_tz = pytz.timezone('Asia/Karachi')
@@ -1083,8 +1083,8 @@ class DataFetcher:
                     daily_change = random.uniform(-0.02, 0.02)
                     current_price = current_price * (1 + daily_change)
                     
-                    # Ensure price stays in reasonable range
-                    current_price = max(40000, min(85000, current_price))
+                    # Ensure price stays in reasonable range (120,000-200,000)
+                    current_price = max(120000, min(200000, current_price))
                     prices.append(round(current_price, 2))
                 
                 current_date += timedelta(days=1)
@@ -1696,8 +1696,8 @@ class DataFetcher:
                                 for match in matches:
                                     try:
                                         price = float(match.replace(',', ''))
-                                        # Validate KSE-100 range (current market around 130k+)
-                                        if 120000 <= price <= 150000:
+                                        # Validate KSE-100 range (current market around 150k+)
+                                        if 120000 <= price <= 200000:
                                             return {
                                                 'price': price,
                                                 'timestamp': datetime.now(),
@@ -1788,7 +1788,7 @@ class DataFetcher:
                                             
                                             # Validate price range based on symbol
                                             if symbol == "KSE-100":
-                                                if 80000 <= price <= 150000:  # Current KSE-100 realistic range
+                                                if 120000 <= price <= 200000:  # Current KSE-100 realistic range (March 2026)
                                                     return {
                                                         'price': price,
                                                         'timestamp': datetime.now(),
@@ -1831,7 +1831,7 @@ class DataFetcher:
                                     try:
                                         price = float(price_match.group(1))
                                         if symbol == "KSE-100":
-                                            if 80000 <= price <= 150000:
+                                            if 120000 <= price <= 200000:
                                                 return {
                                                     'price': price,
                                                     'timestamp': datetime.now(),
@@ -1881,7 +1881,7 @@ class DataFetcher:
                                         try:
                                             price = float(match)
                                             if symbol == "KSE-100":
-                                                if 80000 <= price <= 150000:
+                                                if 120000 <= price <= 200000:
                                                     return {
                                                         'price': price,
                                                         'timestamp': datetime.now(),

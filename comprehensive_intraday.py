@@ -779,81 +779,21 @@ def display_comprehensive_intraday_forecasts():
     st.header("🔮 Comprehensive Intraday Forecasting Dashboard")
     
     # ==========================================
-    # AUTO-REFRESH TOGGLE (SIDEBAR)
-    # ==========================================
-    with st.sidebar:
-        st.markdown("""
-        <style>
-        .refresh-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        </style>
-        <div class="refresh-header">
-            <h4 style="color: white; margin: 0;">⚡ Auto-Refresh</h4>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        auto_refresh = st.toggle("Enable 60-Second Auto-Refresh", value=False, key="auto_refresh_toggle")
-        
-        if auto_refresh:
-            st.success("✅ Auto-refresh ACTIVE - Updates every 60 seconds")
-            
-            # Show countdown
-            if 'last_intraday_refresh' not in st.session_state:
-                st.session_state.last_intraday_refresh = datetime.now()
-            
-            time_since_refresh = (datetime.now() - st.session_state.last_intraday_refresh).total_seconds()
-            time_left = max(0, 60 - time_since_refresh)
-            
-            # Progress bar
-            progress_val = time_since_refresh / 60
-            st.progress(min(1.0, progress_val))
-            
-            st.markdown(f"**⏱️ Next refresh in: {int(time_left)} seconds**")
-            
-            if time_since_refresh >= 60:
-                st.session_state.last_intraday_refresh = datetime.now()
-                st.rerun()
-        else:
-            st.markdown("🔴 Auto-refresh DISABLED")
-    
-    # ==========================================
     # LIVE KSE-100 PRICE DISPLAY (PROMINENT)
     # ==========================================
     
-    # Get live KSE-100 price with previous close for daily change
+    # Get live KSE-100 price
     live_kse100_price = None
     live_source = None
     live_timestamp = None
-    previous_close = None
-    price_change = 0
-    price_change_pct = 0
     
     if hasattr(st.session_state, 'enhanced_psx_fetcher'):
         try:
-            # Get live price
             live_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
             if live_data and live_data.get('price'):
                 live_kse100_price = live_data['price']
                 live_source = live_data.get('source', 'unknown')
                 live_timestamp = live_data.get('timestamp')
-            
-            # Get previous day's close from historical data
-            historical_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("5d")
-            if historical_data is not None and not historical_data.empty:
-                if 'close' in historical_data.columns:
-                    previous_close = historical_data['close'].iloc[-1]  # Last available close
-                elif 'Close' in historical_data.columns:
-                    previous_close = historical_data['Close'].iloc[-1]
-            
-            # Calculate change
-            if live_kse100_price and previous_close:
-                price_change = live_kse100_price - previous_close
-                price_change_pct = (price_change / previous_close) * 100
         except Exception as e:
             pass
     
@@ -872,11 +812,6 @@ def display_comprehensive_intraday_forecasts():
         font-weight: bold;
         color: white;
     }
-    .live-price-change {
-        font-size: 18px;
-        color: white;
-        opacity: 0.95;
-    }
     .live-price-label {
         font-size: 16px;
         color: white;
@@ -887,27 +822,15 @@ def display_comprehensive_intraday_forecasts():
         color: white;
         opacity: 0.8;
     }
-    .price-up { color: #00C853; }
-    .price-down { color: #FF1744; }
     </style>
     """, unsafe_allow_html=True)
     
-    # Show live price with prominent banner including daily change
+    # Show live price with prominent banner
     if live_kse100_price and live_kse100_price > 0:
-        # Determine change color
-        change_color = "📈" if price_change >= 0 else "📉"
-        change_class = "price-up" if price_change >= 0 else "price-down"
-        
-        if previous_close:
-            change_text = f"{change_color} {price_change:+,.2f} ({price_change_pct:+.2f}%)"
-        else:
-            change_text = "(Previous close unavailable)"
-        
         st.markdown(f"""
         <div class="live-price-banner">
             <div class="live-price-label">📊 LIVE KSE-100 INDEX</div>
             <div class="live-price-value">PKR {live_kse100_price:,.2f}</div>
-            <div class="live-price-change">{change_text}</div>
             <div class="live-price-source">Source: {live_source} | Updated: {live_timestamp}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -1026,46 +949,32 @@ def display_comprehensive_intraday_forecasts():
         live_price = None
         live_data_source = None
         
-        # Force fresh data fetch - bypass session cache
+        # Try enhanced_psx_fetcher first for real-time data
         if hasattr(st.session_state, 'enhanced_psx_fetcher'):
             try:
-                # Clear any cached data for KSE-100 to force fresh fetch
-                if 'all_kse100_data' in st.session_state:
-                    if 'KSE-100' in st.session_state.all_kse100_data:
-                        del st.session_state.all_kse100_data['KSE-100']
-                
-                # Fetch fresh live data directly
                 live_kse_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
-                
                 if live_kse_data and live_kse_data.get('price'):
                     live_price = live_kse_data['price']
                     live_data_source = live_kse_data.get('source', 'enhanced_psx_fetcher')
-                    
-                    # Check if this is real live data (not estimated)
-                    is_estimated = 'estimate' in str(live_data_source).lower() or 'sector' in str(live_data_source).lower()
-                    
-                    if is_estimated:
-                        st.warning(f"⚠️ Using fallback price: PKR {live_price:,.2f} (Source: {live_data_source})")
+                    # Show source info
+                    if 'yahoo' in live_data_source.lower():
+                        st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Source: Yahoo Finance)")
+                    elif 'psx' in live_data_source.lower():
+                        st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Source: PSX Official)")
                     else:
-                        # Show source info for real live data
-                        if 'yahoo' in live_data_source.lower():
-                            st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Yahoo Finance)")
-                        elif 'psx' in live_data_source.lower():
-                            st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (PSX Official)")
-                        else:
-                            st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} ({live_data_source})")
+                        st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Source: {live_data_source})")
                 else:
-                    st.warning("⚠️ Live data unavailable - will use last closing price")
-                    # Try to get from KSE-100 index value
+                    st.warning("⚠️ Live data unavailable - trying alternative method")
+                    # Try to get KSE-100 index value directly
                     try:
-                        index_data = st.session_state.enhanced_psx_fetcher.get_kse100_index_value()
-                        if index_data and index_data.get('value'):
-                            live_price = index_data['value']
-                            st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f}")
+                        kse_index = st.session_state.enhanced_psx_fetcher.get_kse100_index_value()
+                        if kse_index and kse_index.get('value'):
+                            live_price = kse_index['value']
+                            st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f} (Source: {kse_index.get('source')})")
                     except:
                         pass
             except Exception as e:
-                st.warning(f"Error fetching live data: {e}")
+                st.warning(f"Enhanced fetcher error: {e}")
         
         # Get historical data from enhanced fetcher (can fallback to data_fetcher for historical only)
         historical_kse = None
@@ -1085,7 +994,32 @@ def display_comprehensive_intraday_forecasts():
 
         # Generate forecast if we have either live price OR historical data
         if historical_kse is not None and not historical_kse.empty:
-            current_price = live_price if live_price else historical_kse['close'].iloc[-1] if 'close' in historical_kse.columns else historical_kse.iloc[-1]
+            # Use live_price if available, otherwise use the most recent historical price
+            if live_price and live_price > 100000:  # Sanity check - KSE-100 should be > 100k
+                current_price = live_price
+            else:
+                # Use the most recent closing price from historical data
+                if 'close' in historical_kse.columns:
+                    historical_close = historical_kse['close'].iloc[-1]
+                    # If historical price is very old/low, try to get a better estimate
+                    if historical_close < 100000:
+                        # Try to get index value as fallback
+                        if hasattr(st.session_state, 'enhanced_psx_fetcher'):
+                            try:
+                                kse_index = st.session_state.enhanced_psx_fetcher.get_kse100_index_value()
+                                if kse_index and kse_index.get('value'):
+                                    current_price = kse_index['value']
+                                    st.info(f"Using KSE-100 Index: PKR {current_price:,.2f}")
+                                else:
+                                    current_price = 152700  # Default to current market level
+                            except:
+                                current_price = 152700
+                        else:
+                            current_price = 152700
+                    else:
+                        current_price = historical_close
+                else:
+                    current_price = historical_kse.iloc[-1]
 
             # Check for cached forecast
             cache_key = f"kse100_forecast_{show_forecast_for}"
@@ -1188,16 +1122,17 @@ def display_comprehensive_intraday_forecasts():
                 fig = go.Figure()
                 
                 # Add CURRENT LIVE PRICE reference line (like 152,700)
+                # Make it lighter so forecast is more visible
                 if live_price and live_price > 0:
                     fig.add_hline(
                         y=live_price, 
-                        line_dash="dash", 
-                        line_color="green",
-                        line_width=2,
-                        annotation_text=f"LIVE: {live_price:,.0f}",
-                        annotation_position="top left",
-                        annotation_font_size=14,
-                        annotation_font_color="green"
+                        line_dash="dot", 
+                        line_color="lightgray",
+                        line_width=1,
+                        annotation_text=f"Today: {live_price:,.0f}",
+                        annotation_position="bottom right",
+                        annotation_font_size=12,
+                        annotation_font_color="gray"
                     )
                 
                 # Yesterday's last hour
@@ -1261,12 +1196,13 @@ def display_comprehensive_intraday_forecasts():
                         ))
                     
                     fig.update_layout(
-                        title=f"Combined Forecast - Yesterday + Today + Next Day ({show_forecast_for.strftime('%Y-%m-%d')})",
-                        xaxis_title="Trading Time",
-                        yaxis_title="Price (PKR)",
+                        title=f"📈 NEXT DAY FORECAST - KSE-100 ({show_forecast_for.strftime('%Y-%m-%d')})",
+                        xaxis_title="Trading Time (09:30 - 15:30)",
+                        yaxis_title="Forecast Price (PKR)",
                         height=550,
                         showlegend=True,
-                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                        title_font_size=18
                     )
                     
                     st.plotly_chart(fig, use_container_width=True)
@@ -1276,7 +1212,11 @@ def display_comprehensive_intraday_forecasts():
                     col1, col2, col3, col4 = st.columns(4)
                     
                     with col1:
-                        st.metric("Current Price", f"PKR {current_price:,.2f}")
+                        if next_day_forecast is not None and not next_day_forecast.empty:
+                            forecast_start = next_day_forecast['predicted_price'].iloc[0]
+                            st.metric("Forecast Open (09:30)", f"PKR {forecast_start:,.2f}")
+                        else:
+                            st.metric("Current Price", f"PKR {current_price:,.2f}")
                     with col2:
                         if next_day_forecast is not None and not next_day_forecast.empty:
                             forecast_open = next_day_forecast['predicted_price'].iloc[0]
@@ -1312,49 +1252,21 @@ def display_comprehensive_intraday_forecasts():
                                 annotation_font_color="green"
                             )
                         
-                        # DYNAMIC FORECAST: Adjust forecast based on live price
-                        # Recalculate forecast starting from live price
-                        adjusted_forecast = main_session_data.copy()
-                        if live_price and live_price > 0 and len(adjusted_forecast) > 0:
-                            original_start = adjusted_forecast['predicted_price'].iloc[0]
-                            adjustment_factor = live_price / original_start if original_start > 0 else 1
-                            adjusted_forecast['predicted_price'] = adjusted_forecast['predicted_price'] * adjustment_factor
-                            
-                            # Also adjust high/low bands
-                            if 'high' in adjusted_forecast.columns:
-                                adjusted_forecast['high'] = adjusted_forecast['high'] * adjustment_factor
-                            if 'low' in adjusted_forecast.columns:
-                                adjusted_forecast['low'] = adjusted_forecast['low'] * adjustment_factor
-                        
-                        # Use adjusted forecast for plotting
-                        forecast_to_plot = adjusted_forecast if (live_price and live_price > 0) else main_session_data
-                        
                         # Main session forecast line (09:36-15:30)
                         fig.add_trace(go.Scatter(
-                            x=forecast_to_plot['time'],
-                            y=forecast_to_plot['predicted_price'],
+                            x=main_session_data['time'],
+                            y=main_session_data['predicted_price'],
                             mode='lines+markers',
                             name='Main Session (09:36-15:30)',
                             line=dict(color='blue', width=3),
                             marker=dict(size=6)
                         ))
                         
-                        # Add confidence bands if available
-                        if 'high' in forecast_to_plot.columns and 'low' in forecast_to_plot.columns:
-                            fig.add_trace(go.Scatter(
-                                x=list(forecast_to_plot['time']) + list(forecast_to_plot['time'][::-1]),
-                                y=list(forecast_to_plot['high']) + list(forecast_to_plot['low'][::-1]),
-                                fill='toself',
-                                fillcolor='rgba(33, 150, 243, 0.15)',
-                                line=dict(color='rgba(255,255,255,0)'),
-                                name='Price Range'
-                            ))
-                        
                         # Add opening marker
-                        if not forecast_to_plot.empty:
+                        if not main_session_data.empty:
                             fig.add_trace(go.Scatter(
-                                x=[forecast_to_plot['time'].iloc[0]],
-                                y=[forecast_to_plot['predicted_price'].iloc[0]],
+                                x=[main_session_data['time'].iloc[0]],
+                                y=[main_session_data['predicted_price'].iloc[0]],
                                 mode='markers',
                                 name='Session Open',
                                 marker=dict(size=15, color='green', symbol='star')
@@ -1362,8 +1274,8 @@ def display_comprehensive_intraday_forecasts():
                             
                             # Add closing marker
                             fig.add_trace(go.Scatter(
-                                x=[forecast_to_plot['time'].iloc[-1]],
-                                y=[forecast_to_plot['predicted_price'].iloc[-1]],
+                                x=[main_session_data['time'].iloc[-1]],
+                                y=[main_session_data['predicted_price'].iloc[-1]],
                                 mode='markers',
                                 name='Session Close',
                                 marker=dict(size=15, color='red', symbol='diamond')
@@ -1379,34 +1291,24 @@ def display_comprehensive_intraday_forecasts():
                         
                         st.plotly_chart(fig, use_container_width=True)
                         
-                        # Use adjusted forecast for metrics
-                        forecast_for_metrics = forecast_to_plot if (live_price and live_price > 0) else main_session_data
-                        
                         # Today's forecast summary
                         st.subheader("📊 Today's Forecast Summary")
                         col1, col2, col3, col4 = st.columns(4)
 
                         with col1:
                             if live_price and live_price > 0:
-                                # Show change from previous close
-                                change_delta = f"{price_change:+,.0f}" if price_change else None
-                                change_help = f"{price_change_pct:+.2f}% from previous close" if price_change_pct else None
-                                st.metric("LIVE Price", f"PKR {live_price:,.2f}", delta=change_delta, help=change_help)
+                                st.metric("LIVE Price", f"PKR {live_price:,.2f}")
                             else:
                                 st.metric("Current Price", f"PKR {current_price:,.2f}")
                         with col2:
-                            session_high = forecast_for_metrics['predicted_price'].max()
-                            st.metric("Expected High", f"PKR {session_high:,.2f}")
+                            session_high = main_session_data['predicted_price'].max()
+                            st.metric("Session High", f"PKR {session_high:,.2f}")
                         with col3:
-                            session_low = forecast_for_metrics['predicted_price'].min()
-                            st.metric("Expected Low", f"PKR {session_low:,.2f}")
+                            session_low = main_session_data['predicted_price'].min()
+                            st.metric("Session Low", f"PKR {session_low:,.2f}")
                         with col4:
-                            avg_confidence = forecast_for_metrics['confidence'].mean()
+                            avg_confidence = main_session_data['confidence'].mean()
                             st.metric("Avg Confidence", f"{avg_confidence:.0%}")
-                        
-                        # Dynamic forecast indicator
-                        if live_price and live_price > 0:
-                            st.success("🔄 Forecast dynamically adjusted to current live price")
                 
                 # Note about forecast stability
                 if not trading_day:
