@@ -548,11 +548,15 @@ def display_enhanced_file_upload():
                                             vertical_spacing=0.12
                                         )
                                         
-                                        # Historical + Forecast
+                                        # Use tail(60) for consistent data display
+                                        hist_display = data['historical_data'].tail(60)
+                                        last_hist_price = hist_display['Price'].iloc[-1]
+                                        
+                                        # Historical + Forecast - with connection
                                         fig.add_trace(
                                             go.Scatter(
-                                                x=data['historical_data']['Date'],
-                                                y=data['historical_data']['Price'],
+                                                x=hist_display['Date'],
+                                                y=hist_display['Price'],
                                                 mode='lines',
                                                 name='Historical',
                                                 line=dict(color='blue')
@@ -561,10 +565,30 @@ def display_enhanced_file_upload():
                                         )
                                         
                                         if 'yhat' in forecast_data.columns:
+                                            # Calculate offset to connect forecast to historical
+                                            first_forecast_price = forecast_data['yhat'].iloc[0]
+                                            price_offset = first_forecast_price - last_hist_price
+                                            adjusted_forecast = forecast_data.copy()
+                                            adjusted_forecast['yhat'] = adjusted_forecast['yhat'] - price_offset
+                                            
+                                            # Add connector line
                                             fig.add_trace(
                                                 go.Scatter(
-                                                    x=forecast_data['ds'],
-                                                    y=forecast_data['yhat'],
+                                                    x=[hist_display['Date'].iloc[-1], forecast_data['ds'].iloc[0]],
+                                                    y=[last_hist_price, adjusted_forecast['yhat'].iloc[0]],
+                                                    mode='lines',
+                                                    name='Connection',
+                                                    line=dict(color='green', width=2, dash='dot'),
+                                                    showlegend=True
+                                                ),
+                                                row=1, col=1
+                                            ),
+                                            
+                                            # Adjusted forecast
+                                            fig.add_trace(
+                                                go.Scatter(
+                                                    x=adjusted_forecast['ds'],
+                                                    y=adjusted_forecast['yhat'],
                                                     mode='lines',
                                                     name='Forecast',
                                                     line=dict(color='red', dash='dash')
@@ -572,12 +596,14 @@ def display_enhanced_file_upload():
                                                 row=1, col=1
                                             )
                                             
-                                            # Confidence intervals
-                                            if 'yhat_lower' in forecast_data.columns and 'yhat_upper' in forecast_data.columns:
+                                            # Adjusted confidence intervals
+                                            if 'yhat_lower' in adjusted_forecast.columns and 'yhat_upper' in adjusted_forecast.columns:
+                                                adjusted_upper = adjusted_forecast['yhat_upper'] - price_offset
+                                                adjusted_lower = adjusted_forecast['yhat_lower'] - price_offset
                                                 fig.add_trace(
                                                     go.Scatter(
-                                                        x=forecast_data['ds'],
-                                                        y=forecast_data['yhat_upper'],
+                                                        x=adjusted_forecast['ds'],
+                                                        y=adjusted_upper,
                                                         fill=None,
                                                         mode='lines',
                                                         line_color='rgba(0,0,0,0)',
@@ -587,8 +613,8 @@ def display_enhanced_file_upload():
                                                 )
                                                 fig.add_trace(
                                                     go.Scatter(
-                                                        x=forecast_data['ds'],
-                                                        y=forecast_data['yhat_lower'],
+                                                        x=adjusted_forecast['ds'],
+                                                        y=adjusted_lower,
                                                         fill='tonexty',
                                                         mode='lines',
                                                         line_color='rgba(0,0,0,0)',

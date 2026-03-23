@@ -547,8 +547,20 @@ def display_advanced_forecasting_dashboard():
                             # Create comprehensive forecast graph
                             fig = go.Figure()
                             
-                            # Add historical data
-                            historical_recent = historical_data.tail(7)  # Last 7 days
+                            # Use tail(60) for consistent data points - handle varying data frequencies
+                            data_points_to_show = 60
+                            historical_recent = historical_data.tail(data_points_to_show)
+                            
+                            # Get the last historical price to connect forecast properly
+                            last_historical_price = historical_recent['close'].iloc[-1]
+                            first_forecast_price = forecast_data['yhat'].iloc[0]
+                            
+                            # Adjust forecast to connect smoothly to historical data (remove gap)
+                            price_offset = first_forecast_price - last_historical_price
+                            adjusted_forecast = forecast_data.copy()
+                            adjusted_forecast['yhat'] = adjusted_forecast['yhat'] - price_offset
+                            
+                            # Add historical data with connecting line
                             fig.add_trace(go.Scatter(
                                 x=historical_recent['date'],
                                 y=historical_recent['close'],
@@ -558,21 +570,34 @@ def display_advanced_forecasting_dashboard():
                                 marker=dict(size=6)
                             ))
                             
-                            # Add forecast line
+                            # Add connector line from last historical to first forecast
                             fig.add_trace(go.Scatter(
-                                x=forecast_data['ds'],
-                                y=forecast_data['yhat'],
+                                x=[historical_recent['date'].iloc[-1], forecast_data['ds'].iloc[0]],
+                                y=[last_historical_price, adjusted_forecast['yhat'].iloc[0]],
+                                mode='lines',
+                                name='Connection',
+                                line=dict(color='green', width=2, dash='dot'),
+                                showlegend=True
+                            ))
+                            
+                            # Add adjusted forecast line
+                            fig.add_trace(go.Scatter(
+                                x=adjusted_forecast['ds'],
+                                y=adjusted_forecast['yhat'],
                                 mode='lines+markers',
                                 name=f'{selected_brand} Forecast',
                                 line=dict(color='blue', width=3),
                                 marker=dict(size=8)
                             ))
                             
-                            # Add confidence interval
-                            if 'yhat_upper' in forecast_data.columns and 'yhat_lower' in forecast_data.columns:
+                            # Add confidence interval (adjusted)
+                            if 'yhat_upper' in adjusted_forecast.columns and 'yhat_lower' in adjusted_forecast.columns:
+                                # Also adjust confidence bounds
+                                adjusted_upper = adjusted_forecast['yhat_upper'] - price_offset
+                                adjusted_lower = adjusted_forecast['yhat_lower'] - price_offset
                                 fig.add_trace(go.Scatter(
-                                    x=list(forecast_data['ds']) + list(forecast_data['ds'][::-1]),
-                                    y=list(forecast_data['yhat_upper']) + list(forecast_data['yhat_lower'][::-1]),
+                                    x=list(adjusted_forecast['ds']) + list(adjusted_forecast['ds'][::-1]),
+                                    y=list(adjusted_upper) + list(adjusted_lower[::-1]),
                                     fill='toself',
                                     fillcolor='rgba(0,100,80,0.2)',
                                     line=dict(color='rgba(255,255,255,0)'),
@@ -710,34 +735,57 @@ def display_advanced_forecasting_dashboard():
                         if forecast is not None and not forecast.empty:
                             fig = go.Figure()
                             
+                            # Use tail(60) for consistent data display
+                            historical_display = processed_data.tail(60)
+                            last_historical_price = historical_display['close'].iloc[-1]
+                            first_forecast_price = forecast['yhat'].iloc[0]
+                            
+                            # Calculate offset and adjust forecast to connect smoothly
+                            price_offset = first_forecast_price - last_historical_price
+                            adjusted_forecast = forecast.copy()
+                            adjusted_forecast['yhat'] = adjusted_forecast['yhat'] - price_offset
+                            
                             # Historical data
                             fig.add_trace(go.Scatter(
-                                x=processed_data['date'],
-                                y=processed_data['close'],
+                                x=historical_display['date'],
+                                y=historical_display['close'],
                                 mode='lines',
                                 name='Historical Price',
                                 line=dict(color='blue', width=2)
                             ))
                             
-                            # Forecast data
+                            # Add connector line
                             fig.add_trace(go.Scatter(
-                                x=forecast['ds'],
-                                y=forecast['yhat'],
+                                x=[historical_display['date'].iloc[-1], forecast['ds'].iloc[0]],
+                                y=[last_historical_price, adjusted_forecast['yhat'].iloc[0]],
+                                mode='lines',
+                                name='Connection',
+                                line=dict(color='green', width=2, dash='dot'),
+                                showlegend=True
+                            ))
+                            
+                            # Adjusted forecast data
+                            fig.add_trace(go.Scatter(
+                                x=adjusted_forecast['ds'],
+                                y=adjusted_forecast['yhat'],
                                 mode='lines+markers',
                                 name='Forecast',
                                 line=dict(color='red', width=3, dash='dash'),
                                 marker=dict(size=8)
                             ))
                             
-                            # Confidence interval
-                            fig.add_trace(go.Scatter(
-                                x=list(forecast['ds']) + list(forecast['ds'][::-1]),
-                                y=list(forecast['yhat_upper']) + list(forecast['yhat_lower'][::-1]),
-                                fill='toself',
-                                fillcolor='rgba(255,0,0,0.2)',
-                                line=dict(color='rgba(255,255,255,0)'),
-                                name='Confidence Interval'
-                            ))
+                            # Adjusted confidence interval
+                            if 'yhat_upper' in adjusted_forecast.columns and 'yhat_lower' in adjusted_forecast.columns:
+                                adjusted_upper = adjusted_forecast['yhat_upper'] - price_offset
+                                adjusted_lower = adjusted_forecast['yhat_lower'] - price_offset
+                                fig.add_trace(go.Scatter(
+                                    x=list(adjusted_forecast['ds']) + list(adjusted_forecast['ds'][::-1]),
+                                    y=list(adjusted_upper) + list(adjusted_lower[::-1]),
+                                    fill='toself',
+                                    fillcolor='rgba(255,0,0,0.2)',
+                                    line=dict(color='rgba(255,255,255,0)'),
+                                    name='Confidence Interval'
+                                ))
                             
                             fig.update_layout(
                                 title=f"{upload_brand} - Historical Data + 7-Day Forecast",
