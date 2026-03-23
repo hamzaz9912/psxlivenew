@@ -333,7 +333,7 @@ class UniversalPredictor:
             return {'error': f'Error analyzing data: {str(e)}'}
     
     def generate_predictions(self, df, brand_name, price_column, date_column=None):
-        """Generate predictions based on uploaded data - With deterministic seed for consistent results"""
+        """Generate predictions based on uploaded data"""
         try:
             # Prepare data
             price_data = pd.to_numeric(df[price_column], errors='coerce').dropna()
@@ -348,18 +348,10 @@ class UniversalPredictor:
             
             current_price = price_data.iloc[-1]
             
-            # Create deterministic seed based on brand_name and last price
-            # This ensures same predictions on every refresh
-            import hashlib
-            seed_string = f"{brand_name}_{current_price}_{len(price_data)}"
-            seed_hash = int(hashlib.md5(seed_string.encode()).hexdigest()[:8], 16) % (2**31)
-            np.random.seed(seed_hash)
-            
             # Generate different types of predictions
             predictions = {
                 'brand_name': brand_name,
                 'current_price': current_price,
-                'last_actual_price': current_price,  # For connecting graph to actual value
                 'data_points': len(price_data),
                 'analysis_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'volatility': volatility,

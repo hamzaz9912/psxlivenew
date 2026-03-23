@@ -1127,23 +1127,6 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
     
     if live_price_data:
         current_price = live_price_data['price']
-        
-        # CRITICAL: Validate price range - KSE-100 should be > 100,000
-        # If price is unrealistic (from old cache), force fetch from live sources
-        if current_price < 100000:
-            # Try enhanced fetcher as fallback for proper price
-            if hasattr(st.session_state, 'enhanced_psx_fetcher'):
-                try:
-                    enhanced_data = st.session_state.enhanced_psx_fetcher.get_kse100_index_value()
-                    if enhanced_data and enhanced_data.get('value', 0) > 100000:
-                        current_price = enhanced_data['value']
-                        live_price_data['source'] = enhanced_data.get('source', 'enhanced_fallback')
-                except:
-                    pass
-            # Final fallback to current market price
-            if current_price < 100000:
-                current_price = 152740  # Current KSE-100 level (March 2026)
-        
         timestamp = live_price_data['timestamp']
         
         # Display current market status
@@ -2290,26 +2273,30 @@ def display_live_market_dashboard():
                     symbol = companies[brand_name]
                     
                     # Get live price for this company using enhanced PSX fetcher
+                    live_price = None
                     try:
                         if hasattr(st.session_state, 'enhanced_psx_fetcher'):
                             live_price = st.session_state.enhanced_psx_fetcher.get_live_price(symbol)
-                        else:
-                            live_price = st.session_state.data_fetcher.get_live_company_price(symbol)
-
-                        # Fallback to all_kse100_data if available (with price validation)
-                        if not live_price and hasattr(st.session_state, 'all_kse100_data') and st.session_state.all_kse100_data:
-                            if symbol in st.session_state.all_kse100_data:
-                                company_data = st.session_state.all_kse100_data[symbol]
-                                fallback_price = company_data.get('current_price', 0)
-                                # Validate price range - reject unrealistic prices from old cache
-                                if fallback_price > 100000:  # KSE-100 should be > 100k
-                                    live_price = {
-                                        'price': fallback_price,
-                                        'source': company_data.get('source', 'cache'),
-                                        'timestamp': company_data.get('timestamp', datetime.now())
-                                    }
                     except Exception as e:
                         live_price = None
+                    
+                    # Fallback to data_fetcher if enhanced fetcher returns None or invalid price
+                    if not live_price or not live_price.get('price'):
+                        if hasattr(st.session_state, 'data_fetcher'):
+                            try:
+                                live_price = st.session_state.data_fetcher.get_live_company_price(symbol)
+                            except:
+                                pass
+                    
+                    # Fallback to all_kse100_data if available
+                    if not live_price and hasattr(st.session_state, 'all_kse100_data') and st.session_state.all_kse100_data:
+                        if symbol in st.session_state.all_kse100_data:
+                            company_data = st.session_state.all_kse100_data[symbol]
+                            live_price = {
+                                'price': company_data['current_price'],
+                                'source': company_data['source'],
+                                'timestamp': company_data['timestamp']
+                            }
                     
                     if live_price and live_price.get('price') is not None:
                         col1, col2 = st.columns([1, 1])
@@ -2937,45 +2924,25 @@ def display_five_minute_live_predictions():
                 # Fallback to regular data fetcher
                 live_price = st.session_state.data_fetcher.get_live_company_price(selected_symbol)
 
-            # If no live price, try to get from all_kse100_data if available (with validation)
+            # If no live price, try to get from all_kse100_data if available
             if not live_price and hasattr(st.session_state, 'all_kse100_data') and st.session_state.all_kse100_data:
                 if selected_symbol in st.session_state.all_kse100_data:
                     company_data = st.session_state.all_kse100_data[selected_symbol]
-                    cached_price = company_data.get('current_price', 0)
-                    # Validate - reject unrealistic cached prices
-                    if selected_symbol == "KSE-100":
-                        if cached_price > 100000:  # Valid KSE-100 range
-                            live_price = {
-                                'price': cached_price,
-                                'source': company_data.get('source', 'cache'),
-                                'timestamp': company_data.get('timestamp', datetime.now())
-                            }
-                    else:
-                        live_price = {
-                            'price': cached_price,
-                            'source': company_data.get('source', 'cache'),
-                            'timestamp': company_data.get('timestamp', datetime.now())
-                        }
-
-            # If still no live price, use proper fallback based on symbol
-            if not live_price:
-                if selected_symbol == "KSE-100":
-                    # KSE-100 should use current market price, not estimates
                     live_price = {
-                        'price': 152740.00,  # Current KSE-100 level (March 2026)
-                        'source': 'current_market_fallback',
-                        'timestamp': datetime.now(),
-                        'note': 'Using current market price - live data temporarily unavailable'
+                        'price': company_data['current_price'],
+                        'source': company_data['source'],
+                        'timestamp': company_data['timestamp']
                     }
-                elif hasattr(st.session_state, 'enhanced_psx_fetcher'):
-                    estimated_price = st.session_state.enhanced_psx_fetcher._get_sector_based_estimate(selected_symbol)
-                    if estimated_price and estimated_price > 0:
-                        live_price = {
-                            'price': estimated_price,
-                            'source': 'sector_estimate_fallback',
-                            'timestamp': datetime.now(),
-                            'note': 'Using sector-based estimate - live data temporarily unavailable'
-                        }
+
+            # If still no live price, use sector-based estimate as final fallback
+            if not live_price and hasattr(st.session_state, 'enhanced_psx_fetcher'):
+                estimated_price = st.session_state.enhanced_psx_fetcher._get_sector_based_estimate(selected_symbol)
+                live_price = {
+                    'price': estimated_price,
+                    'source': 'sector_estimate_fallback',
+                    'timestamp': datetime.now(),
+                    'note': 'Using sector-based estimate - live data temporarily unavailable'
+                }
         except Exception as e:
             st.warning(f"Error fetching live price: {str(e)}")
             # Provide fallback estimate
@@ -4170,23 +4137,10 @@ def display_universal_file_upload():
                         # Use the already loaded dataframe
                         df = analysis['data']
                         
-                        # Generate predictions with caching
-                        cache_key = f"universal_pred_{brand_name}_{uploaded_file.name}"
-                        
-                        # Check if we have cached predictions for this brand/file
-                        if cache_key in st.session_state and 'predictions' in st.session_state[cache_key]:
-                            predictions = st.session_state[cache_key]['predictions']
-                            st.info("📦 Using cached predictions (refresh to regenerate)")
-                        else:
-                            # Generate new predictions
-                            predictions = st.session_state.universal_predictor.generate_predictions(
-                                df, brand_name, price_column, date_column if date_column != 'None' else None
-                            )
-                            # Cache the predictions
-                            st.session_state[cache_key] = {
-                                'predictions': predictions,
-                                'timestamp': datetime.now()
-                            }
+                        # Generate predictions
+                        predictions = st.session_state.universal_predictor.generate_predictions(
+                            df, brand_name, price_column, date_column if date_column != 'None' else None
+                        )
                         
                         if 'error' in predictions:
                             st.error(predictions['error'])
@@ -4241,11 +4195,8 @@ def display_universal_file_upload():
                             styled_df = df_7days.style.apply(highlight_trend, axis=1)
                             st.dataframe(styled_df, use_container_width=True)
                             
-                            # Create enhanced chart - connecting to last actual value
+                            # Create enhanced chart
                             fig_7days = go.Figure()
-                            
-                            # Get last actual price from predictions
-                            last_actual = predictions.get('last_actual_price', predictions['current_price'])
                             
                             # Add current price line
                             fig_7days.add_hline(
@@ -4255,30 +4206,16 @@ def display_universal_file_upload():
                                 annotation_text=f"Current: {predictions['current_price']:.4f}"
                             )
                             
-                            # Add the last actual price point to connect the graph
-                            # This creates a continuous line from actual to predicted
-                            x_combined = [df_7days['date'].iloc[0]] + list(df_7days['date'])
-                            y_combined = [last_actual] + list(df_7days['predicted_price'])
-                            
-                            # Add predictions line starting from last actual value
+                            # Add predictions
                             fig_7days.add_trace(go.Scatter(
-                                x=x_combined,
-                                y=y_combined,
+                                x=df_7days['date'],
+                                y=df_7days['predicted_price'],
                                 mode='lines+markers',
-                                name='7-Day Predictions (Connected)',
+                                name='7-Day Predictions',
                                 line=dict(color='red', width=3),
-                                marker=dict(size=10, color=[1.0] + list(df_7days['confidence']), 
+                                marker=dict(size=10, color=df_7days['confidence'], 
                                           colorscale='RdYlGn', showscale=True, 
                                           colorbar=dict(title="Confidence"))
-                            ))
-                            
-                            # Add a marker for the last actual price point
-                            fig_7days.add_trace(go.Scatter(
-                                x=[df_7days['date'].iloc[0]],
-                                y=[last_actual],
-                                mode='markers',
-                                name='Last Actual Price',
-                                marker=dict(size=15, color='blue', symbol='diamond')
                             ))
                             
                             # Add timezone annotation to chart
@@ -4422,32 +4359,15 @@ def display_universal_file_upload():
                             df_medium = pd.DataFrame(medium_term)
                             st.dataframe(df_medium, use_container_width=True)
                             
-                            # Create medium-term chart - connecting to last actual value
+                            # Create medium-term chart
                             fig_medium = go.Figure()
-                            
-                            # Get last actual price
-                            last_actual = predictions.get('last_actual_price', predictions['current_price'])
-                            
-                            # Add last actual price point to connect the graph
-                            x_medium_combined = [df_medium['date'].iloc[0]] + list(df_medium['date'])
-                            y_medium_combined = [last_actual] + list(df_medium['predicted_price'])
-                            
                             fig_medium.add_trace(go.Scatter(
-                                x=x_medium_combined,
-                                y=y_medium_combined,
+                                x=df_medium['date'],
+                                y=df_medium['predicted_price'],
                                 mode='lines+markers',
-                                name='Medium-term Predictions (Connected)',
+                                name='Medium-term Predictions',
                                 line=dict(color='orange', width=3),
                                 marker=dict(size=8)
-                            ))
-                            
-                            # Add marker for last actual price
-                            fig_medium.add_trace(go.Scatter(
-                                x=[df_medium['date'].iloc[0]],
-                                y=[last_actual],
-                                mode='markers',
-                                name='Last Actual Price',
-                                marker=dict(size=15, color='blue', symbol='diamond')
                             ))
                             
                             # Add timezone annotation to medium-term chart
@@ -4485,32 +4405,15 @@ def display_universal_file_upload():
                             df_long = pd.DataFrame(long_term)
                             st.dataframe(df_long, use_container_width=True)
                             
-                            # Create long-term chart - connecting to last actual value
+                            # Create long-term chart
                             fig_long = go.Figure()
-                            
-                            # Get last actual price
-                            last_actual = predictions.get('last_actual_price', predictions['current_price'])
-                            
-                            # Add last actual price point to connect the graph
-                            x_long_combined = [df_long['date'].iloc[0]] + list(df_long['date'])
-                            y_long_combined = [last_actual] + list(df_long['predicted_price'])
-                            
                             fig_long.add_trace(go.Scatter(
-                                x=x_long_combined,
-                                y=y_long_combined,
+                                x=df_long['date'],
+                                y=df_long['predicted_price'],
                                 mode='lines+markers',
-                                name='Long-term Predictions (Connected)',
+                                name='Long-term Predictions',
                                 line=dict(color='purple', width=3),
                                 marker=dict(size=8)
-                            ))
-                            
-                            # Add marker for last actual price
-                            fig_long.add_trace(go.Scatter(
-                                x=[df_long['date'].iloc[0]],
-                                y=[last_actual],
-                                mode='markers',
-                                name='Last Actual Price',
-                                marker=dict(size=15, color='blue', symbol='diamond')
                             ))
                             
                             # Add timezone annotation to long-term chart

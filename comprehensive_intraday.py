@@ -518,9 +518,13 @@ class ComprehensiveIntradayForecaster:
         if live_price:
             current_price = live_price
         else:
-            current_price = historical_data['close'].iloc[-1] if 'close' in historical_data.columns else historical_data['Price'].iloc[-1]
+            # If no live price and no historical data, use default
+            if historical_data is None or (hasattr(historical_data, 'empty') and historical_data.empty):
+                current_price = 152700  # Default KSE-100 level
+            else:
+                current_price = historical_data['close'].iloc[-1] if 'close' in historical_data.columns else historical_data['Price'].iloc[-1]
 
-        # Get yesterday's last hour data
+        # Get yesterday's last hour data (handles None data internally)
         yesterday_last_hour = self.get_yesterday_last_hour_data(historical_data)
 
         # Generate forecasts using new workflow (with daily seed for consistency)
@@ -730,6 +734,10 @@ class ComprehensiveIntradayForecaster:
     def generate_uploaded_data_forecast(self, historical_data, symbol):
         """Forecast based on uploaded historical data patterns"""
         try:
+            # Handle None or empty data
+            if historical_data is None or (hasattr(historical_data, 'empty') and historical_data.empty):
+                return pd.DataFrame()
+            
             # Analyze recent trends from uploaded data
             if len(historical_data) < 5:
                 return pd.DataFrame()
@@ -1020,6 +1028,18 @@ def display_comprehensive_intraday_forecasts():
                         current_price = historical_close
                 else:
                     current_price = historical_kse.iloc[-1]
+        else:
+            # No historical data available - use fallback price
+            if live_price and live_price > 100000:
+                current_price = live_price
+            else:
+                current_price = 152700  # Default KSE-100 level
+            st.warning("⚠️ Historical data unavailable - using fallback price for forecast")
+            # Create empty historical data structure
+            historical_kse = None
+
+        # Only proceed if we have a valid price
+        if current_price and current_price > 100000:
 
             # Check for cached forecast
             cache_key = f"kse100_forecast_{show_forecast_for}"

@@ -612,88 +612,11 @@ class EnhancedPSXFetcher:
         # This function is deprecated - we no longer use estimated/simulated data
         return None
     
-    def _scrape_psx_live_data(self):
-        """Scrape live KSE-100 from PSX official website"""
-        try:
-            # Try different PSX URLs
-            urls = [
-                "https://www.psx.com.pk/market-summary/",
-                "https://dps.psx.com.pk/market-summary",
-                "https://www.psx.com.pk/market-data/kse-100-index"
-            ]
-            
-            for url in urls:
-                try:
-                    headers = {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.5',
-                        'Connection': 'keep-alive',
-                    }
-                    response = self.session.get(url, headers=headers, timeout=10)
-                    
-                    if response.status_code == 200:
-                        soup = BeautifulSoup(response.content, 'html.parser')
-                        
-                        # Method 1: Look for table with KSE-100 data
-                        tables = soup.find_all('table')
-                        for table in tables:
-                            rows = table.find_all('tr')
-                            for row in rows:
-                                cells = row.find_all(['td', 'th'])
-                                for i, cell in enumerate(cells):
-                                    cell_text = cell.get_text(strip=True)
-                                    if 'kse100' in cell_text.lower() or 'kse-100' in cell_text.lower():
-                                        # Check next few cells for price
-                                        for j in range(1, min(4, len(cells) - i)):
-                                            price_text = cells[i + j].get_text(strip=True)
-                                            price_clean = price_text.replace(',', '').replace(' ', '')
-                                            try:
-                                                value = float(price_clean)
-                                                if 100000 <= value <= 200000:
-                                                    return value
-                                            except:
-                                                continue
-                        
-                        # Method 2: Look for specific div/section with index value
-                        for div in soup.find_all(['div', 'span', 'p']):
-                            text = div.get_text()
-                            if 'kse100' in text.lower():
-                                # Extract number from text
-                                import re
-                                matches = re.findall(r'[0-9]{2},[0-9]{3},[0-9]{3}', text)
-                                for match in matches:
-                                    value = float(match.replace(',', ''))
-                                    if 100000 <= value <= 200000:
-                                        return value
-                        
-                        # Method 3: Look for data attributes
-                        for element in soup.find_all(attrs={'data-index': re.compile('kse', re.I)}):
-                            value = element.get('data-value')
-                            if value:
-                                try:
-                                    num = float(value.replace(',', ''))
-                                    if 100000 <= num <= 200000:
-                                        return num
-                                except:
-                                    continue
-                                    
-                except Exception as e:
-                    print(f"PSX URL {url} failed: {e}")
-                    continue
-                    
-        except Exception as e:
-            print(f"PSX scraping failed: {e}")
-        
-        return None
-    
     def get_kse100_index_value(self):
-        """Get current KSE-100 index value - LIVE SCRAPER MODE"""
+        """Get current KSE-100 index value from multiple live sources: Yahoo Finance, PSX, Investing.com"""
         
-        # ==========================================
-        # SOURCE 1: Yahoo Finance (Primary)
-        # ==========================================
-        kse100_symbols = ["^KSE100", "KSE100.PK", "KSE.PAKISTAN", "KSE100.KA"]
+        # Try Yahoo Finance first (most reliable) - try multiple symbols
+        kse100_symbols = ["^KSE100", "KSE100.INDEX", "KSE.PAKISTAN", "KSE100.KA", "KSE100.PK"]
         
         for symbol in kse100_symbols:
             try:
@@ -702,80 +625,89 @@ class EnhancedPSXFetcher:
                 hist = ticker.history(period="1d", interval="1m")
                 if not hist.empty:
                     latest_value = hist['Close'].iloc[-1]
-                    print(f"✅ Yahoo Finance: KSE-100 = {latest_value}")
+                    print(f"SUCCESS: Got KSE-100 from Yahoo Finance: {latest_value}")
                     return {
                         'value': float(latest_value),
                         'timestamp': self.get_pakistan_time(),
                         'source': f'yahoo_finance_{symbol}'
                     }
             except Exception as e:
-                print(f"❌ Yahoo {symbol}: {str(e)[:50]}")
+                print(f"Yahoo Finance KSE-100 fetch failed with {symbol}: {e}")
                 continue
         
-        # ==========================================
-        # SOURCE 2: PSX Official Scraper
-        # ==========================================
-        psx_value = self._scrape_psx_live_data()
-        if psx_value:
-            print(f"✅ PSX Official: KSE-100 = {psx_value}")
-            return {
-                'value': psx_value,
-                'timestamp': self.get_pakistan_time(),
-                'source': 'psx_official_scraped'
-            }
-        
-        # ==========================================
-        # SOURCE 3: Investing.com Scraper
-        # ==========================================
+        # Try PSX official website
         try:
-            url = "https://www.investing.com/indices/kse-100-historical-data"
+            url = "https://www.psx.com.pk/market-summary/"
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-            response = self.session.get(url, headers=headers, timeout=10)
+            response = self.session.get(url, headers=headers, timeout=5)
             
             if response.status_code == 200:
-                # Look for last price in the data
-                import re
-                # Try multiple patterns
-                patterns = [
-                    r'"last"\s*:\s*([\d.]+)',
-                    r'last[^\d]*([\d,]+\.?\d*)',
-                    r'([\d,]+\.?\d*)[^\d]*last',
-                ]
-                for pattern in patterns:
-                    matches = re.search(pattern, response.text, re.IGNORECASE)
-                    if matches:
-                        value = float(matches.group(1).replace(',', ''))
-                        if 100000 <= value <= 200000:
-                            print(f"✅ Investing.com: KSE-100 = {value}")
-                            return {
-                                'value': value,
-                                'timestamp': self.get_pakistan_time(),
-                                'source': 'investing_com_scraped'
-                            }
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Look for KSE100 index value - try multiple patterns
+                for pattern in [r'KSE.?100', r'KSE-100', r'KSE100']:
+                    kse_elements = soup.find_all(text=re.compile(pattern, re.IGNORECASE))
+                    for element in kse_elements:
+                        parent = element.parent
+                        if parent:
+                            siblings = parent.find_next_siblings()
+                            for sibling in siblings[:5]:
+                                text = sibling.get_text(strip=True)
+                                matches = re.findall(r'[\d,]+\.?\d*', text)
+                                for match in matches:
+                                    try:
+                                        value = float(match.replace(',', ''))
+                                        if 100000 <= value <= 200000:
+                                            print(f"SUCCESS: Got KSE-100 from PSX: {value}")
+                                            return {
+                                                'value': value,
+                                                'timestamp': self.get_pakistan_time(),
+                                                'source': 'psx_official'
+                                            }
+                                    except ValueError:
+                                        continue
         except Exception as e:
-            print(f"❌ Investing.com: {str(e)[:50]}")
+            print(f"PSX website fetch failed: {e}")
         
-        # ==========================================
-        # SOURCE 4: Alternative Yahoo method
-        # ==========================================
+        # Try Investing.com
+        try:
+            url = "https://www.investing.com/indices/kse-100"
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = self.session.get(url, headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                # Look for current price
+                price_match = re.search(r'([\d,]+\.?\d{2})[^\d]*last', response.text, re.IGNORECASE)
+                if price_match:
+                    value = float(price_match.group(1).replace(',', ''))
+                    if 100000 <= value <= 200000:
+                        print(f"SUCCESS: Got KSE-100 from Investing.com: {value}")
+                        return {
+                            'value': value,
+                            'timestamp': self.get_pakistan_time(),
+                            'source': 'investing_com'
+                        }
+        except Exception as e:
+            print(f"Investing.com fetch failed: {e}")
+        
+        # Try alternative Yahoo Finance URL
         try:
             import yfinance as yf
-            data = yf.download("^KSE100", period="5d", interval="1d", progress=False)
+            # Try with different approach
+            data = yf.download("^KSE100", period="1d", interval="1m", progress=False)
             if not data.empty:
                 latest_value = data['Close'].iloc[-1]
-                print(f"✅ Yahoo Alt: KSE-100 = {latest_value}")
+                print(f"SUCCESS: Got KSE-100 from Yahoo (download method): {latest_value}")
                 return {
                     'value': float(latest_value),
                     'timestamp': self.get_pakistan_time(),
-                    'source': 'yahoo_finance_alt'
+                    'source': 'yahoo_finance_download'
                 }
         except Exception as e:
-            print(f"❌ Yahoo Alt: {str(e)[:50]}")
+            print(f"Yahoo Finance download method failed: {e}")
         
-        # ==========================================
-        # NO FALLBACK - Return None
-        # ==========================================
-        print("⚠️ ALL SOURCES FAILED - No live KSE-100 data available")
+        # NO FALLBACK - Return None if no live data available
+        print("WARNING: Could not fetch live KSE-100 from any source")
         return None
     
     
@@ -1007,6 +939,10 @@ class EnhancedPSXFetcher:
         if symbol.upper() in ['KSE-100', 'KSE100', '^KSE100', 'KSE']:
             return self._fetch_kse100_index_price()
         
+        # Define minimum realistic prices for common PSX stocks (reject fake/incorrect data)
+        # PSX stocks typically trade above 1 PKR (most are 10+ PKR)
+        min_price_threshold = 0.5  # Reject prices below 0.5 PKR as likely incorrect
+        
         # Try Yahoo Finance with multiple suffixes
         suffixes = [".KA", ".KAR", "", "-KAR", ".KSE"]
         
@@ -1020,7 +956,8 @@ class EnhancedPSXFetcher:
                 hist = ticker.history(period="1d", interval="1m")
                 if not hist.empty:
                     latest_price = hist['Close'].iloc[-1]
-                    if latest_price and latest_price > 0:
+                    # Validate price - reject unrealistic prices (likely wrong stock data)
+                    if latest_price and latest_price > min_price_threshold:
                         return {
                             'price': float(latest_price),
                             'source': f'yahoo_finance_{suffix}' if suffix else 'yahoo_finance',
