@@ -981,8 +981,27 @@ def display_comprehensive_intraday_forecasts():
                             st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f} (Source: {kse_index.get('source')})")
                     except:
                         pass
+                    
+                    # Additional fallback: try data_fetcher
+                    if not live_price and hasattr(st.session_state, 'data_fetcher'):
+                        try:
+                            fallback_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
+                            if fallback_data and fallback_data.get('price'):
+                                live_price = fallback_data['price']
+                                st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f} (Source: data_fetcher)")
+                        except:
+                            pass
             except Exception as e:
                 st.warning(f"Enhanced fetcher error: {e}")
+                # Fallback to data_fetcher on exception
+                if hasattr(st.session_state, 'data_fetcher'):
+                    try:
+                        fallback_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
+                        if fallback_data and fallback_data.get('price'):
+                            live_price = fallback_data['price']
+                            st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f} (Source: fallback)")
+                    except:
+                        pass
         
         # Get historical data from enhanced fetcher (can fallback to data_fetcher for historical only)
         historical_kse = None

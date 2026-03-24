@@ -2957,13 +2957,8 @@ def display_five_minute_live_predictions():
             else:
                 live_price = None
         
-        if live_price and live_price.get('price'):
+        if live_price:
             current_price = live_price['price']
-            
-            # Validate current_price is not None before division
-            if current_price is None or current_price == 0:
-                st.warning("⚠️ Live price data incomplete")
-                current_price = 100.0  # Default fallback
             
             # Display current price with trend indicator
             import random
@@ -3213,7 +3208,7 @@ def display_five_minute_live_predictions():
                 current_price = live_price.get('price', 0)
                 price_change_pct = live_price.get('change_pct', 0)
                 
-                if current_price and current_price > 0:
+                if current_price > 0:
                     # Next 5-minute prediction
                     next_5min = current_price * (1 + (price_change_pct / 100) * 0.05)
                     st.metric("Next 5-Min", f"{next_5min:.2f} PKR", f"{next_5min - current_price:+.2f}")
@@ -3312,7 +3307,7 @@ def display_five_minute_live_predictions():
         else:
             price_change_pct = 0
     
-    if live_price and current_price and current_price > 0:
+    if live_price and current_price > 0:
         try:
             # Create time points for next 15 minutes (at 5-minute intervals)
             prediction_times = []
@@ -3440,7 +3435,7 @@ def display_five_minute_live_predictions():
             st.info("✅ Morning Session completed")
         
         # Morning session predictions with graph
-        if live_price and 'current_price' in locals() and current_price and current_price > 0:
+        if live_price and 'current_price' in locals():
             col1, col2, col3 = st.columns(3)
             with col1:
                 morning_high = current_price * 1.02
@@ -3558,7 +3553,7 @@ def display_five_minute_live_predictions():
             st.info("✅ Afternoon Session completed")
         
         # Afternoon session predictions with graph
-        if live_price and 'current_price' in locals() and current_price and current_price > 0:
+        if live_price and 'current_price' in locals():
             col1, col2, col3 = st.columns(3)
             with col1:
                 afternoon_high = current_price * 1.015
@@ -3676,7 +3671,7 @@ def display_five_minute_live_predictions():
                 price_change_pct = 0
         
         # Full day metrics
-        if live_price and current_price and current_price > 0:
+        if live_price and current_price > 0:
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
