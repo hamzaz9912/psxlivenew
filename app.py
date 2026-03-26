@@ -4200,8 +4200,49 @@ def display_universal_file_upload():
                             styled_df = df_7days.style.apply(highlight_trend, axis=1)
                             st.dataframe(styled_df, use_container_width=True)
                             
-                            # Create enhanced chart
+                            # Create enhanced chart with offset adjustment
                             fig_7days = go.Figure()
+                            
+                            # Get historical data (last 60 points)
+                            historical_prices = predictions.get('historical_data', {}).get('prices', [])
+                            if historical_prices:
+                                # Use only last 60 data points
+                                historical_display = historical_prices[-60:] if len(historical_prices) > 60 else historical_prices
+                                
+                                # Calculate offset for smooth connection
+                                last_actual_price = historical_display[-1]  # Last historical price
+                                first_prediction = df_7days['predicted_price'].iloc[0] if not df_7days.empty else last_actual_price
+                                offset = last_actual_price - first_prediction
+                                
+                                # Apply offset to all predictions
+                                df_7days_adjusted = df_7days.copy()
+                                df_7days_adjusted['predicted_price'] = df_7days_adjusted['predicted_price'] + offset
+                            else:
+                                historical_display = []
+                                offset = 0
+                                df_7days_adjusted = df_7days
+                            
+                            # Add historical data (last 60 points)
+                            if historical_display:
+                                hist_x = list(range(-len(historical_display), 0))
+                                fig_7days.add_trace(go.Scatter(
+                                    x=hist_x,
+                                    y=historical_display,
+                                    mode='lines',
+                                    name='Historical (Last 60)',
+                                    line=dict(color='gray', width=2)
+                                ))
+                                
+                                # Add connector line
+                                if not df_7days_adjusted.empty:
+                                    fig_7days.add_trace(go.Scatter(
+                                        x=[-1, 0],
+                                        y=[last_actual_price, df_7days_adjusted['predicted_price'].iloc[0]],
+                                        mode='lines',
+                                        name='Connection',
+                                        line=dict(color='green', width=2, dash='dot'),
+                                        showlegend=True
+                                    ))
                             
                             # Add current price line
                             fig_7days.add_hline(
@@ -4211,14 +4252,14 @@ def display_universal_file_upload():
                                 annotation_text=f"Current: {predictions['current_price']:.4f}"
                             )
                             
-                            # Add predictions
+                            # Add adjusted predictions
                             fig_7days.add_trace(go.Scatter(
-                                x=df_7days['date'],
-                                y=df_7days['predicted_price'],
+                                x=df_7days_adjusted['date'],
+                                y=df_7days_adjusted['predicted_price'],
                                 mode='lines+markers',
                                 name='7-Day Predictions',
                                 line=dict(color='red', width=3),
-                                marker=dict(size=10, color=df_7days['confidence'], 
+                                marker=dict(size=10, color=df_7days_adjusted['confidence'], 
                                           colorscale='RdYlGn', showscale=True, 
                                           colorbar=dict(title="Confidence"))
                             ))
@@ -4288,13 +4329,56 @@ def display_universal_file_upload():
                             day_predictions = intraday_data[selected_day]['predictions']
                             df_intraday = pd.DataFrame(day_predictions)
                             
+                            # Get historical data for connection
+                            historical_prices = predictions.get('historical_data', {}).get('prices', [])
+                            if historical_prices:
+                                # Use last 60 points
+                                historical_display = historical_prices[-60:] if len(historical_prices) > 60 else historical_prices
+                                last_actual = historical_display[-1]
+                                
+                                # Calculate offset to connect to last actual price
+                                if not df_intraday.empty:
+                                    first_pred = df_intraday['predicted_price'].iloc[0]
+                                    offset = last_actual - first_pred
+                                    df_intraday_adjusted = df_intraday.copy()
+                                    df_intraday_adjusted['predicted_price'] = df_intraday_adjusted['predicted_price'] + offset
+                                else:
+                                    df_intraday_adjusted = df_intraday
+                                    offset = 0
+                            else:
+                                historical_display = []
+                                df_intraday_adjusted = df_intraday
+                                offset = 0
+                            
                             # Create intraday chart
                             fig_intraday = go.Figure()
                             
-                            # Add price line
+                            # Add historical data (last 60 points) if available
+                            if historical_display:
+                                hist_times = list(range(-len(historical_display), 0))
+                                fig_intraday.add_trace(go.Scatter(
+                                    x=hist_times,
+                                    y=historical_display,
+                                    mode='lines',
+                                    name='Historical (Last 60)',
+                                    line=dict(color='gray', width=2)
+                                ))
+                                
+                                # Add connector line
+                                if not df_intraday_adjusted.empty:
+                                    fig_intraday.add_trace(go.Scatter(
+                                        x=[-1, 0],
+                                        y=[historical_display[-1], df_intraday_adjusted['predicted_price'].iloc[0]],
+                                        mode='lines',
+                                        name='Connection',
+                                        line=dict(color='green', width=2, dash='dot'),
+                                        showlegend=True
+                                    ))
+                            
+                            # Add adjusted price line
                             fig_intraday.add_trace(go.Scatter(
-                                x=df_intraday['time'],
-                                y=df_intraday['predicted_price'],
+                                x=df_intraday_adjusted['time'],
+                                y=df_intraday_adjusted['predicted_price'],
                                 mode='lines',
                                 name='5-Min Price',
                                 line=dict(color='blue', width=2),
@@ -4302,20 +4386,20 @@ def display_universal_file_upload():
                             ))
                             
                             # Add high and low markers
-                            high_idx = df_intraday['predicted_price'].idxmax()
-                            low_idx = df_intraday['predicted_price'].idxmin()
+                            high_idx = df_intraday_adjusted['predicted_price'].idxmax()
+                            low_idx = df_intraday_adjusted['predicted_price'].idxmin()
                             
                             fig_intraday.add_trace(go.Scatter(
-                                x=[df_intraday.iloc[high_idx]['time']],
-                                y=[df_intraday.iloc[high_idx]['predicted_price']],
+                                x=[df_intraday_adjusted.iloc[high_idx]['time']],
+                                y=[df_intraday_adjusted.iloc[high_idx]['predicted_price']],
                                 mode='markers',
                                 name='Day High',
                                 marker=dict(color='green', size=12, symbol='triangle-up')
                             ))
                             
                             fig_intraday.add_trace(go.Scatter(
-                                x=[df_intraday.iloc[low_idx]['time']],
-                                y=[df_intraday.iloc[low_idx]['predicted_price']],
+                                x=[df_intraday_adjusted.iloc[low_idx]['time']],
+                                y=[df_intraday_adjusted.iloc[low_idx]['predicted_price']],
                                 mode='markers',
                                 name='Day Low',
                                 marker=dict(color='red', size=12, symbol='triangle-down')
@@ -4350,6 +4434,52 @@ def display_universal_file_upload():
                             )
                             
                             st.plotly_chart(fig_intraday, use_container_width=True)
+                            
+                            # Trading Session Summary
+                            if not df_intraday_adjusted.empty:
+                                prices = df_intraday_adjusted['predicted_price'].values
+                                times = df_intraday_adjusted['time'].values if 'time' in df_intraday_adjusted.columns else [''] * len(prices)
+                                
+                                # Use predictions current_price for consistency with top display
+                                opening = predictions.get('current_price', historical_display[-1] if historical_display else prices[0])
+                                opening_time = times[0] if len(times) > 0 else ''
+                                
+                                high_idx = prices.argmax()
+                                high = prices[high_idx]
+                                high_time = times[high_idx] if len(times) > high_idx else ''
+                                
+                                low_idx = prices.argmin()
+                                low = prices[low_idx]
+                                low_time = times[low_idx] if len(times) > low_idx else ''
+                                
+                                closing = prices[-1] if len(prices) > 0 else 0
+                                closing_time = times[-1] if len(times) > 0 else ''
+                                
+                                volatility = ((high - low) / opening * 100) if opening > 0 else 0
+                                trend = ((closing - opening) / opening * 100) if opening > 0 else 0
+                                
+                                # Use same current_price from predictions
+                                current_price = predictions.get('current_price', closing)
+                                
+                                col1, col2, col3, col4 = st.columns(4)
+                                with col1:
+                                    st.metric("Opening", f"{opening:.4f}", f"{opening_time}")
+                                with col2:
+                                    st.metric("High", f"{high:.4f}", f"{high_time}")
+                                with col3:
+                                    st.metric("Low", f"{low:.4f}", f"{low_time}")
+                                with col4:
+                                    st.metric("Closing", f"{closing:.4f}", f"{closing_time}")
+                                
+                                col5, col6, col7, col8 = st.columns(4)
+                                with col5:
+                                    st.metric("Current", f"{current_price:.4f}")
+                                with col6:
+                                    st.metric("Volatility", f"{volatility:.2f}%")
+                                with col7:
+                                    st.metric("Trend", f"{trend:+.2f}%")
+                                with col8:
+                                    st.metric("Data Points", f"{len(prices)}")
                             
                             # Show data table (limited to avoid clutter)
                             st.subheader("📋 5-Minute Interval Data (Every 30 minutes)")
