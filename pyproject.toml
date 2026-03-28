@@ -22,4 +22,5 @@ dependencies = [
     "pytz>=2025.2",
     "chardet>=5.2.0",
     "pillow>=11.2.1",
+    "scipy>=1.14.0",
 ]
