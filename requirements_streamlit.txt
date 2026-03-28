@@ -9,4 +9,4 @@ streamlit-autorefresh>=1.0.1
 trafilatura>=2.0.0
 pytz>=2025.2
 holidays>=0.75
-scipy
+scipy>=1.14.0
