@@ -4214,10 +4214,17 @@ def display_universal_file_upload():
                             
                             # Add linear trend line (show prediction direction)
                             if not df_7days.empty and len(df_7days) > 1:
-                                from scipy import stats
+                                # Using numpy for linear regression instead of scipy
                                 x_vals = np.arange(len(df_7days))
                                 y_vals = df_7days['predicted_price'].values
-                                slope, intercept, r_value, p_value, std_err = stats.linregress(x_vals, y_vals)
+                                # Calculate linear regression manually using numpy
+                                n = len(x_vals)
+                                sum_x = np.sum(x_vals)
+                                sum_y = np.sum(y_vals)
+                                sum_xy = np.sum(x_vals * y_vals)
+                                sum_xx = np.sum(x_vals ** 2)
+                                slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x ** 2)
+                                intercept = (sum_y - slope * sum_x) / n
                                 trend_line = intercept + slope * x_vals
                                 fig_7days.add_trace(go.Scatter(
                                     x=df_7days['date'],
@@ -4329,7 +4336,13 @@ def display_universal_file_upload():
                             if not df_intraday.empty and len(df_intraday) > 1:
                                 x_vals = np.arange(len(df_intraday))
                                 y_vals = df_intraday['predicted_price'].values
-                                slope, intercept, r_value, p_value, std_err = stats.linregress(x_vals, y_vals)
+                                n = len(x_vals)
+                                sum_x = np.sum(x_vals)
+                                sum_y = np.sum(y_vals)
+                                sum_xy = np.sum(x_vals * y_vals)
+                                sum_xx = np.sum(x_vals ** 2)
+                                slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x ** 2)
+                                intercept = (sum_y - slope * sum_x) / n
                                 trend_line = intercept + slope * x_vals
                                 fig_intraday.add_trace(go.Scatter(
                                     x=df_intraday['time'],
@@ -4423,7 +4436,13 @@ def display_universal_file_upload():
                             if not df_medium.empty and len(df_medium) > 1:
                                 x_vals = np.arange(len(df_medium))
                                 y_vals = df_medium['predicted_price'].values
-                                slope, intercept, r_value, p_value, std_err = stats.linregress(x_vals, y_vals)
+                                n = len(x_vals)
+                                sum_x = np.sum(x_vals)
+                                sum_y = np.sum(y_vals)
+                                sum_xy = np.sum(x_vals * y_vals)
+                                sum_xx = np.sum(x_vals ** 2)
+                                slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x ** 2)
+                                intercept = (sum_y - slope * sum_x) / n
                                 trend_line = intercept + slope * x_vals
                                 fig_medium.add_trace(go.Scatter(
                                     x=df_medium['date'],
@@ -4493,7 +4512,13 @@ def display_universal_file_upload():
                             if not df_long.empty and len(df_long) > 1:
                                 x_vals = np.arange(len(df_long))
                                 y_vals = df_long['predicted_price'].values
-                                slope, intercept, r_value, p_value, std_err = stats.linregress(x_vals, y_vals)
+                                n = len(x_vals)
+                                sum_x = np.sum(x_vals)
+                                sum_y = np.sum(y_vals)
+                                sum_xy = np.sum(x_vals * y_vals)
+                                sum_xx = np.sum(x_vals ** 2)
+                                slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x ** 2)
+                                intercept = (sum_y - slope * sum_x) / n
                                 trend_line = intercept + slope * x_vals
                                 fig_long.add_trace(go.Scatter(
                                     x=df_long['date'],
