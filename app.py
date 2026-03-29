@@ -7,6 +7,10 @@ import time
 from datetime import datetime, timedelta
 import pytz
 import random
+from sklearn.linear_model import SGDRegressor
+from sklearn.preprocessing import StandardScaler
+
+# Sector-wise model mapping using sklearn SGDRegressor for online learning
 # from streamlit_autorefresh import st_autorefresh  # Commented out due to installation issues
 
 # Import custom modules
@@ -74,6 +78,109 @@ def main():
         st.session_state.live_kse40_dashboard = LiveKSE40Dashboard()
     if 'enhanced_live_dashboard' not in st.session_state:
         st.session_state.enhanced_live_dashboard = get_enhanced_live_dashboard()
+    
+    # Initialize sklearn SGDRegressor-based sector models (online learning)
+    if 'sector_models' not in st.session_state:
+        st.session_state.sector_models = {
+            "Cement": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+            "Oil & Gas": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+            "Fertilizer": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+            "Banking": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+            "Power": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+            " Textile": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []}
+        }
+    # Symbol to sector mapping
+    if 'sector_map' not in st.session_state:
+        st.session_state.sector_map = {
+            "LUCK": "Cement", "DGKC": "Cement", "MLC": "Cement", "ACPL": "Cement", "CEMT": "Cement",
+            "OGDC": "Oil & Gas", "PPL": "Oil & Gas", "POL": "Oil & Gas", "APL": "Oil & Gas", "SGFL": "Oil & Gas",
+            "ENGRO": "Fertilizer", "FFC": "Fertilizer", "EFERT": "Fertilizer", "FATIMA": "Fertilizer", "AHCL": "Fertilizer",
+            "HBL": "Banking", "UBL": "Banking", "MCB": "Banking", "NBP": "Banking", "BAFL": "Banking",
+            "KSE100": "Index", "KSE30": "Index", "KMI30": "Index"
+        }
+    
+    # Initialize River-style handlers using SGDRegressor for different sessions
+    if 'river_handlers' not in st.session_state:
+        def create_sgd_model():
+            return {
+                'scaler': StandardScaler(),
+                'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42),
+                'fitted': False,
+                'history': []
+            }
+        st.session_state.river_handlers = {
+            'kse_40_live': create_sgd_model(),
+            'comprehensive_intraday': create_sgd_model(),
+            'intraday_first_half': create_sgd_model(),
+            'intraday_second_half': create_sgd_model(),
+            'file_upload_session': create_sgd_model()
+        }
+    
+    # Universal prediction engine using SGDRegressor (like River's SNARIMAX)
+    def get_final_prediction(session_key, current_features, actual_price_last_min=None, lstm_pred=None):
+        """
+        The Master Decision Maker - combines LSTM with SGDRegressor for online correction
+        session_key: Which page the user is on (e.g., 'kse_40_live')
+        current_features: Input data for the model
+        actual_price_last_min: Actual price from live market (for learning)
+        lstm_pred: Baseline prediction from LSTM model
+        """
+        handler = st.session_state.river_handlers.get(session_key)
+        if not handler:
+            return lstm_pred
+        
+        # Prepare features array
+        if isinstance(current_features, dict):
+            X = np.array([[current_features.get('price', 0), current_features.get('change_pct', 0), current_features.get('volume', 0)]])
+        else:
+            X = np.array([current_features])
+        
+        # If actual price provided, learn from it (like River's learn_one)
+        if actual_price_last_min is not None:
+            if not handler['fitted']:
+                X_scaled = handler['scaler'].fit_transform(X)
+                handler['model'].fit(X_scaled, [actual_price_last_min])
+                handler['fitted'] = True
+            else:
+                X_scaled = handler['scaler'].transform(X)
+                handler['model'].partial_fit(X_scaled, [actual_price_last_min])
+            handler['history'].append({'features': current_features, 'actual': actual_price_last_min})
+        
+        # Get SGDRegressor forecast (similar to River's forecast)
+        if handler['fitted']:
+            X_scaled = handler['scaler'].transform(X)
+            sgd_correction = handler['model'].predict(X_scaled)[0]
+            
+            # Final decision with 60/40 weightage (as per user's request)
+            if lstm_pred is not None:
+                final_output = (0.6 * lstm_pred) + (0.4 * sgd_correction)
+            else:
+                final_output = sgd_correction
+            return final_output
+        
+        return lstm_pred if lstm_pred is not None else 0
+    
+    st.session_state.get_final_prediction = get_final_prediction
+    
+    # Function to process stock data with sector models (for Top Gainers/Losers)
+    def process_stock_data_sector(symbol, current_price, features):
+        sector = st.session_state.sector_map.get(symbol)
+        if sector and sector in st.session_state.sector_models:
+            sector_data = st.session_state.sector_models[sector]
+            X = np.array([[features.get('price', current_price), features.get('change_pct', 0), features.get('volume', 0)]])
+            if not sector_data['fitted']:
+                X_scaled = sector_data['scaler'].fit_transform(X)
+                sector_data['model'].fit(X_scaled, [current_price])
+                sector_data['fitted'] = True
+            else:
+                X_scaled = sector_data['scaler'].transform(X)
+                # Use partial_fit for online learning
+                sector_data['model'].partial_fit(X_scaled, [current_price])
+            prediction = sector_data['model'].predict(X_scaled)[0]
+            return prediction
+        return None
+    
+    st.session_state.process_stock_data_sector = process_stock_data_sector
 
     st.title("📈 PSX KSE-100 Forecasting Dashboard")
     st.markdown("---")

@@ -789,42 +789,73 @@ class LiveKSE40Dashboard:
             )
     
     def display_top_gainers(self, live_data):
-        """Display all gaining companies"""
+        """Display all gaining companies with sector-wise predictions using sklearn"""
         gainers = [(symbol, data) for symbol, data in live_data.items() if data['change_pct'] > 0]
         gainers.sort(key=lambda x: x[1]['change_pct'], reverse=True)
 
-        st.markdown("🚀 **All Gaining Companies**")
+        st.markdown("🚀 **All Gaining Companies with Sector Predictions**")
 
+        # Process each gainer with sklearn model for sector-wise prediction
         for i, (symbol, data) in enumerate(gainers):
-            col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
+            col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 2])
             
             with col1:
                 st.write(f"**{i+1}. {symbol}**")
             with col2:
-                st.write(data['company_name'][:25] + "...")
+                st.write(data['company_name'][:20] + "...")
             with col3:
                 st.write(f"PKR {data['current_price']:,.2f}")
             with col4:
                 st.success(f"+{data['change_pct']:.2f}%")
+            with col5:
+                # Get sector for this symbol and show sklearn model prediction
+                if hasattr(st.session_state, 'sector_map') and hasattr(st.session_state, 'sector_models'):
+                    sector = st.session_state.sector_map.get(symbol)
+                    if sector and sector in st.session_state.sector_models:
+                        features = {
+                            'price': data['current_price'],
+                            'change_pct': data['change_pct'],
+                            'volume': data.get('volume', 0)
+                        }
+                        # Use the session state function
+                        if hasattr(st.session_state, 'process_stock_data_sector'):
+                            prediction = st.session_state.process_stock_data_sector(symbol, data['current_price'], features)
+                            if prediction:
+                                st.info(f"📊 {sector}: {prediction:.2f}")
     
     def display_top_losers(self, live_data):
-        """Display all losing companies"""
+        """Display all losing companies with sector-wise predictions using sklearn"""
         losers = [(symbol, data) for symbol, data in live_data.items() if data['change_pct'] < 0]
         losers.sort(key=lambda x: x[1]['change_pct'])
 
-        st.markdown("📉 **All Losing Companies**")
+        st.markdown("📉 **All Losing Companies with Sector Predictions**")
 
         for i, (symbol, data) in enumerate(losers):
-            col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
+            col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 2])
             
             with col1:
                 st.write(f"**{i+1}. {symbol}**")
             with col2:
-                st.write(data['company_name'][:25] + "...")
+                st.write(data['company_name'][:20] + "...")
             with col3:
                 st.write(f"PKR {data['current_price']:,.2f}")
             with col4:
                 st.error(f"{data['change_pct']:.2f}%")
+            with col5:
+                # Get sector for this symbol and show sklearn model prediction
+                if hasattr(st.session_state, 'sector_map') and hasattr(st.session_state, 'sector_models'):
+                    sector = st.session_state.sector_map.get(symbol)
+                    if sector and sector in st.session_state.sector_models:
+                        features = {
+                            'price': data['current_price'],
+                            'change_pct': data['change_pct'],
+                            'volume': data.get('volume', 0)
+                        }
+                        # Use the session state function
+                        if hasattr(st.session_state, 'process_stock_data_sector'):
+                            prediction = st.session_state.process_stock_data_sector(symbol, data['current_price'], features)
+                            if prediction:
+                                st.info(f"📊 {sector}: {prediction:.2f}")
     
     def display_sector_performance(self, live_data):
         """Display performance by sector for expanded KSE-100"""
