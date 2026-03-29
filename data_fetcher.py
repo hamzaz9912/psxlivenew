@@ -5,7 +5,10 @@ import numpy as np
 from datetime import datetime, timedelta
 import time
 import streamlit as st
-import trafilatura
+try:
+    import trafilatura
+except ImportError:
+    trafilatura = None
 import re
 import json
 import random

@@ -7,8 +7,16 @@ import time
 from datetime import datetime, timedelta
 import pytz
 import random
-from sklearn.linear_model import SGDRegressor
-from sklearn.preprocessing import StandardScaler
+
+# Optional sklearn imports for online learning features
+try:
+    from sklearn.linear_model import SGDRegressor
+    from sklearn.preprocessing import StandardScaler
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
+    SGDRegressor = None
+    StandardScaler = None
 
 # Sector-wise model mapping using sklearn SGDRegressor for online learning
 # from streamlit_autorefresh import st_autorefresh  # Commented out due to installation issues
@@ -79,16 +87,19 @@ def main():
     if 'enhanced_live_dashboard' not in st.session_state:
         st.session_state.enhanced_live_dashboard = get_enhanced_live_dashboard()
     
-    # Initialize sklearn SGDRegressor-based sector models (online learning)
+    # Initialize sklearn SGDRegressor-based sector models (online learning) if available
     if 'sector_models' not in st.session_state:
-        st.session_state.sector_models = {
-            "Cement": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
-            "Oil & Gas": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
-            "Fertilizer": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
-            "Banking": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
-            "Power": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
-            " Textile": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []}
-        }
+        if HAS_SKLEARN:
+            st.session_state.sector_models = {
+                "Cement": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+                "Oil & Gas": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+                "Fertilizer": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+                "Banking": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+                "Power": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []},
+                " Textile": {'scaler': StandardScaler(), 'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42), 'fitted': False, 'X_buffer': [], 'y_buffer': []}
+            }
+        else:
+            st.session_state.sector_models = {}
     # Symbol to sector mapping
     if 'sector_map' not in st.session_state:
         st.session_state.sector_map = {
@@ -101,20 +112,23 @@ def main():
     
     # Initialize River-style handlers using SGDRegressor for different sessions
     if 'river_handlers' not in st.session_state:
-        def create_sgd_model():
-            return {
-                'scaler': StandardScaler(),
-                'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42),
-                'fitted': False,
-                'history': []
+        if HAS_SKLEARN:
+            def create_sgd_model():
+                return {
+                    'scaler': StandardScaler(),
+                    'model': SGDRegressor(loss='squared_error', learning_rate='adaptive', max_iter=1000, random_state=42),
+                    'fitted': False,
+                    'history': []
+                }
+            st.session_state.river_handlers = {
+                'kse_40_live': create_sgd_model(),
+                'comprehensive_intraday': create_sgd_model(),
+                'intraday_first_half': create_sgd_model(),
+                'intraday_second_half': create_sgd_model(),
+                'file_upload_session': create_sgd_model()
             }
-        st.session_state.river_handlers = {
-            'kse_40_live': create_sgd_model(),
-            'comprehensive_intraday': create_sgd_model(),
-            'intraday_first_half': create_sgd_model(),
-            'intraday_second_half': create_sgd_model(),
-            'file_upload_session': create_sgd_model()
-        }
+        else:
+            st.session_state.river_handlers = {}
     
     # Universal prediction engine using SGDRegressor (like River's SNARIMAX)
     def get_final_prediction(session_key, current_features, actual_price_last_min=None, lstm_pred=None):
@@ -125,6 +139,9 @@ def main():
         actual_price_last_min: Actual price from live market (for learning)
         lstm_pred: Baseline prediction from LSTM model
         """
+        if not HAS_SKLEARN or 'river_handlers' not in st.session_state:
+            return lstm_pred if lstm_pred is not None else 0
+            
         handler = st.session_state.river_handlers.get(session_key)
         if not handler:
             return lstm_pred
@@ -164,6 +181,8 @@ def main():
     
     # Function to process stock data with sector models (for Top Gainers/Losers)
     def process_stock_data_sector(symbol, current_price, features):
+        if not HAS_SKLEARN or 'sector_models' not in st.session_state or not st.session_state.sector_models:
+            return None
         sector = st.session_state.sector_map.get(symbol)
         if sector and sector in st.session_state.sector_models:
             sector_data = st.session_state.sector_models[sector]
