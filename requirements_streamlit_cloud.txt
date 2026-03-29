@@ -1,37 +1,29 @@
-# Core ML/AI Dependencies - MUST be first for Streamlit Cloud
-scikit-learn>=1.5.0
-scipy>=1.14.0
-numpy>=2.3.1
+# Core ML - Critical order matters
+scikit-learn>=1.5.0,<1.6.0
+scipy>=1.14.0,<1.15.0
+numpy>=2.1.0,<2.3.0
+joblib>=1.4.0,<1.5.0
+threadpoolctl>=3.5.0,<4.0.0
 
 # Data processing
-pandas>=2.3.0
-joblib>=1.4.0
-threadpoolctl>=3.5.0
+pandas>=2.3.0,<2.4.0
 
 # Visualization
-plotly>=6.2.0
-matplotlib>=3.9.0
+plotly>=6.0.0,<7.0.0
+matplotlib>=3.9.0,<4.0.0
 
-# Forecasting
-prophet>=1.1.7
-statsmodels>=0.14.0
+# Streamlit
+streamlit>=1.46.0,<2.0.0
+streamlit-autorefresh>=1.0.0,<2.0.0
 
 # Web scraping
-beautifulsoup4>=4.13.4
-requests>=2.32.4
-trafilatura>=2.0.0
-newspaper3k>=0.2.8
-selenium>=4.34.0
-webdriver-manager>=4.0.2
-
-# Streamlit specific
-streamlit>=1.46.1
-streamlit-autorefresh>=1.0.1
+beautifulsoup4>=4.13.0,<5.0.0
+lxml>=5.0.0,<6.0.0
+requests>=2.32.0,<3.0.0
 
 # Utilities
-pytz>=2025.2
-holidays>=0.75
-yfinance>=0.2.64
-chardet>=5.2.0
-pillow>=10.4.0
-openai>=1.93.0
+pytz>=2025.0,<2026.0
+holidays>=0.75,<1.0.0
+yfinance>=0.2.0,<1.0.0
+pillow>=10.0.0,<11.0.0
+chardet>=5.2.0,<6.0.0
