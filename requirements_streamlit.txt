@@ -10,3 +10,4 @@ trafilatura>=2.0.0
 pytz>=2025.2
 holidays>=0.75
 scipy>=1.14.0
+scikit-learn>=1.5.0
