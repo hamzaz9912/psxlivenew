@@ -5886,9 +5886,6 @@ def display_master_oracle_terminal():
             yaxis='y3'
         ), row=1, col=1)
         
-        # Forecast with confidence band
-        fut_times = [now + timedelta(minutes=5*i) for i in range(1, 73)]
-        
         # Calculate confidence interval (wider as we go further)
         upper_bound = [p * 1.015 for p in forecast]
         lower_bound = [p * 0.985 for p in forecast]
@@ -5903,14 +5900,27 @@ def display_master_oracle_terminal():
             name='Confidence Band'
         ), row=1, col=1)
         
-        # Forecast line
+        # Forecast line with markers for 5-min intervals
         fig.add_trace(go.Scatter(
             x=fut_times, 
             y=forecast, 
             name='6H AI Forecast', 
-            line=dict(color='lime', width=3, dash='solid'),
+            line=dict(color='lime', width=3),
             mode='lines+markers',
-            marker=dict(size=4, color='lime')
+            marker=dict(size=5, color='lime', symbol='circle'),
+            hovertemplate='Time: %{x|%H:%M}<br>Price: $%{y:.2f}<extra></extra>'
+        ), row=1, col=1)
+        
+        # Add price labels on forecast points
+        fig.add_trace(go.Scatter(
+            x=fut_times[::12],  # Every hour
+            y=[forecast[i] for i in range(0, 72, 12)],
+            text=[f"${forecast[i]:.2f}" for i in range(0, 72, 12)],
+            mode='text',
+            textposition='top center',
+            textfont=dict(color='lime', size=10),
+            showlegend=False,
+            hoverinfo='skip'
         ), row=1, col=1)
         
         # DXY chart (inverted for correlation view)
@@ -5944,7 +5954,7 @@ def display_master_oracle_terminal():
         # Update layout
         fig.update_layout(
             template="plotly_dark",
-            height=900,
+            height=950,
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
             plot_bgcolor='#0E1117', 
@@ -5952,15 +5962,48 @@ def display_master_oracle_terminal():
             hovermode="x unified"
         )
         
-        # Update axes
-        fig.update_xaxes(range=[now - timedelta(hours=3), now + timedelta(hours=7)], row=1, col=1)
-        fig.update_xaxes(range=[now - timedelta(hours=3), now + timedelta(hours=7)], row=2, col=1)
-        fig.update_xaxes(range=[fut_times[0] - timedelta(minutes=15), fut_times[-1] + timedelta(minutes=15)], row=3, col=1)
+        # Update axes for better 5-min visibility
+        fig.update_xaxes(
+            range=[now - timedelta(hours=2), fut_times[-1] + timedelta(minutes=15)], 
+            row=1, col=1,
+            tickformat='%H:%M',
+            tickangle=45
+        )
+        fig.update_xaxes(
+            range=[now - timedelta(hours=2), fut_times[-1] + timedelta(minutes=15)], 
+            row=2, col=1,
+            tickformat='%H:%M',
+            tickangle=45
+        )
+        fig.update_xaxes(
+            range=[fut_times[0] - timedelta(minutes=5), fut_times[-1] + timedelta(minutes=10)], 
+            row=3, col=1,
+            tickformat='%H:%M',
+            tickangle=45
+        )
         
-        fig.update_yaxes(title_text="Price ($)", row=1, col=1, side="left")
+        fig.update_yaxes(title_text="Price ($)", row=1, col=1, side="left", tickformat='$.2f')
         fig.update_yaxes(title_text="Volume", row=1, col=1, side="right", overlaying="y", showgrid=False, visible=False)
-        fig.update_yaxes(title_text="DXY Index", row=2, col=1)
-        fig.update_yaxes(title_text="Signal %", row=3, col=1)
+        fig.update_yaxes(title_text="DXY Index", row=2, col=1, tickformat='.2f')
+        fig.update_yaxes(title_text="Signal %", row=3, col=1, tickformat='.2f')
+        
+        # Add current price annotation
+        fig.add_annotation(
+            x=now, y=a_price,
+            text=f"Current: ${a_price:.2f}",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            ax=-40,
+            ay=-40,
+            font=dict(color='gold', size=12),
+            bgcolor='rgba(0,0,0,0.8)',
+            bordercolor='gold',
+            borderwidth=1,
+            borderpad=4,
+            row=1, col=1
+        )
         
         st.plotly_chart(fig, use_container_width=True)
         
