@@ -1,3 +1,1 @@
-# System-level apt packages for Streamlit Cloud
-# Add Ubuntu apt package names here (e.g. libgomp1, ffmpeg)
-# Do NOT add Python packages here - use requirements.txt instead
+
