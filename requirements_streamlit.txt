@@ -1,19 +1,11 @@
-# Core ML/AI Dependencies
-scikit-learn==1.7.2
-scipy==1.16.3
-numpy==2.3.5
-pandas==2.3.3
-
-# Visualization
-plotly==6.5.0
-matplotlib==3.10.8
-altair==5.5.0
-
-# Streamlit
-streamlit==1.51.0
-
-# Utilities
-pytz==2025.2
-yfinance==0.2.66
-requests==2.32.5
-pillow==12.0.0
+streamlit>=1.46.1
+pandas>=2.3.0
+numpy>=2.3.1
+plotly>=6.2.0
+prophet>=1.1.7
+requests>=2.32.4
+beautifulsoup4>=4.13.4
+streamlit-autorefresh>=1.0.1
+trafilatura>=2.0.0
+pytz>=2025.2
+holidays>=0.75
