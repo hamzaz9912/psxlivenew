@@ -26,7 +26,6 @@ webdriver-manager>=4.0.2
 
 # Streamlit
 streamlit>=1.46.1
-streamlit-autorefresh>=1.0.1
 
 # Utilities
 pytz>=2025.2
