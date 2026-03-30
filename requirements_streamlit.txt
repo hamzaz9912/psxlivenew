@@ -36,3 +36,4 @@ chardet>=5.2.0
 pillow>=10.4.0
 openai>=1.93.0
 pydantic>=2.11.0
+river>=0.21.0

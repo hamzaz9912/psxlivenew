@@ -10,3 +10,4 @@ trafilatura==2.0.0
 pytz==2025.2
 holidays==0.75
 yfinance==0.2.64
+river==0.21.0
