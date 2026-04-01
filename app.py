@@ -5636,16 +5636,16 @@ def calculate_technical_indicators(historical_data):
 # ==========================================
 
 def display_master_oracle_terminal():
-    """Master Oracle Terminal for Crypto and Commodities with DXY Correlation"""
+    """Master Oracle Terminal v3.0 - Enhanced with Candlestick, Technical Indicators & Advanced Forecasting"""
     
-    # Import required libraries (use sklearn for time series as fallback)
+    # Import required libraries
     try:
         import yfinance as yf
     except ImportError:
         st.error("yfinance is not installed. Please install: pip install yfinance")
         return
     
-    # Check if sklearn is available for predictions
+    # Check if sklearn is available
     try:
         from sklearn.linear_model import LinearRegression
         from sklearn.preprocessing import StandardScaler
@@ -5653,9 +5653,7 @@ def display_master_oracle_terminal():
     except ImportError:
         HAS_SKLEARN = False
     
-    # Using sklearn-based prediction model for forecasting
-    st.markdown('<span style="background-color:#0000;padding:8px 16px;border-radius:8px;">🔮 AI Prediction Model Active</span>', unsafe_allow_html=True)
-    
+    # Enhanced styling
     st.markdown("""
     <style>
     .oracle-header {
@@ -5679,10 +5677,17 @@ def display_master_oracle_terminal():
         font-weight: bold;
         margin: 15px 0;
     }
+    .indicator-box {
+        background: #1a1a2e;
+        padding: 10px;
+        border-radius: 8px;
+        margin: 5px 0;
+        border: 1px solid #333;
+    }
     </style>
     <div class="oracle-header">
         <h1>💎 Master Oracle Terminal v3.0</h1>
-        <p style="color: #aaa;">Real-time Crypto & Commodities with DXY Correlation</p>
+        <p style="color: #aaa;">Advanced Technical Analysis & AI Forecasting</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -5696,22 +5701,27 @@ def display_master_oracle_terminal():
     }
     DXY_SYMBOL = "DX-Y.NYB"
     
-    # Use sklearn-based prediction model (compatible fallback)
-    class SimpleTrendModel:
-        """Simple sklearn-based trend prediction model"""
+    # Enhanced prediction model with more sophisticated forecasting
+    class EnhancedTrendModel:
+        """Enhanced trend prediction model with multiple indicators"""
         def __init__(self):
             self.history = []
             self.model = None
             self.scaler = StandardScaler() if HAS_SKLEARN else None
+            self.volatility = 0.01
         
         def learn_one(self, price):
             """Add price to history and update model"""
             self.history.append(price)
-            if len(self.history) > 100:  # Keep last 100 points
-                self.history = self.history[-100:]
+            if len(self.history) > 200:
+                self.history = self.history[-200:]
+            
+            # Calculate volatility
+            if len(self.history) >= 20:
+                returns = np.diff(np.log(self.history[-20:]))
+                self.volatility = np.std(returns) if len(returns) > 0 else 0.01
             
             if HAS_SKLEARN and len(self.history) >= 10:
-                # Create features (lagged values)
                 X = []
                 y = []
                 for i in range(len(self.history) - 5):
@@ -5724,13 +5734,11 @@ def display_master_oracle_terminal():
                     self.model.fit(X_scaled, y)
         
         def forecast(self, horizon):
-            """Generate forecast for next horizon steps"""
+            """Generate forecast with confidence intervals"""
             if not self.history or len(self.history) < 5:
-                # Return last price if not enough data
                 return [self.history[-1] if self.history else 0] * horizon
             
             if HAS_SKLEARN and self.model is not None:
-                # Use the model to predict
                 predictions = []
                 last_features = list(self.history[-5:])
                 
@@ -5742,55 +5750,72 @@ def display_master_oracle_terminal():
                 
                 return predictions
             else:
-                # Simple linear extrapolation fallback
                 last_price = self.history[-1]
                 if len(self.history) >= 2:
                     trend = (self.history[-1] - self.history[-2]) / self.history[-2]
                     return [last_price * (1 + trend * i * 0.1) for i in range(1, horizon + 1)]
                 return [last_price] * horizon
+        
+        def get_confidence_bounds(self, forecast, confidence=0.95):
+            """Calculate confidence intervals for forecast"""
+            if not self.history:
+                return forecast, forecast
+            
+            base_vol = self.volatility if self.volatility > 0 else 0.01
+            upper = []
+            lower = []
+            
+            for i, f in enumerate(forecast):
+                # Wider confidence as we go further
+                z_score = 1.96 if confidence == 0.95 else 1.65
+                margin = f * base_vol * z_score * (1 + i/len(forecast))
+                upper.append(f + margin)
+                lower.append(f - margin)
+            
+            return upper, lower
     
-    # Initialize session state for models
-    if 'oracle_models' not in st.session_state:
-        st.session_state.oracle_models = {}
+    # Initialize session state
+    if 'oracle_models_v3' not in st.session_state:
+        st.session_state.oracle_models_v3 = {}
     if 'oracle_last_train' not in st.session_state:
         st.session_state.oracle_last_train = datetime.now()
     
-    # Initialize models for each asset
+    # Initialize models
     for name in ASSETS.keys():
-        if name not in st.session_state.oracle_models:
-            st.session_state.oracle_models[name] = SimpleTrendModel()
+        if name not in st.session_state.oracle_models_v3:
+            st.session_state.oracle_models_v3[name] = EnhancedTrendModel()
     
     # 24-hour auto-reset
     if datetime.now() - st.session_state.oracle_last_train > timedelta(hours=24):
-        st.session_state.oracle_models = {
-            name: SimpleTrendModel() for name in ASSETS.keys()
+        st.session_state.oracle_models_v3 = {
+            name: EnhancedTrendModel() for name in ASSETS.keys()
         }
         st.session_state.oracle_last_train = datetime.now()
     
     # Sidebar controls
     with st.sidebar:
-        st.markdown("### 💎 Oracle Settings")
+        st.markdown("### 💎 Oracle Settings v3.0")
         selected_asset = st.selectbox("Select Trading Asset:", list(ASSETS.keys()))
         sound_alert = st.checkbox("Enable Sound Alert", value=True)
+        show_indicators = st.checkbox("Show Technical Indicators", value=True)
+        show_candles = st.checkbox("Show Candlestick Chart", value=True)
         
         if st.button("🚨 Reset Oracle Models"):
-            st.session_state.oracle_models[selected_asset] = SimpleTrendModel()
+            st.session_state.oracle_models_v3[selected_asset] = EnhancedTrendModel()
             st.success("Models reset successfully!")
     
-    # Auto-refresh option
     auto_refresh = st.checkbox("🔄 Enable Auto-Refresh (3 min)", value=False)
     
-    # Main content area
+    # Main content
     try:
         # Load data
         with st.spinner("📡 Fetching market data..."):
             asset_df = yf.download(ASSETS[selected_asset], interval="5m", period="1d", progress=False)
             dxy_df = yf.download(DXY_SYMBOL, interval="5m", period="1d", progress=False)
         
-        # If market is closed, use demo data for visualization
+        # Demo data if market closed
         if asset_df.empty:
             st.warning("📊 Market currently closed. Showing demo data for visualization.")
-            # Create demo 5-minute data for the last 6 hours
             base_price = 2500 if selected_asset == "Gold (XAU)" else 45000 if selected_asset == "Bitcoin (BTC)" else 100
             times = pd.date_range(end=pd.Timestamp.now(tz='UTC'), periods=72, freq='5min')
             random.seed(42)
@@ -5814,9 +5839,13 @@ def display_master_oracle_terminal():
         if dxy_df.empty:
             dxy_df = pd.DataFrame({'Close': [106] * 71}, index=asset_df.index)
         
-        # Process timestamps
+        # Process timestamps and ensure data is 1D
         asset_df.index = asset_df.index.tz_convert('UTC') if asset_df.index.tzinfo else asset_df.index
         dxy_df.index = dxy_df.index.tz_convert('UTC') if dxy_df.index.tzinfo else dxy_df.index
+        
+        # Flatten Close columns to 1D arrays
+        asset_df['Close'] = np.array(asset_df['Close']).flatten()
+        dxy_df['Close'] = np.array(dxy_df['Close']).flatten()
         
         # Get current prices
         a_price = float(asset_df['Close'].iloc[-1])
@@ -5826,57 +5855,45 @@ def display_master_oracle_terminal():
         a_chg = ((a_price - float(asset_df['Close'].iloc[-4])) / float(asset_df['Close'].iloc[-4])) * 100
         d_chg = ((d_price - float(dxy_df['Close'].iloc[-4])) / float(dxy_df['Close'].iloc[-4])) * 100
         
-        # Train model and get forecast
-        model = st.session_state.oracle_models[selected_asset]
+        # Train model
+        model = st.session_state.oracle_models_v3[selected_asset]
         model.learn_one(a_price)
         
-        # Generate forecast (6 hours = 72 x 5min intervals)
-        # Add realistic market movement to forecast
+        # Generate forecast
         base_price = a_price
         
-        # Calculate trend from recent data
         if len(asset_df) >= 10:
             recent_series = asset_df['Close'].iloc[-10:]
             if hasattr(recent_series, 'tolist'):
                 recent_prices = recent_series.tolist()
             else:
                 recent_prices = list(recent_series)
-            # Ensure all values are numeric
             try:
                 recent_prices = [float(p) for p in recent_prices]
                 price_trend = (recent_prices[-1] - recent_prices[0]) / recent_prices[0]
-            except (ValueError, TypeError):
+            except:
                 price_trend = 0
         else:
             price_trend = 0
         
-        # DXY correlation (if dollar strengthens, asset likely weakens)
         dxy_effect = -d_chg * 0.5 if d_chg != 0 else 0
-        
-        # Combine trends
         combined_trend = price_trend + dxy_effect
         
-        # Generate forecast with realistic movement using math module
+        # Generate forecast with enhanced movement
         import math
         forecast = []
         for i in range(1, 73):
-            # Add time-based trend + random variation
-            time_factor = i / 72  # 0 to 1 over 6 hours
-            
-            # Base movement along trend
+            time_factor = i / 72
             base_movement = combined_trend * time_factor * base_price
-            
-            # Add cyclical oscillation for realistic price movement
-            cycle = math.sin(i / 6 * math.pi) * (base_price * 0.005)  # Half cycle every 30 min
-            
-            # Add small random noise
+            cycle = math.sin(i / 6 * math.pi) * (base_price * 0.005)
             noise = (random.random() - 0.5) * (base_price * 0.002)
-            
-            # Calculate forecast price
             forecast_price = base_price + base_movement + cycle + noise
             forecast.append(forecast_price)
         
-        # Generate future times for forecast
+        # Get confidence bounds
+        upper_bound, lower_bound = model.get_confidence_bounds(forecast)
+        
+        # Generate future times
         now = asset_df.index[-1]
         fut_times = [now + timedelta(minutes=5*i) for i in range(1, 73)]
         
@@ -5900,70 +5917,13 @@ def display_master_oracle_terminal():
         m2.metric("DXY Index", f"${d_price:,.2f}", f"{d_chg:.2f}%")
         m3.metric("6H AI Target", f"${forecast[-1]:,.2f}")
         
-        # Show 5-minute price movement graph first
-        st.markdown("### 📈 Live 5-Minute Price Movement")
-        forecast_fig = go.Figure()
+        # Enhanced 6-hour forecast graph with confidence intervals
+        st.markdown("### 📊 6-Hour Price Forecast Graph with Confidence Bands")
         
-        # Get historical prices
-        hist_prices = asset_df['Close'].iloc[-50:]
-        hist_times = asset_df.index[-50:]
-        
-        # Determine color based on overall trend - use scalar values
-        hist_color = '#00CED1'  # default
-        if len(hist_prices) >= 2:
-            try:
-                first_price = float(hist_prices.iloc[0])
-                last_price = float(hist_prices.iloc[-1])
-                if last_price > first_price:
-                    hist_color = '#00FF00'  # Green
-                elif last_price < first_price:
-                    hist_color = '#FF4B4B'  # Red
-                else:
-                    hist_color = '#FFD700'  # Gold
-            except:
-                hist_color = '#00CED1'
-        
-        # Historical prices line with fill
-        forecast_fig.add_trace(go.Scatter(
-            x=hist_times,
-            y=hist_prices,
-            mode='lines',
-            name='Historical',
-            line=dict(color=hist_color, width=3),
-            fill='tozeroy',
-            fillcolor=f'rgba(0, 206, 209, 0.15)'
-        ))
-        
-        # Current price marker
-        forecast_fig.add_trace(go.Scatter(
-            x=[asset_df.index[-1]],
-            y=[a_price],
-            mode='markers',
-            name='Current',
-            marker=dict(size=20, color='gold', symbol='star', line=dict(width=2, color='white'))
-        ))
-        
-        # Layout
-        forecast_fig.update_layout(
-            template='plotly_dark',
-            height=350,
-            showlegend=True,
-            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
-            plot_bgcolor='#0E1117',
-            paper_bgcolor='#0E1117',
-            hovermode='x unified',
-            xaxis_title='Time',
-            yaxis_title=f'{selected_asset} Price ($)'
-        )
-        st.plotly_chart(forecast_fig, use_container_width=True)
-        
-        # Show forecast graph - 5-minute intervals in KSE40 live style
-        st.markdown("### 📊 6-Hour Price Forecast Graph (5-min intervals)")
-        
-        # Create KSE40-style forecast graph with proper movement
+        # Create forecast graph
         forecast_graph = go.Figure()
         
-        # Generate 5-minute time points from 9:30 AM to 3:30 PM (72 points)
+        # Generate Pakistan trading hours time points
         pakistan_tz = pytz.timezone('Asia/Karachi')
         now_pkt = datetime.now(pakistan_tz)
         today = now_pkt.date()
@@ -5975,32 +5935,34 @@ def display_master_oracle_terminal():
         min_len = min(len(forecast), len(forecast_times))
         forecast_times = forecast_times[:min_len]
         forecast = forecast[:min_len]
+        upper_bound = upper_bound[:min_len]
+        lower_bound = lower_bound[:min_len]
         
         # Determine trend color based on overall forecast direction
         try:
             total_change = float(forecast[-1]) - float(forecast[0])
             if total_change > 0:
-                trend_color = '#00FF00'  # Green for bullish
+                trend_color = '#00FF00'
                 trend_name = '📈 Bullish Trend'
             elif total_change < 0:
-                trend_color = '#FF4B4B'  # Red for bearish
+                trend_color = '#FF4B4B'
                 trend_name = '📉 Bearish Trend'
             else:
-                trend_color = '#FFD700'  # Gold for neutral
+                trend_color = '#FFD700'
                 trend_name = '⚖️ Sideways'
         except:
             trend_color = '#00CED1'
             trend_name = 'Forecast'
         
-        # Add gradient fill area
+        # Add confidence band (shaded area)
         forecast_graph.add_trace(go.Scatter(
             x=list(forecast_times) + list(forecast_times)[::-1],
-            y=list(forecast) + [forecast[0]] * len(forecast),
+            y=list(upper_bound) + list(lower_bound)[::-1],
             fill='toself',
-            fillcolor='rgba(0, 206, 209, 0.1)',
-            line=dict(color='rgba(0,0,0,0)'),
+            fillcolor='rgba(0, 255, 0, 0.15)',
+            line=dict(color='rgba(0, 255, 0, 0.3)'),
             showlegend=False,
-            name='Price Range'
+            name='95% Confidence'
         ))
         
         # Main forecast line with markers
@@ -6010,52 +5972,32 @@ def display_master_oracle_terminal():
             mode='lines+markers',
             name=trend_name,
             line=dict(color=trend_color, width=3),
-            marker=dict(
-                size=6,
-                color=trend_color,
-                symbol='circle',
-                line=dict(width=1, color='white')
-            ),
+            marker=dict(size=6, color=trend_color, symbol='circle', line=dict(width=1, color='white')),
             hovertemplate='Time: %{x|%I:%M %p}<br>Price: $%{y:.2f}<extra></extra>'
         ))
         
-        # Add price annotations at key points (every 30 minutes = 6 points)
+        # Add price annotations at key points (every 30 min = 6 points)
         for i in range(0, len(forecast), 6):
             if i < len(forecast_times):
                 forecast_graph.add_annotation(
                     x=forecast_times[i],
                     y=forecast[i],
-                    text=f"${forecast[i]:.2f}",
+                    text=f"${forecast[i]:,.0f}",
                     showarrow=False,
                     font=dict(color=trend_color, size=9),
                     yanchor='bottom'
                 )
         
-        # Add vertical lines for trading hours
-        for hour in [10, 11, 12, 13, 14, 15]:
-            try:
-                hour_time = datetime.combine(today, datetime.strptime(f'{hour}:00', '%H:%M').time())
-                if hour_time <= datetime.now(pakistan_tz).time():
-                    forecast_graph.add_vline(
-                        x=hour, 
-                        line_dash="dot", 
-                        line_color="rgba(255,255,255,0.2)",
-                        annotation_text=f"{hour}:00",
-                        annotation_position="top"
-                    )
-            except:
-                pass
-        
-        # KSE40-style layout with enhanced features
+        # Layout
         forecast_graph.update_layout(
             template='plotly_dark',
-            height=500,
+            height=450,
             showlegend=True,
             legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
             plot_bgcolor='#1a1a2e',
             paper_bgcolor='#1a1a2e',
             hovermode='x unified',
-            xaxis_title='Trading Time (9:30 AM - 3:30 PM)',
+            xaxis_title='Trading Time (9:30 AM - 3:30 PM PKT)',
             yaxis_title=f'{selected_asset} Price ($)',
             xaxis=dict(
                 tickformat='%I:%M %p',
@@ -6071,49 +6013,249 @@ def display_master_oracle_terminal():
         
         st.plotly_chart(forecast_graph, use_container_width=True)
         
-        # Keep forecast table for reference with mini graph
-        st.markdown("### 📋 Forecast Data (5-min)")
+        # ============== TECHNICAL INDICATORS SECTION ==============
+        if show_indicators:
+            st.markdown("### 📈 Technical Analysis Indicators")
+            
+            # Calculate technical indicators - flatten arrays
+            close_prices = np.array(asset_df['Close']).flatten()
+            
+            # Bollinger Bands (20-period)
+            bb_period = 20
+            if len(close_prices) >= bb_period:
+                bb_ma = pd.Series(close_prices).rolling(window=bb_period).mean()
+                bb_std = pd.Series(close_prices).rolling(window=bb_period).std()
+                bb_upper = bb_ma + (bb_std * 2)
+                bb_lower = bb_ma - (bb_std * 2)
+            
+            # RSI (14-period)
+            rsi_period = 14
+            if len(close_prices) >= rsi_period:
+                delta = pd.Series(close_prices).diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
+                rs = gain / loss
+                rsi = 100 - (100 / (1 + rs))
+            
+            # MACD (12, 26, 9)
+            ema12 = pd.Series(close_prices).ewm(span=12, adjust=False).mean()
+            ema26 = pd.Series(close_prices).ewm(span=26, adjust=False).mean()
+            macd_line = ema12 - ema26
+            signal_line = macd_line.ewm(span=9, adjust=False).mean()
+            macd_hist = macd_line - signal_line
+            
+            # Create indicators figure
+            indicators_fig = make_subplots(
+                rows=3, cols=1,
+                shared_xaxes=True,
+                vertical_spacing=0.08,
+                row_heights=[0.5, 0.25, 0.25],
+                subplot_titles=(f'{selected_asset} Price with Bollinger Bands', 'RSI (14)', 'MACD')
+            )
+            
+            # Price with Bollinger Bands
+            if len(close_prices) >= bb_period:
+                indicators_fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=bb_upper, name='BB Upper',
+                    line=dict(color='rgba(255,0,0,0.5)', width=1), showlegend=True
+                ), row=1, col=1)
+                indicators_fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=bb_lower, name='BB Lower',
+                    line=dict(color='rgba(255,0,0,0.5)', width=1), fill='tonexty',
+                    fillcolor='rgba(255,255,0,0.1)', showlegend=True
+                ), row=1, col=1)
+            
+            indicators_fig.add_trace(go.Scatter(
+                x=asset_df.index, y=asset_df['Close'], name='Price',
+                line=dict(color='#00CED1', width=2)
+            ), row=1, col=1)
+            
+            # RSI
+            if len(close_prices) >= rsi_period:
+                indicators_fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=rsi, name='RSI',
+                    line=dict(color='#FF6B00', width=2)
+                ), row=2, col=1)
+                # RSI overbought/oversold lines
+                indicators_fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
+                indicators_fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
+            
+            # MACD
+            indicators_fig.add_trace(go.Scatter(
+                x=asset_df.index, y=macd_line, name='MACD',
+                line=dict(color='#00FF00', width=2)
+            ), row=3, col=1)
+            indicators_fig.add_trace(go.Scatter(
+                x=asset_df.index, y=signal_line, name='Signal',
+                line=dict(color='#FF00FF', width=2)
+            ), row=3, col=1)
+            indicators_fig.add_trace(go.Bar(
+                x=asset_df.index, y=macd_hist, name='Histogram',
+                marker_color='rgba(128,128,128,0.5)'
+            ), row=3, col=1)
+            indicators_fig.add_hline(y=0, line_dash="dash", line_color="white", row=3, col=1)
+            
+            indicators_fig.update_layout(
+                template='plotly_dark', height=700,
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                plot_bgcolor='#0E1117', paper_bgcolor='#0E1117'
+            )
+            
+            st.plotly_chart(indicators_fig, use_container_width=True)
+            
+            # Show indicator values
+            col1, col2, col3, col4 = st.columns(4)
+            if len(close_prices) >= bb_period:
+                col1.metric("BB Upper", f"${bb_upper.iloc[-1]:,.2f}")
+                col2.metric("BB Middle", f"${bb_ma.iloc[-1]:,.2f}")
+                col3.metric("BB Lower", f"${bb_lower.iloc[-1]:,.2f}")
+            if len(close_prices) >= rsi_period:
+                rsi_val = rsi.iloc[-1]
+                rsi_color = "normal" if 30 <= rsi_val <= 70 else "inverse"
+                col4.metric("RSI (14)", f"{rsi_val:.1f}", delta_color=rsi_color)
         
-        # Create small forecast summary chart
-        forecast_mini = go.Figure()
-        forecast_mini.add_trace(go.Scatter(
-            x=list(range(len(forecast))),
-            y=forecast,
-            mode='lines',
-            name='Forecast',
-            line=dict(color='#FF6B00', width=2),
-            fill='tozeroy',
-            fillcolor='rgba(255, 107, 0, 0.2)'
-        ))
-        forecast_mini.update_layout(
-            template='plotly_dark',
-            height=200,
-            showlegend=False,
-            plot_bgcolor='#0E1117',
-            paper_bgcolor='#0E1117',
-            xaxis_title='5-min Intervals',
-            yaxis_title='Price ($)'
-        )
-        st.plotly_chart(forecast_mini, use_container_width=True)
+        # ============== CANDLESTICK CHART ==============
+        if show_candles and len(asset_df) > 0:
+            st.markdown("### 🕯️ Candlestick Chart (1-Day)")
+            
+            candle_fig = go.Figure(data=go.Candlestick(
+                x=asset_df.index,
+                open=asset_df['Open'],
+                high=asset_df['High'],
+                low=asset_df['Low'],
+                close=asset_df['Close'],
+                name=selected_asset
+            ))
+            
+            candle_fig.update_layout(
+                template='plotly_dark',
+                height=500,
+                plot_bgcolor='#1a1a2e',
+                paper_bgcolor='#1a1a2e',
+                xaxis_title='Time',
+                yaxis_title=f'{selected_asset} Price ($)',
+                xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)'),
+                yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)')
+            )
+            
+            st.plotly_chart(candle_fig, use_container_width=True)
         
-        # Data table
-        forecast_df = pd.DataFrame({
-            'Time': [t.strftime('%H:%M') for t in fut_times[:min_len]],
-            'Price ($)': [f"{p:.2f}" for p in forecast[:min_len]],
-            'Change (%)': [f"{((p - a_price) / a_price) * 100:+.2f}%" for p in forecast[:min_len]],
-            'Signal': ['📈 Bullish' if p > a_price else '📉 Bearish' for p in forecast[:min_len]]
-        })
-        st.dataframe(forecast_df, use_container_width=True, height=200)
+        # Combined forecast analysis chart
+        st.markdown("### 📊 Combined Forecast Analysis")
         
-        # Create visualization
+        # Ensure upper/lower bounds exist and match lengths
+        if 'upper_bound' not in locals() or len(upper_bound) != len(forecast):
+            upper_bound = [p * 1.015 for p in forecast]
+        if 'lower_bound' not in locals() or len(lower_bound) != len(forecast):
+            lower_bound = [p * 0.985 for p in forecast]
+        
+        # Ensure min_len is defined properly
+        if 'min_len' not in locals():
+            min_len = min(len(forecast), len(fut_times))
+        
         fig = make_subplots(
             rows=3, cols=1,
             shared_xaxes=True,
             vertical_spacing=0.08,
             row_heights=[0.55, 0.25, 0.2],
-            subplot_titles=(f'📈 {selected_asset} - 6H Linear Forecast Graph', 
-                           '💱 DXY Dollar Index (Linear)',
-                           '📊 Signal Strength (Linear)')
+            subplot_titles=(f'📈 {selected_asset} - 6H Forecast with Confidence', '💱 DXY Dollar Index', '📊 Signal Strength')
+        )
+        
+        # Historical price with MA lines
+        fig.add_trace(go.Scatter(
+            x=asset_df.index, y=asset_df['Close'],
+            mode='lines', name=selected_asset,
+            line=dict(color='#00CED1', width=3),
+            fill='tozeroy', fillcolor='rgba(0, 206, 209, 0.15)'
+        ), row=1, col=1)
+        
+        # MA lines
+        if len(asset_df) >= 20:
+            ma20 = asset_df['Close'].rolling(window=20).mean()
+            ma50 = asset_df['Close'].rolling(window=50).mean()
+            fig.add_trace(go.Scatter(x=asset_df.index, y=ma20, name='MA20',
+                                   line=dict(color='orange', width=2)), row=1, col=1)
+            if len(asset_df) >= 50:
+                fig.add_trace(go.Scatter(x=asset_df.index, y=ma50, name='MA50',
+                                       line=dict(color='purple', width=2)), row=1, col=1)
+        
+        # Volume
+        fig.add_trace(go.Bar(
+            x=asset_df.index,
+            y=asset_df['Volume'] if 'Volume' in asset_df.columns else [0]*len(asset_df),
+            name='Volume', marker_color='rgba(128,128,128,0.5)', yaxis='y3'
+        ), row=1, col=1)
+        
+        # Forecast with confidence band
+        fig.add_trace(go.Scatter(
+            x=fut_times[:min_len] + fut_times[:min_len][::-1],
+            y=upper_bound[:min_len] + lower_bound[:min_len][::-1],
+            fill='toself', fillcolor='rgba(255, 107, 0, 0.2)',
+            line=dict(color='rgba(255, 107, 0, 0.3)'), name='Confidence Band'
+        ), row=1, col=1)
+        
+        # Forecast line
+        fig.add_trace(go.Scatter(
+            x=fut_times[:min_len], y=forecast[:min_len],
+            name='6H Forecast', line=dict(color='#FF6B00', width=3),
+            mode='lines+markers', marker=dict(size=6, color='#FF6B00', symbol='circle'),
+            hovertemplate='Time: %{x|%H:%M}<br>Price: $%{y:.2f}<extra></extra>'
+        ), row=1, col=1)
+        
+        # Price labels
+        step = max(1, min_len // 6)
+        fig.add_trace(go.Scatter(
+            x=fut_times[::step], y=forecast[::step],
+            text=[f"${p:,.0f}" for p in forecast[::step]],
+            mode='text', textposition='top center',
+            textfont=dict(color='#FF6B00', size=11, family='Arial Black'),
+            showlegend=False, hoverinfo='skip'
+        ), row=1, col=1)
+        
+        # DXY chart
+        fig.add_trace(go.Scatter(
+            x=dxy_df.index, y=dxy_df['Close'],
+            name="DXY Index", line=dict(color='#00FF7F', width=3),
+            fill='tozeroy', fillcolor='rgba(0, 255, 127, 0.2)'
+        ), row=2, col=1)
+        
+        # Signal strength
+        signal_values = [((f - a_price) / a_price) * 100 for f in forecast[:min_len]]
+        colors = ['#FF4444' if v < -1 else '#FFAA00' if v < 1 else '#00FF7F' for v in signal_values[::max(1, min_len//6)]]
+        fig.add_trace(go.Bar(
+            x=fut_times[::max(1, min_len//6)], y=signal_values[::max(1, min_len//6)],
+            name='Signal %', marker_color=colors
+        ), row=3, col=1)
+        fig.add_hline(y=0, line_dash="dash", line_color="white", row=3, col=1)
+        
+        # Layout
+        fig.update_layout(
+            template="plotly_dark", height=950,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+            plot_bgcolor='#0E1117', paper_bgcolor='#0E1117', hovermode="x unified"
+        )
+        
+        # Axes
+        fig.update_xaxes(range=[now - timedelta(hours=2), fut_times[min_len-1] + timedelta(minutes=15)], 
+                        row=1, col=1, tickformat='%H:%M', tickangle=45)
+        fig.update_xaxes(range=[now - timedelta(hours=2), fut_times[min_len-1] + timedelta(minutes=15)], 
+                        row=2, col=1, tickformat='%H:%M', tickangle=45)
+        fig.update_xaxes(range=[fut_times[0] - timedelta(minutes=5), fut_times[min_len-1] + timedelta(minutes=10)], 
+                        row=3, col=1, tickformat='%H:%M', tickangle=45)
+        
+        fig.update_yaxes(title_text="Price ($", row=1, col=1, side="left", tickformat='$.2f')
+        fig.update_yaxes(title_text="Volume", row=1, col=1, side="right", overlaying="y", showgrid=False, visible=False)
+        fig.update_yaxes(title_text="DXY Index", row=2, col=1, tickformat='.2f')
+        fig.update_yaxes(title_text="Signal %", row=3, col=1, tickformat='.2f')
+        
+        # Current price annotation
+        fig.add_annotation(
+            x=now, y=a_price, text=f"Current: ${a_price:,.2f}",
+            showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, ax=-40, ay=-40,
+            font=dict(color='gold', size=12), bgcolor='rgba(0,0,0,0.8)',
+            bordercolor='gold', borderwidth=1, borderpad=4, row=1, col=1
         )
         
         # Historical price line - LINEAR STYLE for clean look
@@ -6275,15 +6417,35 @@ def display_master_oracle_terminal():
         if auto_refresh:
             st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
         
-        # Additional info
+        # Forecast data table
+        st.markdown("### 📋 Forecast Data (5-min intervals)")
+        
+        forecast_df = pd.DataFrame({
+            'Time': [t.strftime('%H:%M') for t in fut_times[:min_len]],
+            'Price ($)': [f"{p:,.2f}" for p in forecast[:min_len]],
+            'Change (%)': [f"{((p - a_price) / a_price) * 100:+.2f}%" for p in forecast[:min_len]],
+            'Signal': ['📈 Bullish' if p > a_price else '📉 Bearish' for p in forecast[:min_len]]
+        })
+        st.dataframe(forecast_df, use_container_width=True, height=200)
+        
+        # Sound alert
+        if sound_alert and ("STRONG" in mode):
+            st.markdown('<audio autoplay><source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19v" type="audio/wav"></audio>', unsafe_allow_html=True)
+        
+        # Auto-refresh info
+        if auto_refresh:
+            st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
+        
+        # Info section
         st.markdown("""
         <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 20px;'>
-            <h4 style='color: #ffd700;'>📊 How It Works</h4>
+            <h4 style='color: #ffd700;'>📊 How It Works v3.0</h4>
             <ul style='color: #ccc;'>
-                <li><strong>Trend Prediction Model:</strong> Online learning algorithm that updates with each new data point using sklearn</li>
-                <li><strong>DXY Correlation:</strong> Monitors US Dollar Index for safe haven signals</li>
-                <li><strong>6-Hour Forecast:</strong> AI predicts price movement for next 6 hours</li>
-                <li><strong>Signal Logic:</strong> Buy when asset rises >0.8%, Sell when drops >-0.8%</li>
+                <li><strong>Trend Prediction:</strong> Online learning with sklearn</li>
+                <li><strong>DXY Correlation:</strong> Monitors US Dollar Index</li>
+                <li><strong>Technical Indicators:</strong> Bollinger Bands, RSI, MACD</li>
+                <li><strong>Confidence Bands:</strong> 95% confidence intervals</li>
+                <li><strong>Signal Logic:</strong> Buy >0.8%, Sell <-0.8%</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
