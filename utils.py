@@ -253,8 +253,18 @@ def generate_market_summary(kse_data, companies_data):
     try:
         # KSE-100 summary
         if kse_data is not None and not kse_data.empty:
-            current_price = kse_data['close'].iloc[-1]
-            start_price = kse_data['close'].iloc[0]
+            # Find the close price column
+            close_col = None
+            for col in kse_data.columns:
+                if 'close' in col.lower():
+                    close_col = col
+                    break
+
+            if close_col is None:
+                return {"error": "No 'close' column found in KSE-100 data"}
+
+            current_price = kse_data[close_col].iloc[-1]
+            start_price = kse_data[close_col].iloc[0]
             
             summary['kse100'] = {
                 'current_level': current_price,
@@ -272,8 +282,18 @@ def generate_market_summary(kse_data, companies_data):
             
             for company, data in companies_data.items():
                 if data is not None and not data.empty and len(data) > 1:
-                    current = data['close'].iloc[-1]
-                    previous = data['close'].iloc[-2]
+                    # Find the close price column
+                    close_col = None
+                    for col in data.columns:
+                        if 'close' in col.lower():
+                            close_col = col
+                            break
+
+                    if close_col is None:
+                        continue  # Skip this company if no close column
+
+                    current = data[close_col].iloc[-1]
+                    previous = data[close_col].iloc[-2]
                     change_pct = ((current - previous) / previous) * 100
                     
                     if change_pct > 0:

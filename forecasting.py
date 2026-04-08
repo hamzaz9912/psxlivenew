@@ -69,13 +69,23 @@ class StockForecaster:
     
     def _moving_average_forecast(self, historical_data, days_ahead=1, window=10):
         """Simple moving average based forecast"""
-        
+
         if len(historical_data) < window:
             return None
-            
+
         try:
+            # Find the close price column
+            close_col = None
+            for col in historical_data.columns:
+                if 'close' in col.lower():
+                    close_col = col
+                    break
+
+            if close_col is None:
+                return None
+
             # Calculate moving average
-            ma = historical_data['close'].rolling(window=window).mean().iloc[-1]
+            ma = historical_data[close_col].rolling(window=window).mean().iloc[-1]
             
             # Create forecast dataframe
             last_date = pd.to_datetime(historical_data['date'].max())
@@ -105,9 +115,19 @@ class StockForecaster:
             return None
             
         try:
+            # Find the close price column
+            close_col = None
+            for col in historical_data.columns:
+                if 'close' in col.lower():
+                    close_col = col
+                    break
+
+            if close_col is None:
+                return None
+
             # Calculate linear trend
             x = np.arange(len(historical_data))
-            y = historical_data['close'].values
+            y = historical_data[close_col].values
             
             # Fit linear regression
             coeffs = np.polyfit(x, y, 1)
@@ -139,7 +159,7 @@ class StockForecaster:
             )
             
             # Calculate simple confidence intervals based on historical volatility
-            volatility = historical_data['close'].pct_change().std()
+            volatility = historical_data[close_col].pct_change().std()
             confidence_range = future_y * volatility * 1.96  # 95% confidence
             
             forecast = pd.DataFrame({

@@ -257,7 +257,7 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-        if st.button("🔄 Refresh Data Now", use_container_width=True):
+        if st.button("🔄 Refresh Data Now", key="refresh_data_btn", type="primary"):
             st.session_state.last_update = None
             st.rerun()
 
@@ -359,7 +359,7 @@ def main():
 
         analysis_type = st.selectbox(
             "",
-            ["📊 Enhanced Live Dashboard (Top 80 KSE-100)", "🔍 Comprehensive Brand Predictions", "🔴 Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "⚡ 15-Minute Live Predictions", "🏛️ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "📁 Universal File Upload", "📰 News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Database Overview", "💎 Master Oracle Terminal (Crypto + Commodities)"],
+            ["📊 Enhanced Live Dashboard (Top 80 KSE-100)", "🔍 Comprehensive Brand Predictions", "🔴 Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "⚡ 15-Minute Live Predictions", "🏛️ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "📁 Universal File Upload", "📰 News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "📈 Technical Analysis Indicators", "Database Overview", "💎 Master Oracle Terminal (Crypto + Commodities)"],
             key="analysis_type"
         )
 
@@ -527,6 +527,8 @@ def main():
     elif analysis_type == "Comprehensive Intraday Forecasts":
         from comprehensive_intraday import display_comprehensive_intraday_forecasts
         display_comprehensive_intraday_forecasts()
+    elif analysis_type == "📈 Technical Analysis Indicators":
+        display_technical_analysis()
     elif analysis_type == "💎 Master Oracle Terminal (Crypto + Commodities)":
         display_master_oracle_terminal()
     else:
@@ -611,10 +613,23 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
             if kse_data is not None and not kse_data.empty:
                 st.session_state.kse_data = kse_data
                 st.session_state.last_update = datetime.now()
-                
+
+                # Find the close price column (could be 'close', 'Close', 'adj close', or similar)
+                close_col = None
+                possible_close_cols = ['close', 'adj close', 'price', 'value']
+                for col in kse_data.columns:
+                    col_lower = col.lower()
+                    if any(close_name in col_lower for close_name in possible_close_cols):
+                        close_col = col
+                        break
+
+                if close_col is None:
+                    st.error(f"Error loading market data: No close price column found in data. Available columns: {list(kse_data.columns)}")
+                    return
+
                 # Current price display
-                current_price = kse_data['close'].iloc[-1]
-                prev_price = kse_data['close'].iloc[-2] if len(kse_data) > 1 else current_price
+                current_price = kse_data[close_col].iloc[-1]
+                prev_price = kse_data[close_col].iloc[-2] if len(kse_data) > 1 else current_price
                 change = current_price - prev_price
                 change_pct = (change / prev_price) * 100 if prev_price != 0 else 0
                 
@@ -5232,37 +5247,61 @@ def display_individual_company_forecast(symbol, company_name):
         
         with tab1:
             # Historical price chart
-            fig = go.Figure()
-            
-            # Add candlestick chart
-            fig.add_trace(go.Candlestick(
-                x=historical_data.index,
-                open=historical_data['open'],
-                high=historical_data['high'],
-                low=historical_data['low'],
-                close=historical_data['close'],
-                name=f"{symbol} Price"
-            ))
-            
-            # Add volume bar chart
-            fig.add_trace(go.Bar(
-                x=historical_data.index,
-                y=historical_data.get('volume', [1000000] * len(historical_data)),
-                name="Volume",
-                yaxis="y2",
-                opacity=0.3
-            ))
-            
-            fig.update_layout(
-                title=f"{company_name} ({symbol}) - Historical Price & Volume",
-                xaxis_title="Date",
-                yaxis_title="Price (PKR)",
-                yaxis2=dict(title="Volume", overlaying="y", side="right"),
-                height=500,
-                showlegend=True
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                st.markdown("**Note:** Generating 90 days of synthetic historical data for candlestick visualization")
+                
+                fig = go.Figure()
+                
+                # Debug: Check data structure
+                st.write(f"Debug: Historical data has {len(historical_data)} rows")
+                st.write(f"Debug: Columns = {list(historical_data.columns)}")
+                st.write(f"Debug: Index type = {type(historical_data.index)}")
+                
+                # Ensure we have required columns
+                required_cols = ['open', 'high', 'low', 'close']
+                has_required = all(col in historical_data.columns for col in required_cols)
+                
+                if not has_required:
+                    st.error(f"Missing required columns. Available: {list(historical_data.columns)}")
+                else:
+                    # Add candlestick chart
+                    fig.add_trace(go.Candlestick(
+                        x=historical_data.index,
+                        open=historical_data['open'],
+                        high=historical_data['high'],
+                        low=historical_data['low'],
+                        close=historical_data['close'],
+                        name=f"{symbol} Price",
+                        increasing_line_color='#2ca02c',
+                        decreasing_line_color='#d62728'
+                    ))
+                    
+                    # Add volume bar chart
+                    fig.add_trace(go.Bar(
+                        x=historical_data.index,
+                        y=historical_data.get('volume', [1000000] * len(historical_data)),
+                        name="Volume",
+                        yaxis="y2",
+                        opacity=0.3,
+                        marker_color='lightblue'
+                    ))
+                    
+                    fig.update_layout(
+                        title=dict(text=f"{company_name} ({symbol}) - Candlestick Chart (1-Day)", font=dict(size=18)),
+                        xaxis_title="Date",
+                        yaxis_title="Price (PKR)",
+                        yaxis2=dict(title="Volume", overlaying="y", side="right"),
+                        height=550,
+                        showlegend=True,
+                        template="plotly_white",
+                        xaxis_rangeslider_visible=False
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+            except Exception as e:
+                st.error(f"Error displaying candlestick chart: {str(e)}")
+                st.write("Details:", e)
         
         with tab2:
             # 7-day forecast using Prophet
@@ -5632,18 +5671,254 @@ def calculate_technical_indicators(historical_data):
         }
 
 # ==========================================
+# Technical Analysis Indicators Section
+# ==========================================
+
+def display_technical_analysis():
+    """Display comprehensive technical analysis with candlestick charts and indicators"""
+
+    st.title("📈 Technical Analysis Indicators")
+    st.markdown("---")
+
+    # Company selection
+    companies = st.session_state.data_fetcher.get_kse100_companies()
+    selected_company = st.selectbox(
+        "Select Company for Technical Analysis:",
+        list(companies.keys()),
+        key="tech_analysis_company"
+    )
+
+    if selected_company:
+        company_name = companies[selected_company]
+
+        # Fetch data
+        with st.spinner(f"Fetching data for {company_name}..."):
+            try:
+                # Try to get from cache first
+                cached_data = st.session_state.cache_manager.get_stock_data(selected_company, days=90)
+
+                if cached_data is not None and not cached_data.empty:
+                    stock_data = cached_data
+                    st.success(f"✅ Loaded cached data for {company_name}")
+                else:
+                    # Fetch fresh data
+                    stock_data = st.session_state.data_fetcher.fetch_company_data(selected_company, days=90)
+                    if stock_data is not None and not stock_data.empty:
+                        st.session_state.cache_manager.store_stock_data(selected_company, company_name, stock_data)
+                        st.success(f"📡 Fetched fresh data for {company_name}")
+
+                if stock_data is not None and not stock_data.empty and len(stock_data) >= 30:
+                    st.session_state.last_update = datetime.now()
+
+                    # Find column names
+                    close_col = None
+                    high_col = None
+                    low_col = None
+                    volume_col = None
+
+                    for col in stock_data.columns:
+                        col_lower = col.lower()
+                        if 'close' in col_lower:
+                            close_col = col
+                        elif 'high' in col_lower:
+                            high_col = col
+                        elif 'low' in col_lower:
+                            low_col = col
+                        elif 'volume' in col_lower or 'vol' in col_lower:
+                            volume_col = col
+
+                    if close_col is None:
+                        st.error("Error loading market data: 'close'")
+                        return
+
+                    # Display current metrics
+                    current_price = stock_data[close_col].iloc[-1]
+                    prev_price = stock_data[close_col].iloc[-2] if len(stock_data) > 1 else current_price
+                    change = current_price - prev_price
+                    change_pct = (change / prev_price) * 100 if prev_price != 0 else 0
+
+                    col1, col2, col3, col4 = st.columns(4)
+
+                    with col1:
+                        st.metric("Current Price", format_currency(current_price), f"{change:+.2f} ({change_pct:+.2f}%)")
+
+                    with col2:
+                        if high_col:
+                            st.metric("High", format_currency(stock_data[high_col].iloc[-1]))
+                        else:
+                            st.metric("High", "N/A")
+
+                    with col3:
+                        if low_col:
+                            st.metric("Low", format_currency(stock_data[low_col].iloc[-1]))
+                        else:
+                            st.metric("Low", "N/A")
+
+                    with col4:
+                        if volume_col:
+                            st.metric("Volume", f"{stock_data[volume_col].iloc[-1]:,.0f}")
+                        else:
+                            st.metric("Volume", "N/A")
+
+                    # Technical Analysis Chart
+                    st.subheader("📊 Complete Technical Analysis")
+                    tech_chart = st.session_state.visualizer.create_technical_analysis_chart(
+                        stock_data, f"{company_name} ({selected_company})"
+                    )
+                    st.plotly_chart(tech_chart, use_container_width=True)
+
+                    # Current Indicator Values
+                    st.markdown("---")
+                    st.subheader("📊 Current Technical Indicator Values")
+
+                    # Calculate latest values
+                    latest_rsi = st.session_state.visualizer.calculate_rsi(stock_data).iloc[-1]
+                    latest_macd, latest_signal, latest_hist = st.session_state.visualizer.calculate_macd(stock_data)
+                    latest_k, latest_d = st.session_state.visualizer.calculate_stochastic(stock_data)
+                    bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(stock_data)
+
+                    col1, col2, col3, col4 = st.columns(4)
+
+                    with col1:
+                        st.metric("RSI (14)", f"{latest_rsi:.1f}",
+                                 delta="Overbought" if latest_rsi > 70 else "Oversold" if latest_rsi < 30 else "Neutral",
+                                 delta_color="inverse" if latest_rsi > 70 or latest_rsi < 30 else "off")
+
+                    with col2:
+                        macd_value = latest_macd.iloc[-1]
+                        signal_value = latest_signal.iloc[-1]
+                        st.metric("MACD", f"{macd_value:.2f}",
+                                 delta="Bullish" if macd_value > signal_value else "Bearish",
+                                 delta_color="normal" if macd_value > signal_value else "inverse")
+
+                    with col3:
+                        stoch_k = latest_k.iloc[-1]
+                        st.metric("Stochastic %K", f"{stoch_k:.1f}",
+                                 delta="Overbought" if stoch_k > 80 else "Oversold" if stoch_k < 20 else "Neutral",
+                                 delta_color="inverse" if stoch_k > 80 or stoch_k < 20 else "off")
+
+                    with col4:
+                        current_bb_upper = bb_upper.iloc[-1]
+                        current_bb_lower = bb_lower.iloc[-1]
+                        current_price = stock_data[close_col].iloc[-1]
+                        bb_position = "Upper Band" if current_price > current_bb_upper else "Lower Band" if current_price < current_bb_lower else "Middle"
+                        st.metric("BB Position", bb_position)
+
+                    # Indicator Explanations
+                    st.markdown("---")
+                    st.subheader("📋 Complete Technical Analysis Guide")
+
+                    with st.expander("🔍 Understanding All Indicators", expanded=True):
+                        st.markdown("""
+                        ### 📈 **Candlestick Price Chart**
+                        - **Green candles**: Price increased (bullish)
+                        - **Red candles**: Price decreased (bearish)
+                        - **Body**: Difference between open/close
+                        - **Wicks**: High/low range
+
+                        ### 📊 **Bollinger Bands (Dedicated Graph)**
+                        - **Upper Band**: +2 SD from SMA 20 (overbought zone)
+                        - **Middle Band**: 20-period SMA (trend indicator)
+                        - **Lower Band**: -2 SD from SMA 20 (oversold zone)
+                        - **Strategy**: Buy when price touches lower band, sell when touches upper band
+
+                        ### 📈 **Moving Averages (SMA 20 & EMA 20)**
+                        - **SMA 20**: Simple Moving Average (equal weight)
+                        - **EMA 20**: Exponential Moving Average (recent prices weighted more)
+                        - **Golden Cross**: Short MA crosses above long MA (bullish)
+                        - **Death Cross**: Short MA crosses below long MA (bearish)
+
+                        ### 🎯 **RSI (Relative Strength Index)**
+                        - **Scale**: 0-100
+                        - **Overbought**: > 70 (potential sell signal)
+                        - **Oversold**: < 30 (potential buy signal)
+                        - **Neutral**: 30-70 (no clear signal)
+                        - **Divergence**: RSI vs price can signal reversals
+
+                        ### 📊 **MACD (Moving Average Convergence Divergence)**
+                        - **MACD Line**: 12-period EMA minus 26-period EMA
+                        - **Signal Line**: 9-period EMA of MACD
+                        - **Histogram**: Difference between MACD and Signal
+                        - **Bullish Signal**: MACD crosses above Signal line
+                        - **Bearish Signal**: MACD crosses below Signal line
+
+                        ### 🎲 **Stochastic Oscillator**
+                        - **%K Line**: Main stochastic line
+                        - **%D Line**: 3-period SMA of %K (signal line)
+                        - **Overbought**: > 80 (potential sell)
+                        - **Oversold**: < 20 (potential buy)
+                        - **Crossovers**: %K crossing %D generates signals
+
+                        ### 📊 **Volume Analysis**
+                        - **Green bars**: Volume on up days
+                        - **Red bars**: Volume on down days
+                        - **High volume**: Confirms trend strength
+                        - **Low volume**: Weak trend signals
+                        """)
+
+                        # Trading Signals Summary
+                        st.markdown("### 🚀 **Quick Trading Signals Summary**")
+                        signals = []
+
+                        # RSI signals
+                        if latest_rsi > 70:
+                            signals.append("⚠️ RSI Overbought - Consider Selling")
+                        elif latest_rsi < 30:
+                            signals.append("✅ RSI Oversold - Consider Buying")
+
+                        # MACD signals
+                        if macd_value > signal_value:
+                            signals.append("✅ MACD Bullish Crossover")
+                        else:
+                            signals.append("⚠️ MACD Bearish Crossover")
+
+                        # Stochastic signals
+                        if stoch_k > 80:
+                            signals.append("⚠️ Stochastic Overbought")
+                        elif stoch_k < 20:
+                            signals.append("✅ Stochastic Oversold")
+
+                        # Bollinger Band signals
+                        if current_price < current_bb_lower:
+                            signals.append("✅ Price near Lower BB - Potential Buy")
+                        elif current_price > current_bb_upper:
+                            signals.append("⚠️ Price near Upper BB - Potential Sell")
+
+                        if signals:
+                            for signal in signals:
+                                st.markdown(f"- {signal}")
+                        else:
+                            st.info("No strong signals at current levels - Monitor for changes")
+
+                else:
+                    st.error(f"Insufficient data for {company_name}. Need at least 30 days of data for technical analysis.")
+
+            except Exception as e:
+                st.error(f"Error fetching data for {company_name}: {str(e)}")
+
+# ==========================================
 # Master Oracle Terminal - Crypto & Commodities
 # ==========================================
 
 def display_master_oracle_terminal():
-    """Master Oracle Terminal v3.0 - Enhanced with Candlestick, Technical Indicators & Advanced Forecasting"""
-    
+    """Master Oracle Terminal v4.0 - Enhanced Real-Time Scraper with Advanced Technical Analysis & Forecasting"""
+
     # Import required libraries
     try:
         import yfinance as yf
-    except ImportError:
-        st.error("yfinance is not installed. Please install: pip install yfinance")
-        return
+        import requests
+        from bs4 import BeautifulSoup
+        import time
+        from datetime import datetime, timedelta
+        REQUESTS_AVAILABLE = True
+    except ImportError as e:
+        st.warning(f"Some libraries not available: {e}. Real-time scraping will be limited.")
+        REQUESTS_AVAILABLE = False
+        try:
+            import yfinance as yf
+        except ImportError:
+            st.error("yfinance is required. Please install: pip install yfinance")
+            return
     
     # Check if sklearn is available
     try:
@@ -5652,6 +5927,104 @@ def display_master_oracle_terminal():
         HAS_SKLEARN = True
     except ImportError:
         HAS_SKLEARN = False
+
+    # Enhanced Real-Time Data Scraper
+    class RealTimeDataScraper:
+        """Advanced real-time data scraper for crypto and commodities"""
+
+        def __init__(self):
+            if REQUESTS_AVAILABLE:
+                self.session = requests.Session()
+                self.session.headers.update({
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                })
+            else:
+                self.session = None
+            self.cache = {}
+            self.cache_timeout = 60  # 1 minute cache
+
+        def get_crypto_price(self, symbol):
+            """Get real-time crypto price from multiple sources"""
+            try:
+                # Primary: Yahoo Finance
+                ticker = yf.Ticker(symbol)
+                data = ticker.history(period="1d", interval="1m")
+                if not data.empty and len(data) > 0:
+                    return {
+                        'price': float(data['Close'].iloc[-1]),
+                        'change': float(data['Close'].iloc[-1] - data['Open'].iloc[0]) if len(data) > 1 else 0,
+                        'change_pct': float(((data['Close'].iloc[-1] - data['Open'].iloc[0]) / data['Open'].iloc[0]) * 100) if len(data) > 1 else 0,
+                        'volume': int(data['Volume'].iloc[-1]) if 'Volume' in data.columns else 0,
+                        'high': float(data['High'].iloc[-1]),
+                        'low': float(data['Low'].iloc[-1]),
+                        'source': 'Yahoo Finance'
+                    }
+            except Exception as e:
+                if debug_mode:
+                    st.write(f"🐛 Yahoo Finance crypto failed: {e}")
+                pass
+
+            # Fallback: CoinGecko API (only if requests available)
+            if REQUESTS_AVAILABLE and self.session:
+                try:
+                    url = f"https://api.coingecko.com/api/v3/simple/price?ids={symbol.lower().replace('-usd', '')}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true"
+                    response = self.session.get(url, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        coin_id = symbol.lower().replace('-usd', '')
+                        if coin_id in data:
+                            coin_data = data[coin_id]
+                            return {
+                                'price': float(coin_data['usd']),
+                                'change': float(coin_data.get('usd_24h_change', 0)),
+                                'change_pct': float(coin_data.get('usd_24h_change', 0)),
+                                'volume': float(coin_data.get('usd_24h_vol', 0)),
+                                'source': 'CoinGecko'
+                            }
+                except Exception as e:
+                    if debug_mode:
+                        st.write(f"🐛 CoinGecko API failed: {e}")
+                    pass
+
+            return None
+
+        def get_commodity_price(self, symbol):
+            """Get real-time commodity price"""
+            try:
+                # Yahoo Finance for commodities
+                ticker = yf.Ticker(symbol)
+                data = ticker.history(period="1d", interval="5m")
+                if not data.empty and len(data) > 0:
+                    return {
+                        'price': float(data['Close'].iloc[-1]),
+                        'change': float(data['Close'].iloc[-1] - data['Open'].iloc[0]) if len(data) > 1 else 0,
+                        'change_pct': float(((data['Close'].iloc[-1] - data['Open'].iloc[0]) / data['Open'].iloc[0]) * 100) if len(data) > 1 else 0,
+                        'volume': int(data['Volume'].iloc[-1]) if 'Volume' in data.columns else 0,
+                        'high': float(data['High'].max()),
+                        'low': float(data['Low'].min()),
+                        'source': 'Yahoo Finance'
+                    }
+            except Exception as e:
+                if debug_mode:
+                    st.write(f"🐛 Yahoo Finance commodity failed: {e}")
+                pass
+
+            return None
+
+        def get_historical_data(self, symbol, period="1d", interval="5m"):
+            """Get historical data with fallback"""
+            try:
+                ticker = yf.Ticker(symbol)
+                data = ticker.history(period=period, interval=interval)
+                if not data.empty and len(data) > 0:
+                    return data
+            except Exception as e:
+                if debug_mode:
+                    st.write(f"🐛 Historical data fetch failed for {symbol}: {e}")
+                pass
+
+            # Return empty DataFrame if all methods fail
+            return pd.DataFrame()
     
     # Enhanced styling
     st.markdown("""
@@ -5691,15 +6064,26 @@ def display_master_oracle_terminal():
     </div>
     """, unsafe_allow_html=True)
     
-    # Asset configuration
+    # Enhanced Asset configuration with multiple data sources
     ASSETS = {
-        "Gold (XAU)": "GC=F",
-        "Silver (XAG)": "SI=F",
-        "Bitcoin (BTC)": "BTC-USD",
-        "Ethereum (ETH)": "ETH-USD",
-        "Solana (SOL)": "SOL-USD"
+        "Gold (XAU/USD)": "GC=F",
+        "Silver (XAG/USD)": "SI=F",
+        "Platinum (XPT/USD)": "PL=F",
+        "Bitcoin (BTC/USD)": "BTC-USD",
+        "Ethereum (ETH/USD)": "ETH-USD",
+        "Solana (SOL/USD)": "SOL-USD",
+        "Cardano (ADA/USD)": "ADA-USD",
+        "Polkadot (DOT/USD)": "DOT-USD",
+        "Chainlink (LINK/USD)": "LINK-USD",
+        "Uniswap (UNI/USD)": "UNI-USD",
+        "Crude Oil (WTI)": "CL=F",
+        "Natural Gas": "NG=F",
+        "Copper": "HG=F"
     }
     DXY_SYMBOL = "DX-Y.NYB"
+
+    # Initialize real-time scraper
+    scraper = RealTimeDataScraper()
     
     # Enhanced prediction model with more sophisticated forecasting
     class EnhancedTrendModel:
@@ -5794,24 +6178,133 @@ def display_master_oracle_terminal():
     
     # Sidebar controls
     with st.sidebar:
-        st.markdown("### 💎 Oracle Settings v3.0")
+        st.markdown("### 💎 Oracle Settings v4.0")
         selected_asset = st.selectbox("Select Trading Asset:", list(ASSETS.keys()))
         sound_alert = st.checkbox("Enable Sound Alert", value=True)
-        show_indicators = st.checkbox("Show Technical Indicators", value=True)
-        show_candles = st.checkbox("Show Candlestick Chart", value=True)
-        
+        show_indicators = st.checkbox("Show Advanced Technical Indicators", value=True)
+        show_candles = st.checkbox("Show Enhanced Candlestick Chart", value=True)
+        real_time_data = st.checkbox("Enable Real-Time Data Scraping", value=True)
+        forecast_period = st.selectbox("Forecast Period:", ["1H", "6H", "12H", "24H"], index=1)
+        debug_mode = st.checkbox("🐛 Debug Mode", value=False)
+
         if st.button("🚨 Reset Oracle Models"):
             st.session_state.oracle_models_v3[selected_asset] = EnhancedTrendModel()
             st.success("Models reset successfully!")
     
     auto_refresh = st.checkbox("🔄 Enable Auto-Refresh (3 min)", value=False)
-    
-    # Main content
+
+    # Calculate forecast hours for status display
+    period_hours = {"1H": 1, "6H": 6, "12H": 12, "24H": 24}[forecast_period]
+
     try:
-        # Load data
-        with st.spinner("📡 Fetching market data..."):
-            asset_df = yf.download(ASSETS[selected_asset], interval="5m", period="1d", progress=False)
-            dxy_df = yf.download(DXY_SYMBOL, interval="5m", period="1d", progress=False)
+        # Enhanced data fetching with real-time scraper
+        with st.spinner("📡 Fetching real-time market data..."):
+            data_fetch_success = False
+
+            if debug_mode:
+                st.write("🐛 **DEBUG MODE ENABLED**")
+                st.write(f"Selected asset: {selected_asset}")
+                st.write(f"Real-time data: {real_time_data}")
+                st.write(f"Forecast period: {forecast_period}")
+
+            if real_time_data:
+                try:
+                    # Use enhanced scraper for real-time data
+                    if "BTC" in selected_asset or "ETH" in selected_asset or "SOL" in selected_asset or "ADA" in selected_asset or "DOT" in selected_asset or "LINK" in selected_asset or "UNI" in selected_asset:
+                        # Crypto assets - use crypto scraper
+                        real_time_price = scraper.get_crypto_price(ASSETS[selected_asset])
+                    else:
+                        # Commodities - use commodity scraper
+                        real_time_price = scraper.get_commodity_price(ASSETS[selected_asset])
+
+                    # Get historical data
+                    asset_df = scraper.get_historical_data(ASSETS[selected_asset], period="1d", interval="5m")
+                    dxy_df = scraper.get_historical_data(DXY_SYMBOL, period="1d", interval="5m")
+
+                    # Check if we have valid data
+                    if not asset_df.empty and len(asset_df) > 0 and 'Close' in asset_df.columns:
+                        data_fetch_success = True
+
+                        # If real-time price available, append it
+                        if real_time_price and len(asset_df) > 0:
+                            try:
+                                # Add real-time price as latest data point
+                                latest_time = asset_df.index[-1] + pd.Timedelta(minutes=5)
+                                new_row = pd.DataFrame({
+                                    'Open': [asset_df['Open'].iloc[-1]],
+                                    'High': [max(asset_df['High'].iloc[-1], real_time_price.get('high', asset_df['High'].iloc[-1]))],
+                                    'Low': [min(asset_df['Low'].iloc[-1], real_time_price.get('low', asset_df['Low'].iloc[-1]))],
+                                    'Close': [real_time_price['price']],
+                                    'Volume': [real_time_price.get('volume', asset_df.get('Volume', pd.Series([0])).iloc[-1] if 'Volume' in asset_df.columns else 0)]
+                                }, index=[latest_time])
+                                asset_df = pd.concat([asset_df, new_row])
+                                st.success(f"✅ Real-time data integrated from {real_time_price.get('source', 'Unknown')}")
+                            except Exception as e:
+                                st.warning(f"Could not append real-time data: {e}")
+                    else:
+                        st.warning("Real-time scraper returned invalid data, falling back to Yahoo Finance")
+
+                except Exception as e:
+                    st.warning(f"Real-time scraping failed: {e}, falling back to Yahoo Finance")
+
+            # Fallback to standard Yahoo Finance if scraper failed or not enabled
+            if not data_fetch_success or not real_time_data:
+                try:
+                    asset_df = yf.download(ASSETS[selected_asset], interval="5m", period="1d", progress=False)
+                    dxy_df = yf.download(DXY_SYMBOL, interval="5m", period="1d", progress=False)
+                    if not asset_df.empty:
+                        data_fetch_success = True
+                        if real_time_data:
+                            st.info("📊 Using Yahoo Finance fallback data")
+                except Exception as e:
+                    st.error(f"Error loading market data: {e}")
+                    data_fetch_success = False
+
+            if not data_fetch_success:
+                # Ultimate fallback: Generate demo data
+                st.warning("⚠️ All data sources failed. Using demo data for demonstration.")
+                st.info("💡 This allows you to explore the interface and features even without live market data.")
+
+                # Generate demo data based on selected asset
+                base_price = {
+                    "Gold (XAU/USD)": 2500,
+                    "Silver (XAG/USD)": 30,
+                    "Bitcoin (BTC/USD)": 45000,
+                    "Ethereum (ETH/USD)": 2800,
+                    "Solana (SOL/USD)": 120,
+                    "Cardano (ADA/USD)": 0.45,
+                    "Polkadot (DOT/USD)": 8.5,
+                    "Chainlink (LINK/USD)": 18,
+                    "Uniswap (UNI/USD)": 8,
+                    "Crude Oil (WTI)": 85,
+                    "Natural Gas": 2.5,
+                    "Copper": 4.2,
+                    "Platinum (XPT/USD)": 950
+                }.get(selected_asset, 100)
+
+                # Create demo dataset
+                times = pd.date_range(end=pd.Timestamp.now(tz='UTC'), periods=72, freq='5min')
+                random.seed(42)
+                demo_prices = []
+                current_price = base_price
+                for i in range(72):
+                    demo_prices.append(current_price)
+                    change = (random.random() - 0.5) * base_price * 0.004
+                    current_price = max(current_price * 0.95, current_price + change)  # Prevent negative prices
+
+                asset_df = pd.DataFrame({
+                    'Open': demo_prices[:-1],
+                    'High': [p * 1.005 for p in demo_prices[1:]],
+                    'Low': [p * 0.995 for p in demo_prices[1:]],
+                    'Close': demo_prices[1:],
+                    'Volume': [1000000] * 71
+                }, index=times[1:])
+
+                dxy_df = pd.DataFrame({
+                    'Close': [106 + (random.random() - 0.5) * 0.2 for _ in range(71)]
+                }, index=times[1:])
+
+                data_fetch_success = True
         
         # Demo data if market closed
         if asset_df.empty:
@@ -5838,22 +6331,73 @@ def display_master_oracle_terminal():
         
         if dxy_df.empty:
             dxy_df = pd.DataFrame({'Close': [106] * 71}, index=asset_df.index)
-        
+
+        # Main content - Status display after data fetching
+        st.markdown("### 🔧 System Status")
+        status_col1, status_col2, status_col3 = st.columns(3)
+        with status_col1:
+            if not data_fetch_success:
+                st.metric("Data Sources", "Demo Data", "No live data available")
+            else:
+                data_source = "Demo Data" if "demo" in str(asset_df).lower() else "Yahoo Finance + CoinGecko"
+                st.metric("Data Sources", data_source, "Real-time enabled" if real_time_data else "Standard mode")
+
+                if "demo" in str(asset_df).lower():
+                    st.info("🎯 **Demo Mode Active**: Using simulated data to showcase features. Live market data is not currently available.")
+        with status_col2:
+            st.metric("Forecast Period", forecast_period, f"{period_hours} hours")
+        with status_col3:
+            st.metric("Technical Analysis", "Enabled" if show_indicators else "Disabled", "Advanced mode")
+
         # Process timestamps and ensure data is 1D
-        asset_df.index = asset_df.index.tz_convert('UTC') if asset_df.index.tzinfo else asset_df.index
-        dxy_df.index = dxy_df.index.tz_convert('UTC') if dxy_df.index.tzinfo else dxy_df.index
+        if not asset_df.empty:
+            asset_df.index = asset_df.index.tz_convert('UTC') if asset_df.index.tzinfo else asset_df.index
+            # Flatten Close columns to 1D arrays
+            if 'Close' in asset_df.columns:
+                asset_df['Close'] = np.array(asset_df['Close']).flatten()
+
+        if not dxy_df.empty:
+            dxy_df.index = dxy_df.index.tz_convert('UTC') if dxy_df.index.tzinfo else dxy_df.index
+            # Flatten Close columns to 1D arrays
+            if 'Close' in dxy_df.columns:
+                dxy_df['Close'] = np.array(dxy_df['Close']).flatten()
         
-        # Flatten Close columns to 1D arrays
-        asset_df['Close'] = np.array(asset_df['Close']).flatten()
-        dxy_df['Close'] = np.array(dxy_df['Close']).flatten()
-        
-        # Get current prices
-        a_price = float(asset_df['Close'].iloc[-1])
-        d_price = float(dxy_df['Close'].iloc[-1])
-        
-        # Calculate changes
-        a_chg = ((a_price - float(asset_df['Close'].iloc[-4])) / float(asset_df['Close'].iloc[-4])) * 100
-        d_chg = ((d_price - float(dxy_df['Close'].iloc[-4])) / float(dxy_df['Close'].iloc[-4])) * 100
+        # Get current prices with comprehensive error handling
+        try:
+            if debug_mode:
+                st.write(f"🐛 Asset DF shape: {asset_df.shape}")
+                st.write(f"🐛 Asset DF columns: {list(asset_df.columns)}")
+                st.write(f"🐛 Asset DF index type: {type(asset_df.index)}")
+                st.write(f"🐛 DXY DF shape: {dxy_df.shape}")
+                st.write(f"🐛 DXY DF columns: {list(dxy_df.columns)}")
+
+            if asset_df.empty or 'Close' not in asset_df.columns or len(asset_df) < 4:
+                st.error("❌ Insufficient asset data for analysis. DataFrame is empty or missing required columns.")
+                st.write(f"DataFrame shape: {asset_df.shape if hasattr(asset_df, 'shape') else 'No shape'}")
+                st.write(f"Columns: {list(asset_df.columns) if hasattr(asset_df, 'columns') else 'No columns'}")
+                return
+
+            if dxy_df.empty or 'Close' not in dxy_df.columns or len(dxy_df) < 4:
+                # Create dummy DXY data if not available
+                dxy_df = pd.DataFrame({'Close': [106] * len(asset_df)}, index=asset_df.index)
+
+            a_price = float(asset_df['Close'].iloc[-1])
+            d_price = float(dxy_df['Close'].iloc[-1])
+
+            # Calculate changes with error handling
+            a_chg = ((a_price - float(asset_df['Close'].iloc[-4])) / float(asset_df['Close'].iloc[-4])) * 100
+            d_chg = ((d_price - float(dxy_df['Close'].iloc[-4])) / float(dxy_df['Close'].iloc[-4])) * 100
+
+        except KeyError as e:
+            st.error(f"❌ Column access error: {e}. Available columns: {list(asset_df.columns) if hasattr(asset_df, 'columns') else 'None'}")
+            return
+        except IndexError as e:
+            st.error(f"❌ Index access error: {e}. DataFrame length: {len(asset_df) if hasattr(asset_df, 'shape') else 'Unknown'}")
+            return
+        except Exception as e:
+            st.error(f"❌ Unexpected error in data processing: {e}")
+            st.write(f"Error type: {type(e).__name__}")
+            return
         
         # Train model
         model = st.session_state.oracle_models_v3[selected_asset]
@@ -5862,7 +6406,7 @@ def display_master_oracle_terminal():
         # Generate forecast
         base_price = a_price
         
-        if len(asset_df) >= 10:
+        if len(asset_df) >= 10 and 'Close' in asset_df.columns:
             recent_series = asset_df['Close'].iloc[-10:]
             if hasattr(recent_series, 'tolist'):
                 recent_prices = recent_series.tolist()
@@ -5879,11 +6423,16 @@ def display_master_oracle_terminal():
         dxy_effect = -d_chg * 0.5 if d_chg != 0 else 0
         combined_trend = price_trend + dxy_effect
         
-        # Generate forecast with enhanced movement
+        # Enhanced forecast generation based on selected period
         import math
+
+        # Determine forecast length based on period
+        period_hours = {"1H": 1, "6H": 6, "12H": 12, "24H": 24}[forecast_period]
+        forecast_steps = period_hours * 12  # 5-minute intervals
+
         forecast = []
-        for i in range(1, 73):
-            time_factor = i / 72
+        for i in range(1, forecast_steps + 1):
+            time_factor = i / forecast_steps
             base_movement = combined_trend * time_factor * base_price
             cycle = math.sin(i / 6 * math.pi) * (base_price * 0.005)
             noise = (random.random() - 0.5) * (base_price * 0.002)
@@ -5893,9 +6442,9 @@ def display_master_oracle_terminal():
         # Get confidence bounds
         upper_bound, lower_bound = model.get_confidence_bounds(forecast)
         
-        # Generate future times
+        # Generate future times based on forecast period
         now = asset_df.index[-1]
-        fut_times = [now + timedelta(minutes=5*i) for i in range(1, 73)]
+        fut_times = [now + timedelta(minutes=5*i) for i in range(1, forecast_steps + 1)]
         
         # Signal logic
         if a_chg > 0.05 and d_chg > 0.05:
@@ -5915,10 +6464,10 @@ def display_master_oracle_terminal():
         m1, m2, m3 = st.columns(3)
         m1.metric(f"{selected_asset} (UTC)", f"${a_price:,.2f}", f"{a_chg:.2f}%")
         m2.metric("DXY Index", f"${d_price:,.2f}", f"{d_chg:.2f}%")
-        m3.metric("6H AI Target", f"${forecast[-1]:,.2f}")
+        m3.metric(f"{forecast_period} AI Target", f"${forecast[-1]:,.2f}")
         
-        # Enhanced 6-hour forecast graph with confidence intervals
-        st.markdown("### 📊 6-Hour Price Forecast Graph with Confidence Bands")
+        # Enhanced forecast graph with confidence intervals
+        st.markdown(f"### 📊 {forecast_period} Price Forecast Graph with Confidence Bands")
         
         # Create forecast graph
         forecast_graph = go.Figure()
@@ -6013,153 +6562,174 @@ def display_master_oracle_terminal():
         
         st.plotly_chart(forecast_graph, use_container_width=True)
         
-        # ============== TECHNICAL INDICATORS SECTION ==============
+        # ============== ENHANCED TECHNICAL INDICATORS SECTION ==============
         if show_indicators:
-            st.markdown("### 📈 Technical Analysis Indicators")
-            
-            # Calculate technical indicators - flatten arrays
-            close_prices = np.array(asset_df['Close']).flatten()
-            
-            # Bollinger Bands (20-period)
-            bb_period = 20
-            if len(close_prices) >= bb_period:
-                bb_ma = pd.Series(close_prices).rolling(window=bb_period).mean()
-                bb_std = pd.Series(close_prices).rolling(window=bb_period).std()
-                bb_upper = bb_ma + (bb_std * 2)
-                bb_lower = bb_ma - (bb_std * 2)
-            
-            # RSI (14-period)
-            rsi_period = 14
-            if len(close_prices) >= rsi_period:
-                delta = pd.Series(close_prices).diff()
-                gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
-                loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
-                rs = gain / loss
-                rsi = 100 - (100 / (1 + rs))
-            
-            # MACD (12, 26, 9)
-            ema12 = pd.Series(close_prices).ewm(span=12, adjust=False).mean()
-            ema26 = pd.Series(close_prices).ewm(span=26, adjust=False).mean()
-            macd_line = ema12 - ema26
-            signal_line = macd_line.ewm(span=9, adjust=False).mean()
-            macd_hist = macd_line - signal_line
-            
-            # Create indicators figure
-            indicators_fig = make_subplots(
-                rows=3, cols=1,
-                shared_xaxes=True,
-                vertical_spacing=0.08,
-                row_heights=[0.5, 0.25, 0.25],
-                subplot_titles=(f'{selected_asset} Price with Bollinger Bands', 'RSI (14)', 'MACD')
-            )
-            
-            # Price with Bollinger Bands
-            if len(close_prices) >= bb_period:
-                indicators_fig.add_trace(go.Scatter(
-                    x=asset_df.index, y=bb_upper, name='BB Upper',
-                    line=dict(color='rgba(255,0,0,0.5)', width=1), showlegend=True
-                ), row=1, col=1)
-                indicators_fig.add_trace(go.Scatter(
-                    x=asset_df.index, y=bb_lower, name='BB Lower',
-                    line=dict(color='rgba(255,0,0,0.5)', width=1), fill='tonexty',
-                    fillcolor='rgba(255,255,0,0.1)', showlegend=True
-                ), row=1, col=1)
-            
-            indicators_fig.add_trace(go.Scatter(
-                x=asset_df.index, y=asset_df['Close'], name='Price',
-                line=dict(color='#00CED1', width=2)
-            ), row=1, col=1)
-            
-            # RSI
-            if len(close_prices) >= rsi_period:
-                indicators_fig.add_trace(go.Scatter(
-                    x=asset_df.index, y=rsi, name='RSI',
-                    line=dict(color='#FF6B00', width=2)
-                ), row=2, col=1)
-                # RSI overbought/oversold lines
-                indicators_fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
-                indicators_fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
-            
-            # MACD
-            indicators_fig.add_trace(go.Scatter(
-                x=asset_df.index, y=macd_line, name='MACD',
-                line=dict(color='#00FF00', width=2)
-            ), row=3, col=1)
-            indicators_fig.add_trace(go.Scatter(
-                x=asset_df.index, y=signal_line, name='Signal',
-                line=dict(color='#FF00FF', width=2)
-            ), row=3, col=1)
-            indicators_fig.add_trace(go.Bar(
-                x=asset_df.index, y=macd_hist, name='Histogram',
-                marker_color='rgba(128,128,128,0.5)'
-            ), row=3, col=1)
-            indicators_fig.add_hline(y=0, line_dash="dash", line_color="white", row=3, col=1)
-            
-            indicators_fig.update_layout(
-                template='plotly_dark', height=700,
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-                plot_bgcolor='#0E1117', paper_bgcolor='#0E1117'
-            )
-            
-            st.plotly_chart(indicators_fig, use_container_width=True)
-            
-            # Show indicator values
-            col1, col2, col3, col4 = st.columns(4)
-            if len(close_prices) >= bb_period:
-                col1.metric("BB Upper", f"${bb_upper.iloc[-1]:,.2f}")
-                col2.metric("BB Middle", f"${bb_ma.iloc[-1]:,.2f}")
-                col3.metric("BB Lower", f"${bb_lower.iloc[-1]:,.2f}")
-            if len(close_prices) >= rsi_period:
-                rsi_val = rsi.iloc[-1]
-                rsi_color = "normal" if 30 <= rsi_val <= 70 else "inverse"
-                col4.metric("RSI (14)", f"{rsi_val:.1f}", delta_color=rsi_color)
+            st.markdown("### 📊 Complete Technical Analysis Dashboard")
+
+            # Use the comprehensive technical analysis chart from visualization.py
+            try:
+                tech_chart = st.session_state.visualizer.create_technical_analysis_chart(
+                    asset_df, f"{selected_asset} - Complete Analysis"
+                )
+                st.plotly_chart(tech_chart, use_container_width=True)
+            except Exception as e:
+                st.warning(f"Could not generate advanced technical chart: {e}")
+                # Fallback to basic indicators
+                st.markdown("### 📈 Basic Technical Indicators")
+
+                # Find the close column (could be 'close', 'Close', etc.)
+                close_col = None
+                for col in asset_df.columns:
+                    if 'close' in col.lower():
+                        close_col = col
+                        break
+
+                if close_col and len(asset_df) > 0:
+                    close_prices = np.array(asset_df[close_col]).flatten()
+                else:
+                    st.error("Error loading market data: 'close'")
+                    close_prices = np.array([])
+
+                # Calculate basic indicators
+                if len(close_prices) >= 20:
+                    bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
+                    rsi = st.session_state.visualizer.calculate_rsi(asset_df)
+                    macd, signal, hist = st.session_state.visualizer.calculate_macd(asset_df)
+                    k_percent, d_percent = st.session_state.visualizer.calculate_stochastic(asset_df)
+
+                    # Display indicator values
+                    col1, col2, col3, col4 = st.columns(4)
+                    col1.metric("RSI", f"{rsi.iloc[-1]:.1f}")
+                    col2.metric("MACD", f"{macd.iloc[-1]:.2f}")
+                    col3.metric("Stochastic %K", f"{k_percent.iloc[-1]:.1f}")
+                    col4.metric("BB Position", f"${bb_middle.iloc[-1]:.2f}")
+
+            # Technical Analysis Summary
+            st.markdown("### 🎯 Technical Analysis Summary")
+
+            # Calculate signals
+            signals = []
+            # Find the close column
+            close_col = None
+            for col in asset_df.columns:
+                if 'close' in col.lower():
+                    close_col = col
+                    break
+
+            if close_col and len(asset_df) > 0:
+                close_prices = np.array(asset_df[close_col]).flatten()
+            else:
+                close_prices = np.array([])
+
+            if len(close_prices) >= 50:
+                # RSI signals
+                rsi = st.session_state.visualizer.calculate_rsi(asset_df)
+                if rsi.iloc[-1] > 70:
+                    signals.append("⚠️ RSI Overbought - Consider Selling")
+                elif rsi.iloc[-1] < 30:
+                    signals.append("✅ RSI Oversold - Consider Buying")
+
+                # MACD signals
+                macd, signal_line, _ = st.session_state.visualizer.calculate_macd(asset_df)
+                if macd.iloc[-1] > signal_line.iloc[-1]:
+                    signals.append("✅ MACD Bullish Crossover")
+                else:
+                    signals.append("⚠️ MACD Bearish Crossover")
+
+                # Bollinger Band signals
+                bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
+                current_price = close_prices[-1]
+                if current_price < bb_lower.iloc[-1]:
+                    signals.append("✅ Price Below Lower BB - Potential Long")
+                elif current_price > bb_upper.iloc[-1]:
+                    signals.append("⚠️ Price Above Upper BB - Potential Short")
+
+                # Stochastic signals
+                k_percent, d_percent = st.session_state.visualizer.calculate_stochastic(asset_df)
+                if k_percent.iloc[-1] > 80:
+                    signals.append("⚠️ Stochastic Overbought")
+                elif k_percent.iloc[-1] < 20:
+                    signals.append("✅ Stochastic Oversold")
+
+            if signals:
+                for signal in signals:
+                    st.markdown(f"- {signal}")
+            else:
+                st.info("📊 No strong technical signals at current levels")
         
-        # ============== CANDLESTICK CHART ==============
+        # ============== ENHANCED CANDLESTICK CHART ==============
         if show_candles and len(asset_df) > 0:
-            st.markdown("### 🕯️ Candlestick Chart (1-Day)")
-            
-            candle_fig = go.Figure(data=go.Candlestick(
+            st.markdown("### 🕯️ Enhanced Candlestick Chart with Technical Overlays")
+
+            # Create enhanced candlestick chart
+            candle_fig = go.Figure()
+
+            # Add candlestick
+            candle_fig.add_trace(go.Candlestick(
                 x=asset_df.index,
                 open=asset_df['Open'],
                 high=asset_df['High'],
                 low=asset_df['Low'],
                 close=asset_df['Close'],
-                name=selected_asset
+                name='Candlesticks'
             ))
-            
+
+            # Add technical overlays
+            if len(asset_df) >= 20:
+                # Moving averages
+                sma20 = st.session_state.visualizer.calculate_sma(asset_df, 20)
+                ema20 = st.session_state.visualizer.calculate_ema(asset_df, 20)
+                candle_fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=sma20, name='SMA 20',
+                    line=dict(color='orange', width=2)
+                ))
+                candle_fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=ema20, name='EMA 20',
+                    line=dict(color='purple', width=2)
+                ))
+
+                # Bollinger Bands
+                bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
+                candle_fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=bb_upper, name='BB Upper',
+                    line=dict(color='red', width=1, dash='dot')
+                ))
+                candle_fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=bb_lower, name='BB Lower',
+                    line=dict(color='green', width=1, dash='dot')
+                ))
+
             candle_fig.update_layout(
                 template='plotly_dark',
-                height=500,
+                height=600,
                 plot_bgcolor='#1a1a2e',
                 paper_bgcolor='#1a1a2e',
                 xaxis_title='Time',
                 yaxis_title=f'{selected_asset} Price ($)',
-                xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)'),
-                yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)')
+                xaxis_rangeslider_visible=False,
+                showlegend=True
             )
-            
+
             st.plotly_chart(candle_fig, use_container_width=True)
         
         # Combined forecast analysis chart
-        st.markdown("### 📊 Combined Forecast Analysis")
-        
+        st.markdown(f"### 📊 Combined {forecast_period} Forecast Analysis")
+
         # Ensure upper/lower bounds exist and match lengths
         if 'upper_bound' not in locals() or len(upper_bound) != len(forecast):
             upper_bound = [p * 1.015 for p in forecast]
         if 'lower_bound' not in locals() or len(lower_bound) != len(forecast):
             lower_bound = [p * 0.985 for p in forecast]
-        
+
         # Ensure min_len is defined properly
-        if 'min_len' not in locals():
-            min_len = min(len(forecast), len(fut_times))
-        
+        min_len = len(forecast)
+
         fig = make_subplots(
             rows=3, cols=1,
             shared_xaxes=True,
             vertical_spacing=0.08,
             row_heights=[0.55, 0.25, 0.2],
-            subplot_titles=(f'📈 {selected_asset} - 6H Forecast with Confidence', '💱 DXY Dollar Index', '📊 Signal Strength')
+            subplot_titles=(f'📈 {selected_asset} - {forecast_period} Forecast with Confidence', '💱 DXY Dollar Index', '📊 Signal Strength')
         )
         
         # Historical price with MA lines
@@ -6418,15 +6988,15 @@ def display_master_oracle_terminal():
             st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
         
         # Forecast data table
-        st.markdown("### 📋 Forecast Data (5-min intervals)")
-        
+        st.markdown(f"### 📋 {forecast_period} Forecast Data (5-min intervals)")
+
         forecast_df = pd.DataFrame({
             'Time': [t.strftime('%H:%M') for t in fut_times[:min_len]],
             'Price ($)': [f"{p:,.2f}" for p in forecast[:min_len]],
             'Change (%)': [f"{((p - a_price) / a_price) * 100:+.2f}%" for p in forecast[:min_len]],
             'Signal': ['📈 Bullish' if p > a_price else '📉 Bearish' for p in forecast[:min_len]]
         })
-        st.dataframe(forecast_df, use_container_width=True, height=200)
+        st.dataframe(forecast_df, use_container_width=True, height=min(400, len(forecast_df)*35))
         
         # Sound alert
         if sound_alert and ("STRONG" in mode):

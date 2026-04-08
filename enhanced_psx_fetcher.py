@@ -727,16 +727,38 @@ class EnhancedPSXFetcher:
                 import yfinance as yf
                 ticker = yf.Ticker(symbol)
                 hist = ticker.history(period=period, interval="1d")
-                
+
                 if not hist.empty:
                     hist = hist.reset_index()
                     hist.columns = [c.lower() for c in hist.columns]
-                    
+
                     if 'date' in hist.columns:
                         hist['date'] = pd.to_datetime(hist['date']).dt.strftime('%Y-%m-%d')
                     elif 'Datetime' in hist.columns:
                         hist['date'] = pd.to_datetime(hist['Datetime']).dt.strftime('%Y-%m-%d')
-                    
+
+                    # Ensure we have the required OHLC columns
+                    required_cols = ['date', 'open', 'high', 'low', 'close', 'volume']
+                    missing_cols = [col for col in required_cols if col not in hist.columns]
+
+                    if missing_cols:
+                        print(f"Warning: Missing columns in Yahoo Finance data: {missing_cols}")
+                        # Try to map alternative column names
+                        col_mapping = {
+                            'close': ['close', 'Close', 'CLOSE', 'adj close', 'Adj Close', 'price', 'Price'],
+                            'open': ['open', 'Open', 'OPEN'],
+                            'high': ['high', 'High', 'HIGH'],
+                            'low': ['low', 'Low', 'LOW'],
+                            'volume': ['volume', 'Volume', 'VOLUME', 'vol', 'Vol']
+                        }
+
+                        for req_col in missing_cols:
+                            if req_col in col_mapping:
+                                for alt_col in col_mapping[req_col]:
+                                    if alt_col in hist.columns:
+                                        hist[req_col] = hist[alt_col]
+                                        break
+
                     return hist
             except Exception as e:
                 continue
@@ -753,9 +775,36 @@ class EnhancedPSXFetcher:
                 tables = pd.read_html(StringIO(response.text))
                 if tables:
                     df = tables[0]
-                    df.columns = ['date', 'close', 'open', 'high', 'low', 'volume']
-                    df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
-                    return df.tail(30)  # Return last 30 days
+                    # Standardize column names to lowercase
+                    df.columns = [c.lower() for c in df.columns]
+
+                    # Ensure we have the required columns by mapping them
+                    if len(df.columns) >= 6:
+                        # Investing.com typically returns: Date, Price, Open, High, Low, Vol.
+                        col_mapping = {
+                            'date': df.columns[0],
+                            'close': df.columns[1],  # Price column
+                            'open': df.columns[2] if len(df.columns) > 2 else None,
+                            'high': df.columns[3] if len(df.columns) > 3 else None,
+                            'low': df.columns[4] if len(df.columns) > 4 else None,
+                            'volume': df.columns[5] if len(df.columns) > 5 else None
+                        }
+
+                        # Create standardized dataframe
+                        standardized_df = pd.DataFrame()
+                        for std_col, orig_col in col_mapping.items():
+                            if orig_col is not None and orig_col in df.columns:
+                                standardized_df[std_col] = df[orig_col]
+
+                        if 'date' in standardized_df.columns:
+                            standardized_df['date'] = pd.to_datetime(standardized_df['date']).dt.strftime('%Y-%m-%d')
+
+                        return standardized_df.tail(30)  # Return last 30 days
+                    else:
+                        # Fallback: assume standard order
+                        df.columns = ['date', 'close', 'open', 'high', 'low', 'volume']
+                        df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
+                        return df.tail(30)
         except Exception as e:
             print(f"Investing.com scrape failed: {e}")
         

@@ -997,6 +997,9 @@ class DataFetcher:
                             hist.columns = [c.lower() for c in hist.columns]
                             if 'date' in hist.columns:
                                 hist['date'] = pd.to_datetime(hist['date']).dt.tz_localize(None)
+                            elif 'datetime' in hist.columns:
+                                hist['date'] = pd.to_datetime(hist['datetime']).dt.tz_localize(None)
+                                hist = hist.drop('datetime', axis=1)
                             st.success(f"✅ Fetched KSE-100 data from Yahoo Finance ({ticker_symbol})")
                             return hist
                     except Exception:
