@@ -523,15 +523,35 @@ class ChartVisualizer:
             plotly.graph_objects.Figure: Interactive technical analysis chart
         """
 
-        # Find the date column
+        # Find the date column or use index
         date_col = None
         for col in data.columns:
-            if 'date' in col.lower() or 'datetime' in col.lower() or 'time' in col.lower():
+            if ('date' in col.lower() or 'datetime' in col.lower() or 'time' in col.lower() or
+                'timestamp' in col.lower()):
                 date_col = col
                 break
 
+        # If no date column found, check if index is datetime
         if date_col is None:
-            raise ValueError("No date column found in data")
+            if isinstance(data.index, pd.DatetimeIndex) or pd.api.types.is_datetime64_any_dtype(data.index):
+                # Use index as date column
+                data = data.reset_index()
+                date_col = data.columns[0]  # The reset index creates a new column
+                # Ensure all columns are lowercase for consistency
+                data.columns = [col.lower() if isinstance(col, str) else str(col).lower()
+                              for col in data.columns]
+                date_col = date_col.lower()
+            elif len(data.columns) > 0:
+                # Try to use first column as date if it looks like datetime
+                first_col = data.columns[0]
+                try:
+                    pd.to_datetime(data[first_col].iloc[0])
+                    date_col = first_col
+                except:
+                    pass
+
+        if date_col is None:
+            raise ValueError(f"No date column found in data. Available columns: {list(data.columns)}. Index type: {type(data.index)}")
 
         # Find OHLC columns
         open_col = None
@@ -554,7 +574,7 @@ class ChartVisualizer:
                 volume_col = col
 
         if close_col is None:
-            raise ValueError("No close price column found in data")
+            raise ValueError("No close price column found in data. Available columns: " + ", ".join(data.columns.tolist()))
 
         # Create subplots: Price (candlestick), Bollinger Bands, RSI, MACD, Stochastic, Volume
         fig = make_subplots(

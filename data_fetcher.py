@@ -1171,8 +1171,22 @@ class DataFetcher:
                         if not hist.empty:
                             hist = hist.reset_index()
                             hist.columns = [c.lower() for c in hist.columns]
+
+                            # Ensure we have a date column
+                            if 'date' not in hist.columns and 'datetime' not in hist.columns:
+                                # Rename the index column to 'date'
+                                if 'index' in hist.columns:
+                                    hist = hist.rename(columns={'index': 'date'})
+                                elif len(hist.columns) > 0 and hist.columns[0] != 'date':
+                                    hist = hist.rename(columns={hist.columns[0]: 'date'})
+
+                            # Convert date column to datetime if it exists
                             if 'date' in hist.columns:
                                 hist['date'] = pd.to_datetime(hist['date']).dt.tz_localize(None)
+                            elif 'datetime' in hist.columns:
+                                hist['datetime'] = pd.to_datetime(hist['datetime']).dt.tz_localize(None)
+                                hist = hist.rename(columns={'datetime': 'date'})
+
                             return hist
                     except Exception:
                         continue

@@ -5732,33 +5732,43 @@ def display_technical_analysis():
                         return
 
                     # Display current metrics
-                    current_price = stock_data[close_col].iloc[-1]
-                    prev_price = stock_data[close_col].iloc[-2] if len(stock_data) > 1 else current_price
-                    change = current_price - prev_price
-                    change_pct = (change / prev_price) * 100 if prev_price != 0 else 0
+                    try:
+                        current_price = stock_data[close_col].iloc[-1]
+                        prev_price = stock_data[close_col].iloc[-2] if len(stock_data) > 1 else current_price
+                        change = current_price - prev_price
+                        change_pct = (change / prev_price) * 100 if prev_price != 0 else 0
 
-                    col1, col2, col3, col4 = st.columns(4)
+                        col1, col2, col3, col4 = st.columns(4)
 
-                    with col1:
-                        st.metric("Current Price", format_currency(current_price), f"{change:+.2f} ({change_pct:+.2f}%)")
+                        with col1:
+                            st.metric("Current Price", format_currency(current_price), f"{change:+.2f} ({change_pct:+.2f}%)")
 
-                    with col2:
-                        if high_col:
-                            st.metric("High", format_currency(stock_data[high_col].iloc[-1]))
-                        else:
-                            st.metric("High", "N/A")
+                        with col2:
+                            if high_col and len(stock_data) > 0:
+                                high_val = stock_data[high_col].iloc[-1]
+                                st.metric("High", format_currency(high_val))
+                            else:
+                                st.metric("High", "N/A")
 
-                    with col3:
-                        if low_col:
-                            st.metric("Low", format_currency(stock_data[low_col].iloc[-1]))
-                        else:
-                            st.metric("Low", "N/A")
+                        with col3:
+                            if low_col and len(stock_data) > 0:
+                                low_val = stock_data[low_col].iloc[-1]
+                                st.metric("Low", format_currency(low_val))
+                            else:
+                                st.metric("Low", "N/A")
 
-                    with col4:
-                        if volume_col:
-                            st.metric("Volume", f"{stock_data[volume_col].iloc[-1]:,.0f}")
-                        else:
-                            st.metric("Volume", "N/A")
+                        with col4:
+                            if volume_col and len(stock_data) > 0:
+                                vol_val = stock_data[volume_col].iloc[-1]
+                                st.metric("Volume", f"{vol_val:,.0f}")
+                            else:
+                                st.metric("Volume", "N/A")
+                    except Exception as e:
+                        st.error(f"Error displaying current metrics: {str(e)}")
+                        # Fallback: show basic info
+                        col1, col2 = st.columns(2)
+                        col1.metric("Data Points", len(stock_data))
+                        col2.metric("Columns", len(stock_data.columns))
 
                     # Technical Analysis Chart
                     st.subheader("📊 Complete Technical Analysis")
@@ -5771,38 +5781,54 @@ def display_technical_analysis():
                     st.markdown("---")
                     st.subheader("📊 Current Technical Indicator Values")
 
-                    # Calculate latest values
-                    latest_rsi = st.session_state.visualizer.calculate_rsi(stock_data).iloc[-1]
-                    latest_macd, latest_signal, latest_hist = st.session_state.visualizer.calculate_macd(stock_data)
-                    latest_k, latest_d = st.session_state.visualizer.calculate_stochastic(stock_data)
-                    bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(stock_data)
+                    try:
+                        # Calculate latest values
+                        rsi_series = st.session_state.visualizer.calculate_rsi(stock_data)
+                        macd_series, signal_series, hist_series = st.session_state.visualizer.calculate_macd(stock_data)
+                        k_series, d_series = st.session_state.visualizer.calculate_stochastic(stock_data)
+                        bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(stock_data)
 
-                    col1, col2, col3, col4 = st.columns(4)
+                        # Check if all indicators have valid data
+                        if (len(rsi_series) > 0 and len(macd_series) > 0 and len(signal_series) > 0 and
+                            len(k_series) > 0 and len(bb_upper) > 0 and len(bb_lower) > 0):
 
-                    with col1:
-                        st.metric("RSI (14)", f"{latest_rsi:.1f}",
-                                 delta="Overbought" if latest_rsi > 70 else "Oversold" if latest_rsi < 30 else "Neutral",
-                                 delta_color="inverse" if latest_rsi > 70 or latest_rsi < 30 else "off")
+                            latest_rsi = rsi_series.iloc[-1] if not pd.isna(rsi_series.iloc[-1]) else 50.0
+                            latest_macd = macd_series.iloc[-1] if not pd.isna(macd_series.iloc[-1]) else 0.0
+                            latest_signal = signal_series.iloc[-1] if not pd.isna(signal_series.iloc[-1]) else 0.0
+                            latest_k = k_series.iloc[-1] if not pd.isna(k_series.iloc[-1]) else 50.0
+                            current_bb_upper = bb_upper.iloc[-1] if not pd.isna(bb_upper.iloc[-1]) else current_price
+                            current_bb_lower = bb_lower.iloc[-1] if not pd.isna(bb_lower.iloc[-1]) else current_price
+                            current_price = stock_data[close_col].iloc[-1]
 
-                    with col2:
-                        macd_value = latest_macd.iloc[-1]
-                        signal_value = latest_signal.iloc[-1]
-                        st.metric("MACD", f"{macd_value:.2f}",
-                                 delta="Bullish" if macd_value > signal_value else "Bearish",
-                                 delta_color="normal" if macd_value > signal_value else "inverse")
+                            col1, col2, col3, col4 = st.columns(4)
 
-                    with col3:
-                        stoch_k = latest_k.iloc[-1]
-                        st.metric("Stochastic %K", f"{stoch_k:.1f}",
-                                 delta="Overbought" if stoch_k > 80 else "Oversold" if stoch_k < 20 else "Neutral",
-                                 delta_color="inverse" if stoch_k > 80 or stoch_k < 20 else "off")
+                            with col1:
+                                st.metric("RSI (14)", f"{latest_rsi:.1f}",
+                                         delta="Overbought" if latest_rsi > 70 else "Oversold" if latest_rsi < 30 else "Neutral",
+                                         delta_color="inverse" if latest_rsi > 70 or latest_rsi < 30 else "off")
 
-                    with col4:
-                        current_bb_upper = bb_upper.iloc[-1]
-                        current_bb_lower = bb_lower.iloc[-1]
-                        current_price = stock_data[close_col].iloc[-1]
-                        bb_position = "Upper Band" if current_price > current_bb_upper else "Lower Band" if current_price < current_bb_lower else "Middle"
-                        st.metric("BB Position", bb_position)
+                            with col2:
+                                st.metric("MACD", f"{latest_macd:.2f}",
+                                         delta="Bullish" if latest_macd > latest_signal else "Bearish",
+                                         delta_color="normal" if latest_macd > latest_signal else "inverse")
+
+                            with col3:
+                                st.metric("Stochastic %K", f"{latest_k:.1f}",
+                                         delta="Overbought" if latest_k > 80 else "Oversold" if latest_k < 20 else "Neutral",
+                                         delta_color="inverse" if latest_k > 80 or latest_k < 20 else "off")
+
+                            with col4:
+                                bb_position = "Upper Band" if current_price > current_bb_upper else "Lower Band" if current_price < current_bb_lower else "Middle"
+                                st.metric("BB Position", bb_position)
+                        else:
+                            st.warning("Unable to calculate technical indicators - data may be insufficient or malformed")
+
+                    except Exception as e:
+                        st.error(f"Error calculating indicators: {str(e)}")
+                        # Provide fallback information
+                        col1, col2 = st.columns(2)
+                        col1.metric("Data Length", len(stock_data))
+                        col2.metric("Available Columns", ", ".join(stock_data.columns.tolist()[:3]))
 
                     # Indicator Explanations
                     st.markdown("---")
@@ -6371,22 +6397,38 @@ def display_master_oracle_terminal():
                 st.write(f"🐛 DXY DF shape: {dxy_df.shape}")
                 st.write(f"🐛 DXY DF columns: {list(dxy_df.columns)}")
 
-            if asset_df.empty or 'Close' not in asset_df.columns or len(asset_df) < 4:
+            # Find required columns dynamically
+            close_col = None
+            for col in asset_df.columns:
+                if 'close' in col.lower():
+                    close_col = col
+                    break
+
+            if asset_df.empty or close_col is None or len(asset_df) < 4:
                 st.error("❌ Insufficient asset data for analysis. DataFrame is empty or missing required columns.")
                 st.write(f"DataFrame shape: {asset_df.shape if hasattr(asset_df, 'shape') else 'No shape'}")
                 st.write(f"Columns: {list(asset_df.columns) if hasattr(asset_df, 'columns') else 'No columns'}")
                 return
 
-            if dxy_df.empty or 'Close' not in dxy_df.columns or len(dxy_df) < 4:
+            # Handle DXY data
+            dxy_close_col = None
+            if not dxy_df.empty:
+                for col in dxy_df.columns:
+                    if 'close' in col.lower():
+                        dxy_close_col = col
+                        break
+
+            if dxy_df.empty or dxy_close_col is None or len(dxy_df) < 4:
                 # Create dummy DXY data if not available
                 dxy_df = pd.DataFrame({'Close': [106] * len(asset_df)}, index=asset_df.index)
+                dxy_close_col = 'Close'
 
-            a_price = float(asset_df['Close'].iloc[-1])
-            d_price = float(dxy_df['Close'].iloc[-1])
+            a_price = float(asset_df[close_col].iloc[-1])
+            d_price = float(dxy_df[dxy_close_col].iloc[-1])
 
             # Calculate changes with error handling
-            a_chg = ((a_price - float(asset_df['Close'].iloc[-4])) / float(asset_df['Close'].iloc[-4])) * 100
-            d_chg = ((d_price - float(dxy_df['Close'].iloc[-4])) / float(dxy_df['Close'].iloc[-4])) * 100
+            a_chg = ((a_price - float(asset_df[close_col].iloc[-4])) / float(asset_df[close_col].iloc[-4])) * 100
+            d_chg = ((d_price - float(dxy_df[dxy_close_col].iloc[-4])) / float(dxy_df[dxy_close_col].iloc[-4])) * 100
 
         except KeyError as e:
             st.error(f"❌ Column access error: {e}. Available columns: {list(asset_df.columns) if hasattr(asset_df, 'columns') else 'None'}")
@@ -6406,8 +6448,8 @@ def display_master_oracle_terminal():
         # Generate forecast
         base_price = a_price
         
-        if len(asset_df) >= 10 and 'Close' in asset_df.columns:
-            recent_series = asset_df['Close'].iloc[-10:]
+        if len(asset_df) >= 10 and close_col is not None:
+            recent_series = asset_df[close_col].iloc[-10:]
             if hasattr(recent_series, 'tolist'):
                 recent_prices = recent_series.tolist()
             else:
@@ -6592,17 +6634,36 @@ def display_master_oracle_terminal():
 
                 # Calculate basic indicators
                 if len(close_prices) >= 20:
-                    bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
-                    rsi = st.session_state.visualizer.calculate_rsi(asset_df)
-                    macd, signal, hist = st.session_state.visualizer.calculate_macd(asset_df)
-                    k_percent, d_percent = st.session_state.visualizer.calculate_stochastic(asset_df)
+                    try:
+                        bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
+                        rsi = st.session_state.visualizer.calculate_rsi(asset_df)
+                        macd, signal, hist = st.session_state.visualizer.calculate_macd(asset_df)
+                        k_percent, d_percent = st.session_state.visualizer.calculate_stochastic(asset_df)
 
-                    # Display indicator values
-                    col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("RSI", f"{rsi.iloc[-1]:.1f}")
-                    col2.metric("MACD", f"{macd.iloc[-1]:.2f}")
-                    col3.metric("Stochastic %K", f"{k_percent.iloc[-1]:.1f}")
-                    col4.metric("BB Position", f"${bb_middle.iloc[-1]:.2f}")
+                        # Check if indicators have valid data
+                        if len(rsi) > 0 and len(macd) > 0 and len(k_percent) > 0 and len(bb_middle) > 0:
+                            # Display indicator values
+                            col1, col2, col3, col4 = st.columns(4)
+
+                            rsi_val = rsi.iloc[-1] if not pd.isna(rsi.iloc[-1]) else 50.0
+                            macd_val = macd.iloc[-1] if not pd.isna(macd.iloc[-1]) else 0.0
+                            k_val = k_percent.iloc[-1] if not pd.isna(k_percent.iloc[-1]) else 50.0
+                            bb_val = bb_middle.iloc[-1] if not pd.isna(bb_middle.iloc[-1]) else close_prices[-1] if len(close_prices) > 0 else 0.0
+
+                            col1.metric("RSI", f"{rsi_val:.1f}")
+                            col2.metric("MACD", f"{macd_val:.2f}")
+                            col3.metric("Stochastic %K", f"{k_val:.1f}")
+                            col4.metric("BB Middle", f"${bb_val:.2f}")
+                        else:
+                            st.warning("Unable to calculate technical indicators - insufficient data")
+
+                    except Exception as e:
+                        st.error(f"Error calculating technical indicators: {str(e)}")
+                        # Provide basic price information as fallback
+                        if len(close_prices) > 0:
+                            col1, col2 = st.columns(2)
+                            col1.metric("Current Price", f"${close_prices[-1]:.2f}")
+                            col2.metric("Data Points", len(close_prices))
 
             # Technical Analysis Summary
             st.markdown("### 🎯 Technical Analysis Summary")
@@ -6622,27 +6683,34 @@ def display_master_oracle_terminal():
                 close_prices = np.array([])
 
             if len(close_prices) >= 50:
-                # RSI signals
-                rsi = st.session_state.visualizer.calculate_rsi(asset_df)
-                if rsi.iloc[-1] > 70:
-                    signals.append("⚠️ RSI Overbought - Consider Selling")
-                elif rsi.iloc[-1] < 30:
-                    signals.append("✅ RSI Oversold - Consider Buying")
+                try:
+                    # RSI signals
+                    rsi = st.session_state.visualizer.calculate_rsi(asset_df)
+                    if len(rsi) > 0 and not pd.isna(rsi.iloc[-1]):
+                        if rsi.iloc[-1] > 70:
+                            signals.append("⚠️ RSI Overbought - Consider Selling")
+                        elif rsi.iloc[-1] < 30:
+                            signals.append("✅ RSI Oversold - Consider Buying")
 
-                # MACD signals
-                macd, signal_line, _ = st.session_state.visualizer.calculate_macd(asset_df)
-                if macd.iloc[-1] > signal_line.iloc[-1]:
-                    signals.append("✅ MACD Bullish Crossover")
-                else:
-                    signals.append("⚠️ MACD Bearish Crossover")
+                    # MACD signals
+                    macd, signal_line, _ = st.session_state.visualizer.calculate_macd(asset_df)
+                    if len(macd) > 0 and len(signal_line) > 0 and not pd.isna(macd.iloc[-1]) and not pd.isna(signal_line.iloc[-1]):
+                        if macd.iloc[-1] > signal_line.iloc[-1]:
+                            signals.append("✅ MACD Bullish Crossover")
+                        else:
+                            signals.append("⚠️ MACD Bearish Crossover")
 
-                # Bollinger Band signals
-                bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
-                current_price = close_prices[-1]
-                if current_price < bb_lower.iloc[-1]:
-                    signals.append("✅ Price Below Lower BB - Potential Long")
-                elif current_price > bb_upper.iloc[-1]:
-                    signals.append("⚠️ Price Above Upper BB - Potential Short")
+                    # Bollinger Band signals
+                    bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
+                    if len(bb_upper) > 0 and len(bb_lower) > 0 and not pd.isna(bb_upper.iloc[-1]) and not pd.isna(bb_lower.iloc[-1]):
+                        current_price = close_prices[-1]
+                        if current_price < bb_lower.iloc[-1]:
+                            signals.append("✅ Price Below Lower BB - Potential Long")
+                        elif current_price > bb_upper.iloc[-1]:
+                            signals.append("⚠️ Price Above Upper BB - Potential Short")
+
+                except Exception as e:
+                    signals.append(f"⚠️ Unable to calculate signals: {str(e)}")
 
                 # Stochastic signals
                 k_percent, d_percent = st.session_state.visualizer.calculate_stochastic(asset_df)
@@ -6664,13 +6732,27 @@ def display_master_oracle_terminal():
             # Create enhanced candlestick chart
             candle_fig = go.Figure()
 
+            # Find OHLC columns dynamically
+            open_col = None
+            high_col = None
+            low_col = None
+
+            for col in asset_df.columns:
+                col_lower = col.lower()
+                if 'open' in col_lower:
+                    open_col = col
+                elif 'high' in col_lower:
+                    high_col = col
+                elif 'low' in col_lower:
+                    low_col = col
+
             # Add candlestick
             candle_fig.add_trace(go.Candlestick(
                 x=asset_df.index,
-                open=asset_df['Open'],
-                high=asset_df['High'],
-                low=asset_df['Low'],
-                close=asset_df['Close'],
+                open=asset_df[open_col] if open_col else asset_df[close_col],
+                high=asset_df[high_col] if high_col else asset_df[close_col],
+                low=asset_df[low_col] if low_col else asset_df[close_col],
+                close=asset_df[close_col],
                 name='Candlesticks'
             ))
 
@@ -6734,26 +6816,32 @@ def display_master_oracle_terminal():
         
         # Historical price with MA lines
         fig.add_trace(go.Scatter(
-            x=asset_df.index, y=asset_df['Close'],
+            x=asset_df.index, y=asset_df[close_col],
             mode='lines', name=selected_asset,
             line=dict(color='#00CED1', width=3),
             fill='tozeroy', fillcolor='rgba(0, 206, 209, 0.15)'
         ), row=1, col=1)
-        
+
         # MA lines
         if len(asset_df) >= 20:
-            ma20 = asset_df['Close'].rolling(window=20).mean()
-            ma50 = asset_df['Close'].rolling(window=50).mean()
+            ma20 = asset_df[close_col].rolling(window=20).mean()
+            ma50 = asset_df[close_col].rolling(window=50).mean()
             fig.add_trace(go.Scatter(x=asset_df.index, y=ma20, name='MA20',
                                    line=dict(color='orange', width=2)), row=1, col=1)
             if len(asset_df) >= 50:
                 fig.add_trace(go.Scatter(x=asset_df.index, y=ma50, name='MA50',
                                        line=dict(color='purple', width=2)), row=1, col=1)
-        
+
         # Volume
+        volume_col = None
+        for col in asset_df.columns:
+            if 'volume' in col.lower() or 'vol' in col.lower():
+                volume_col = col
+                break
+
         fig.add_trace(go.Bar(
             x=asset_df.index,
-            y=asset_df['Volume'] if 'Volume' in asset_df.columns else [0]*len(asset_df),
+            y=asset_df[volume_col] if volume_col else [0]*len(asset_df),
             name='Volume', marker_color='rgba(128,128,128,0.5)', yaxis='y3'
         ), row=1, col=1)
         
@@ -6785,7 +6873,7 @@ def display_master_oracle_terminal():
         
         # DXY chart
         fig.add_trace(go.Scatter(
-            x=dxy_df.index, y=dxy_df['Close'],
+            x=dxy_df.index, y=dxy_df[dxy_close_col],
             name="DXY Index", line=dict(color='#00FF7F', width=3),
             fill='tozeroy', fillcolor='rgba(0, 255, 127, 0.2)'
         ), row=2, col=1)
