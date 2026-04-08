@@ -6128,7 +6128,43 @@ def display_master_oracle_terminal():
 
     # Initialize real-time scraper
     scraper = RealTimeDataScraper()
-    
+
+    def calculate_confidence_bounds(forecast, volatility, confidence=0.95):
+        """Standalone function to calculate realistic confidence intervals for forecast"""
+        if not forecast or len(forecast) == 0:
+            return [], []
+
+        # Base volatility from historical data or default
+        base_vol = volatility if volatility > 0 else 0.015
+
+        # Z-score for confidence level
+        z_score = 1.96 if confidence == 0.95 else 1.65
+
+        upper = []
+        lower = []
+
+        # Calculate volatility expansion over time (forecast uncertainty increases)
+        for i, price in enumerate(forecast):
+            time_factor = i / len(forecast)  # 0 to 1 over forecast period
+
+            # Volatility expands over time (longer forecasts are less certain)
+            time_volatility = base_vol * (1 + time_factor * 2.0)
+
+            # Add market regime uncertainty (higher volatility in uncertain conditions)
+            regime_uncertainty = base_vol * 0.5 * math.sin(time_factor * math.pi)
+
+            # Calculate asymmetric confidence bounds (often wider on upside for bull markets)
+            total_volatility = time_volatility + regime_uncertainty
+
+            # Slight asymmetry - often wider upper bounds in uncertain markets
+            upper_margin = price * total_volatility * z_score * (1 + time_factor * 0.2)
+            lower_margin = price * total_volatility * z_score * (1 + time_factor * 0.1)
+
+            upper.append(price + upper_margin)
+            lower.append(price - lower_margin)
+
+        return upper, lower
+
     # Enhanced prediction model with more sophisticated forecasting
     class EnhancedTrendModel:
         """Enhanced trend prediction model with multiple indicators"""
@@ -6576,14 +6612,8 @@ def display_master_oracle_terminal():
             # Update momentum (gradual decay)
             momentum = momentum * 0.995 + price_change / current_price * 0.1
         
-        # Get confidence bounds
-        try:
-            upper_bound, lower_bound = model.get_confidence_bounds(forecast)
-        except AttributeError as e:
-            # Fallback: create simple confidence bounds
-            st.warning(f"Using fallback confidence bounds: {e}")
-            upper_bound = [p * 1.05 for p in forecast]
-            lower_bound = [p * 0.95 for p in forecast]
+        # Get confidence bounds using standalone function
+        upper_bound, lower_bound = calculate_confidence_bounds(forecast, model.volatility)
         
         # Generate future times based on forecast period
         now = asset_df.index[-1]
