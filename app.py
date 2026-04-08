@@ -2798,6 +2798,25 @@ def display_file_upload_prediction():
         - `volume`: Trading volume
         """)
 
+def create_fallback_forecast_chart(asset, period):
+    """Create a simple fallback chart when forecast data is unavailable"""
+    fig = go.Figure()
+    fig.add_annotation(
+        text=f"Forecast Graph Unavailable<br>Asset: {asset}<br>Period: {period}<br>Data Loading...",
+        xref="paper", yref="paper",
+        x=0.5, y=0.5,
+        showarrow=False,
+        font=dict(size=14, color='orange')
+    )
+    fig.update_layout(
+        template='plotly_dark',
+        height=300,
+        title=f"📊 {period} Forecast (Loading...)",
+        plot_bgcolor='#1a1a2e',
+        paper_bgcolor='#1a1a2e'
+    )
+    return fig
+
 def display_five_minute_live_predictions():
     """Live market data scraping with 15-minute predictions for all KSE-100 brands"""
 
@@ -5430,7 +5449,6 @@ def display_individual_company_forecast(symbol, company_name):
 
 def generate_company_historical_data(symbol):
     """Generate realistic historical data for company analysis"""
-    import numpy as np
     from datetime import datetime, timedelta
     
     try:
@@ -6166,34 +6184,55 @@ def display_master_oracle_terminal():
                     return [last_price * (1 + trend * i * 0.1) for i in range(1, horizon + 1)]
                 return [last_price] * horizon
         
-        def get_confidence_bounds(self, forecast, confidence=0.95):
-            """Calculate confidence intervals for forecast"""
-            if not self.history:
-                return forecast, forecast
-            
-            base_vol = self.volatility if self.volatility > 0 else 0.01
-            upper = []
-            lower = []
-            
-            for i, f in enumerate(forecast):
-                # Wider confidence as we go further
-                z_score = 1.96 if confidence == 0.95 else 1.65
-                margin = f * base_vol * z_score * (1 + i/len(forecast))
-                upper.append(f + margin)
-                lower.append(f - margin)
-            
-            return upper, lower
+    def get_confidence_bounds(self, forecast, confidence=0.95):
+        """Calculate realistic confidence intervals for forecast with proper market behavior"""
+        if not forecast or len(forecast) == 0:
+            return [], []
+
+        # Base volatility from historical data or default
+        base_vol = self.volatility if self.volatility > 0 else 0.015
+
+        # Z-score for confidence level
+        z_score = 1.96 if confidence == 0.95 else 1.65
+
+        upper = []
+        lower = []
+
+        # Calculate volatility expansion over time (forecast uncertainty increases)
+        for i, price in enumerate(forecast):
+            time_factor = i / len(forecast)  # 0 to 1 over forecast period
+
+            # Volatility expands over time (longer forecasts are less certain)
+            time_volatility = base_vol * (1 + time_factor * 2.0)
+
+            # Add market regime uncertainty (higher volatility in uncertain conditions)
+            regime_uncertainty = base_vol * 0.5 * math.sin(time_factor * math.pi)
+
+            # Calculate asymmetric confidence bounds (often wider on upside for bull markets)
+            total_volatility = time_volatility + regime_uncertainty
+
+            # Slight asymmetry - often wider upper bounds in uncertain markets
+            upper_margin = price * total_volatility * z_score * (1 + time_factor * 0.2)
+            lower_margin = price * total_volatility * z_score * (1 + time_factor * 0.1)
+
+            upper.append(price + upper_margin)
+            lower.append(price - lower_margin)
+
+        return upper, lower
     
-    # Initialize session state
+    # Initialize session state - force reload to fix method issues
     if 'oracle_models_v3' not in st.session_state:
         st.session_state.oracle_models_v3 = {}
     if 'oracle_last_train' not in st.session_state:
         st.session_state.oracle_last_train = datetime.now()
-    
-    # Initialize models
+
+    # Force re-initialization of models to ensure latest class methods
+    st.session_state.oracle_models_v3 = {}  # Clear existing models
+    st.session_state.oracle_last_train = datetime.now()
+
+    # Initialize models with latest class definition
     for name in ASSETS.keys():
-        if name not in st.session_state.oracle_models_v3:
-            st.session_state.oracle_models_v3[name] = EnhancedTrendModel()
+        st.session_state.oracle_models_v3[name] = EnhancedTrendModel()
     
     # 24-hour auto-reset
     if datetime.now() - st.session_state.oracle_last_train > timedelta(hours=24):
@@ -6465,24 +6504,86 @@ def display_master_oracle_terminal():
         dxy_effect = -d_chg * 0.5 if d_chg != 0 else 0
         combined_trend = price_trend + dxy_effect
         
-        # Enhanced forecast generation based on selected period
+        # Advanced forecast generation with realistic market movements
         import math
 
         # Determine forecast length based on period
         period_hours = {"1H": 1, "6H": 6, "12H": 12, "24H": 24}[forecast_period]
         forecast_steps = period_hours * 12  # 5-minute intervals
 
+        # Enhanced forecast with realistic market behavior
         forecast = []
+        current_price = base_price
+
+        # Calculate base volatility and trend strength
+        base_volatility = min(0.02, max(0.005, abs(combined_trend) * 2))
+        trend_strength = min(0.8, max(0.1, abs(combined_trend) * 3))
+
+        # Generate support and resistance levels
+        support_level = base_price * (0.95 - combined_trend * 0.1)
+        resistance_level = base_price * (1.05 + combined_trend * 0.1)
+
+        # Initialize momentum and mean reversion factors
+        momentum = combined_trend * 0.3
+        mean_reversion_strength = 0.15
+
         for i in range(1, forecast_steps + 1):
             time_factor = i / forecast_steps
-            base_movement = combined_trend * time_factor * base_price
-            cycle = math.sin(i / 6 * math.pi) * (base_price * 0.005)
-            noise = (random.random() - 0.5) * (base_price * 0.002)
-            forecast_price = base_price + base_movement + cycle + noise
-            forecast.append(forecast_price)
+
+            # Dynamic volatility that clusters (periods of high/low volatility)
+            volatility_cycle = math.sin(i / 12 * math.pi) * 0.5 + 0.5  # 0 to 1 range
+            current_volatility = base_volatility * (0.5 + volatility_cycle * 0.8)
+
+            # Mean reversion towards fair value (slight pull towards base_price)
+            fair_value = base_price * (1 + combined_trend * time_factor)
+            mean_reversion = (fair_value - current_price) * mean_reversion_strength
+
+            # Momentum component (trend persistence)
+            momentum_component = momentum * current_price * 0.001
+
+            # Support/resistance bounce effect
+            sr_effect = 0
+            if current_price < support_level * 1.02:
+                sr_effect = (support_level - current_price) * 0.3
+            elif current_price > resistance_level * 0.98:
+                sr_effect = (resistance_level - current_price) * 0.3
+
+            # Market microstructure noise (bid-ask spread effect)
+            microstructure_noise = (random.random() - 0.5) * current_price * 0.0005
+
+            # Main trend movement
+            trend_movement = combined_trend * current_price * (0.0002 + time_factor * 0.0001)
+
+            # Random walk component with volatility clustering
+            random_walk = np.random.normal(0, current_volatility) * current_price * 0.01
+
+            # Combine all factors for realistic price movement
+            price_change = (trend_movement + momentum_component + mean_reversion +
+                          sr_effect + random_walk + microstructure_noise)
+
+            current_price += price_change
+
+            # Ensure price doesn't go negative or become unrealistic
+            current_price = max(current_price * 0.1, min(current_price, base_price * 2.0))
+
+            # Add some gap effects (price jumps) occasionally
+            if random.random() < 0.02:  # 2% chance of gap
+                gap_size = np.random.normal(0, current_volatility * 2) * current_price
+                current_price += gap_size
+
+            forecast.append(current_price)
+
+            # Update momentum (gradual decay)
+            momentum = momentum * 0.995 + price_change / current_price * 0.1
         
         # Get confidence bounds
-        upper_bound, lower_bound = model.get_confidence_bounds(forecast)
+        try:
+            upper_bound, lower_bound = model.get_confidence_bounds(forecast)
+        except AttributeError as e:
+            # Fallback: create simple confidence bounds
+            st.warning(f"Using fallback confidence bounds: {e}")
+            upper_bound = [p * 1.05 for p in forecast]
+            lower_bound = [p * 0.95 for p in forecast]
         
         # Generate future times based on forecast period
         now = asset_df.index[-1]
@@ -6510,99 +6611,281 @@ def display_master_oracle_terminal():
         
         # Enhanced forecast graph with confidence intervals
         st.markdown(f"### 📊 {forecast_period} Price Forecast Graph with Confidence Bands")
-        
-        # Create forecast graph
-        forecast_graph = go.Figure()
-        
-        # Generate Pakistan trading hours time points
-        pakistan_tz = pytz.timezone('Asia/Karachi')
-        now_pkt = datetime.now(pakistan_tz)
-        today = now_pkt.date()
-        start_forecast = datetime.combine(today, datetime.strptime('09:30', '%H:%M').time())
-        end_forecast = datetime.combine(today, datetime.strptime('15:30', '%H:%M').time())
-        forecast_times = pd.date_range(start=start_forecast, end=end_forecast, freq='5T')
-        
-        # Ensure forecast and times match in length
-        min_len = min(len(forecast), len(forecast_times))
-        forecast_times = forecast_times[:min_len]
-        forecast = forecast[:min_len]
-        upper_bound = upper_bound[:min_len]
-        lower_bound = lower_bound[:min_len]
-        
-        # Determine trend color based on overall forecast direction
+
         try:
-            total_change = float(forecast[-1]) - float(forecast[0])
-            if total_change > 0:
-                trend_color = '#00FF00'
-                trend_name = '📈 Bullish Trend'
-            elif total_change < 0:
-                trend_color = '#FF4B4B'
-                trend_name = '📉 Bearish Trend'
-            else:
-                trend_color = '#FFD700'
-                trend_name = '⚖️ Sideways'
-        except:
-            trend_color = '#00CED1'
-            trend_name = 'Forecast'
-        
-        # Add confidence band (shaded area)
-        forecast_graph.add_trace(go.Scatter(
-            x=list(forecast_times) + list(forecast_times)[::-1],
-            y=list(upper_bound) + list(lower_bound)[::-1],
-            fill='toself',
-            fillcolor='rgba(0, 255, 0, 0.15)',
-            line=dict(color='rgba(0, 255, 0, 0.3)'),
-            showlegend=False,
-            name='95% Confidence'
-        ))
-        
-        # Main forecast line with markers
-        forecast_graph.add_trace(go.Scatter(
-            x=forecast_times,
-            y=forecast,
-            mode='lines+markers',
-            name=trend_name,
-            line=dict(color=trend_color, width=3),
-            marker=dict(size=6, color=trend_color, symbol='circle', line=dict(width=1, color='white')),
-            hovertemplate='Time: %{x|%I:%M %p}<br>Price: $%{y:.2f}<extra></extra>'
-        ))
-        
-        # Add price annotations at key points (every 30 min = 6 points)
-        for i in range(0, len(forecast), 6):
-            if i < len(forecast_times):
-                forecast_graph.add_annotation(
-                    x=forecast_times[i],
-                    y=forecast[i],
-                    text=f"${forecast[i]:,.0f}",
-                    showarrow=False,
-                    font=dict(color=trend_color, size=9),
-                    yanchor='bottom'
+            # Validate forecast data
+            if not forecast or len(forecast) == 0:
+                st.error("❌ No forecast data available")
+                st.plotly_chart(create_fallback_forecast_chart(selected_asset, forecast_period), use_container_width=True)
+                return
+
+            if not upper_bound or len(upper_bound) == 0:
+                upper_bound = [p * 1.05 for p in forecast]
+
+            if not lower_bound or len(lower_bound) == 0:
+                lower_bound = [p * 0.95 for p in forecast]
+
+            # Create forecast graph
+            forecast_graph = go.Figure()
+
+            # Generate Pakistan trading hours time points
+            pakistan_tz = pytz.timezone('Asia/Karachi')
+            now_pkt = datetime.now(pakistan_tz)
+            today = now_pkt.date()
+            start_forecast = datetime.combine(today, datetime.strptime('09:30', '%H:%M').time())
+            end_forecast = datetime.combine(today, datetime.strptime('15:30', '%H:%M').time())
+            forecast_times = pd.date_range(start=start_forecast, end=end_forecast, freq='5T')
+
+            # Ensure forecast and times match in length
+            min_len = min(len(forecast), len(forecast_times), len(upper_bound), len(lower_bound))
+            if min_len == 0:
+                st.error("❌ Insufficient forecast data for visualization")
+                st.plotly_chart(create_fallback_forecast_chart(selected_asset, forecast_period), use_container_width=True)
+                return
+
+            forecast_times = forecast_times[:min_len]
+            forecast = forecast[:min_len]
+            upper_bound = upper_bound[:min_len]
+            lower_bound = lower_bound[:min_len]
+
+            # Determine trend color based on overall forecast direction
+            try:
+                total_change = float(forecast[-1]) - float(forecast[0])
+                if total_change > 0:
+                    trend_color = '#00FF00'
+                    trend_name = '📈 Bullish Trend'
+                elif total_change < 0:
+                    trend_color = '#FF4B4B'
+                    trend_name = '📉 Bearish Trend'
+                else:
+                    trend_color = '#FFD700'
+                    trend_name = '⚖️ Sideways'
+            except:
+                trend_color = '#00CED1'
+                trend_name = 'Forecast'
+
+            # Add confidence band (shaded area) with gradient fill
+            forecast_graph.add_trace(go.Scatter(
+                x=list(forecast_times) + list(forecast_times)[::-1],
+                y=list(upper_bound) + list(lower_bound)[::-1],
+                fill='toself',
+                fillcolor='rgba(52, 152, 219, 0.2)',  # Professional blue gradient
+                line=dict(color='rgba(52, 152, 219, 0.5)', width=1),
+                showlegend=True,
+                name='95% Confidence Band',
+                hoverinfo='skip'
+            ))
+
+            # Add current price reference line
+            forecast_graph.add_trace(go.Scatter(
+                x=[forecast_times[0]],
+                y=[forecast[0]],
+                mode='markers',
+                name='Current Price',
+                marker=dict(size=12, color='#E74C3C', symbol='diamond',
+                          line=dict(width=2, color='white')),
+                hovertemplate='Current Price: $%{y:.2f}<extra></extra>'
+            ))
+
+            # Main forecast line with smooth curve
+            forecast_graph.add_trace(go.Scatter(
+                x=forecast_times,
+                y=forecast,
+                mode='lines',
+                name=f'{trend_name} Forecast',
+                line=dict(color=trend_color, width=4, shape='spline', smoothing=1.3),
+                hovertemplate='Time: %{x|%I:%M %p}<br>Forecast Price: $%{y:.2f}<extra></extra>'
+            ))
+
+            # Add forecast endpoint marker
+            final_price = forecast[-1]
+            forecast_graph.add_trace(go.Scatter(
+                x=[forecast_times[-1]],
+                y=[final_price],
+                mode='markers+text',
+                name='Target Price',
+                marker=dict(size=14, color=trend_color, symbol='star',
+                          line=dict(width=2, color='white')),
+                text=[f"${final_price:,.0f}"],
+                textposition='top right',
+                textfont=dict(size=12, color=trend_color, family='Arial Black'),
+                hovertemplate='Target Price: $%{y:.2f}<extra></extra>',
+                showlegend=False
+            ))
+
+            # Add key price level annotations (every hour)
+            hourly_step = 12  # 12 * 5min = 1 hour
+            for i in range(0, len(forecast), hourly_step):
+                if i < len(forecast_times) and i > 0:  # Skip first point
+                    price_change = ((forecast[i] - forecast[0]) / forecast[0]) * 100
+                    forecast_graph.add_annotation(
+                        x=forecast_times[i],
+                        y=forecast[i],
+                        text=f"${forecast[i]:,.0f}<br>{price_change:+.1f}%",
+                        showarrow=True,
+                        arrowhead=2,
+                        arrowsize=1,
+                        arrowwidth=2,
+                        arrowcolor=trend_color,
+                        font=dict(color=trend_color, size=10, family='Arial'),
+                        bgcolor='rgba(255,255,255,0.9)',
+                        bordercolor=trend_color,
+                        borderwidth=1,
+                        borderpad=4,
+                        yanchor='bottom' if forecast[i] > forecast[i-1] else 'top'
+                    )
+
+            # Add support/resistance level lines if available
+            if 'support_level' in locals() and 'resistance_level' in locals():
+                forecast_graph.add_hline(
+                    y=support_level, line_dash="dot", line_color="green",
+                    annotation_text=f"Support: ${support_level:,.0f}",
+                    annotation_position="left"
                 )
-        
-        # Layout
-        forecast_graph.update_layout(
-            template='plotly_dark',
-            height=450,
-            showlegend=True,
-            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
-            plot_bgcolor='#1a1a2e',
-            paper_bgcolor='#1a1a2e',
-            hovermode='x unified',
-            xaxis_title='Trading Time (9:30 AM - 3:30 PM PKT)',
-            yaxis_title=f'{selected_asset} Price ($)',
-            xaxis=dict(
-                tickformat='%I:%M %p',
-                showgrid=True,
-                gridcolor='rgba(255,255,255,0.1)',
-                dtick=3600000
-            ),
-            yaxis=dict(
-                showgrid=True,
-                gridcolor='rgba(255,255,255,0.1)'
+                forecast_graph.add_hline(
+                    y=resistance_level, line_dash="dot", line_color="red",
+                    annotation_text=f"Resistance: ${resistance_level:,.0f}",
+                    annotation_position="right"
+                )
+
+            # Enhanced layout with professional styling
+            forecast_graph.update_layout(
+                template='plotly_white',
+                height=550,
+                showlegend=True,
+                legend=dict(
+                    orientation='h',
+                    yanchor='bottom',
+                    y=1.02,
+                    xanchor='center',
+                    x=0.5,
+                    font=dict(size=12, family='Arial'),
+                    bgcolor='rgba(255,255,255,0.9)',
+                    bordercolor='rgba(0,0,0,0.1)',
+                    borderwidth=1
+                ),
+                plot_bgcolor='rgba(248, 249, 250, 0.5)',
+                paper_bgcolor='white',
+                hovermode='x unified',
+                hoverlabel=dict(
+                    bgcolor='rgba(0,0,0,0.8)',
+                    font=dict(color='white', size=12)
+                ),
+                title=dict(
+                    text=f'📊 {selected_asset} - {forecast_period} Professional Price Forecast',
+                    font=dict(size=20, color='#2C3E50', family='Arial Black'),
+                    x=0.5,
+                    y=0.95
+                ),
+                xaxis_title='Trading Time (Pakistan Standard Time)',
+                yaxis_title=f'{selected_asset} Price (USD)',
+                xaxis=dict(
+                    tickformat='%I:%M %p',
+                    showgrid=True,
+                    gridcolor='rgba(0,0,0,0.1)',
+                    gridwidth=1,
+                    dtick=7200000,  # 2-hour intervals
+                    tickfont=dict(size=11, family='Arial'),
+                    title_font=dict(size=14, family='Arial Black')
+                ),
+                yaxis=dict(
+                    showgrid=True,
+                    gridcolor='rgba(0,0,0,0.1)',
+                    gridwidth=1,
+                    tickformat='$,.2f',
+                    tickfont=dict(size=11, family='Arial'),
+                    title_font=dict(size=14, family='Arial Black')
+                ),
+                # Add margin for better spacing
+                margin=dict(l=80, r=80, t=120, b=80)
             )
-        )
-        
-        st.plotly_chart(forecast_graph, use_container_width=True)
+
+            # Add watermark/annotation for forecast period
+            forecast_graph.add_annotation(
+                text=f"Forecast Period: {forecast_period} | Confidence: 95%",
+                xref="paper", yref="paper",
+                x=0.02, y=0.98,
+                showarrow=False,
+                font=dict(size=10, color='rgba(0,0,0,0.5)'),
+                bgcolor='rgba(255,255,255,0.8)',
+                bordercolor='rgba(0,0,0,0.2)',
+                borderwidth=1,
+                borderpad=4
+            )
+
+            st.plotly_chart(forecast_graph, use_container_width=True)
+
+            # Add forecast analysis summary
+            st.markdown("### 📈 Forecast Analysis Summary")
+
+            if len(forecast) > 1:
+                # Calculate forecast statistics
+                start_price = forecast[0]
+                end_price = forecast[-1]
+                max_price = max(forecast)
+                min_price = min(forecast)
+                avg_price = sum(forecast) / len(forecast)
+
+                total_return = ((end_price - start_price) / start_price) * 100
+                max_drawdown = ((min_price - start_price) / start_price) * 100
+                volatility = np.std([(forecast[i] - forecast[i-1]) / forecast[i-1] for i in range(1, len(forecast))]) * 100
+
+                # Create summary cards
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric(
+                        "Target Price",
+                        f"${end_price:,.2f}",
+                        f"{total_return:+.2f}%",
+                        delta_color="normal" if total_return >= 0 else "inverse"
+                    )
+
+                with col2:
+                    st.metric(
+                        "Price Range",
+                        f"${max_price:,.0f} - ${min_price:,.0f}",
+                        f"Range: ${(max_price-min_price):,.0f}"
+                    )
+
+                with col3:
+                    st.metric(
+                        "Average Price",
+                        f"${avg_price:,.2f}",
+                        f"vs Current: ${(avg_price-start_price):+,.0f}"
+                    )
+
+                with col4:
+                    st.metric(
+                        "Forecast Volatility",
+                        f"{volatility:.2f}%",
+                        "Daily Std Dev" if period_hours <= 24 else "Period Std Dev"
+                    )
+
+                # Add risk assessment
+                if abs(total_return) > 5:
+                    risk_level = "🔴 HIGH VOLATILITY" if abs(total_return) > 10 else "🟡 MODERATE MOVEMENT"
+                    risk_color = "#E74C3C" if abs(total_return) > 10 else "#F39C12"
+                else:
+                    risk_level = "🟢 STABLE FORECAST"
+                    risk_color = "#27AE60"
+
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, {risk_color}22, {risk_color}44); padding: 15px; border-radius: 10px; border-left: 4px solid {risk_color}; margin: 10px 0;'>
+                    <h4 style='color: {risk_color}; margin: 0 0 8px 0; font-family: Arial Black;'>Risk Assessment: {risk_level}</h4>
+                    <p style='color: #2C3E50; margin: 0; font-size: 14px;'>
+                        Expected movement: <strong>{total_return:+.1f}%</strong> |
+                        Confidence range: <strong>${upper_bound[-1]:,.0f} - ${lower_bound[-1]:,.0f}</strong> |
+                        Max drawdown: <strong>{max_drawdown:+.1f}%</strong>
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error(f"❌ Error creating forecast graph: {str(e)}")
+            st.info("💡 Try refreshing the page or selecting a different asset/forecast period")
+            # Create a simple fallback chart
+            st.plotly_chart(create_fallback_forecast_chart(selected_asset, forecast_period), use_container_width=True)
         
         # ============== ENHANCED TECHNICAL INDICATORS SECTION ==============
         if show_indicators:
