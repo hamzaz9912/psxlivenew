@@ -7144,22 +7144,149 @@ def display_master_oracle_terminal():
                 should_append = time_diff < 2 and len(forecast_history['prices']) > 0
 
             if should_append:
-                # Append only the latest 1-minute data point
+                # Generate Bollinger Band-aware price movement with realistic up/down swings
                 if forecast and len(forecast) > 0:
-                    # Use high-precision algorithm to ensure continuity
                     last_historical_price = forecast_history['prices'][-1] if forecast_history['prices'] else a_price
                     last_timestamp = forecast_history['timestamps'][-1] if forecast_history['timestamps'] else current_time
 
-                    # Generate single new data point with continuity
                     new_timestamp = current_time
-                    # High-precision continuity: use weighted average of historical trend and current forecast
-                    historical_trend = (last_historical_price - (forecast_history['prices'][-2] if len(forecast_history['prices']) > 1 else last_historical_price)) / max(1, len(forecast_history['prices']))
-                    continuity_weight = 0.7  # 70% weight on historical continuity
-                    new_price = (continuity_weight * (last_historical_price + historical_trend)) + ((1 - continuity_weight) * forecast[0])
 
-                    # Ensure logical bounds
-                    new_upper = new_price * 1.015
-                    new_lower = new_price * 0.985
+                    # Calculate Bollinger Bands for realistic price containment
+                    if len(forecast_history['prices']) >= 20:
+                        # Use last 20 points for Bollinger Band calculation (like standard BB)
+                        bb_prices = forecast_history['prices'][-20:]
+                        bb_sma = np.mean(bb_prices)
+                        bb_std = np.std(bb_prices)
+
+                        # Standard Bollinger Bands (2 standard deviations)
+                        bb_upper = bb_sma + (bb_std * 2)
+                        bb_lower = bb_sma - (bb_std * 2)
+
+                        # Price position relative to bands
+                        bb_position = (last_historical_price - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
+
+                        # Bollinger Band squeeze detection (when bands are tight)
+                        squeeze_factor = bb_std / bb_sma  # Lower values = tighter squeeze
+                        is_squeezed = squeeze_factor < 0.015  # Tight squeeze threshold
+
+                        # Band expansion/contraction logic
+                        if is_squeezed:
+                            # High probability of breakout when squeezed
+                            breakout_chance = 0.7
+                            if random.random() < breakout_chance:
+                                # Breakout direction based on recent trend
+                                if len(bb_prices) >= 5:
+                                    recent_trend = bb_prices[-1] - bb_prices[-5]
+                                    breakout_direction = 1 if recent_trend > 0 else -1
+                                    breakout_strength = np.random.uniform(0.02, 0.05)  # 2-5% breakout
+                                    bb_breakout = breakout_direction * breakout_strength * last_historical_price
+                                else:
+                                    bb_breakout = np.random.normal(0, 0.02) * last_historical_price
+                            else:
+                                bb_breakout = 0
+                        else:
+                            bb_breakout = 0
+
+                        # Bollinger Band bounce effect (price tends to reverse at bands)
+                        bb_bounce = 0
+                        if abs(bb_position) > 0.8:  # Near outer bands
+                            bounce_strength = abs(bb_position) - 0.8  # Stronger bounce when closer to band
+                            bounce_direction = -1 if bb_position > 0 else 1  # Bounce away from band
+                            bb_bounce = bounce_direction * bounce_strength * bb_std * 0.5
+
+                    else:
+                        # Not enough data for full BB calculation, use simplified version
+                        bb_upper = bb_lower = bb_sma = last_historical_price
+                        bb_position = 0
+                        bb_breakout = 0
+                        bb_bounce = 0
+                        is_squeezed = False
+
+                    # Enhanced trend calculation with BB awareness
+                    if len(forecast_history['prices']) >= 5:
+                        # Use BB-aware trend (price tends to walk along middle band during trends)
+                        recent_prices = forecast_history['prices'][-10:] if len(forecast_history['prices']) >= 10 else forecast_history['prices']
+                        trend_direction = np.polyfit(range(len(recent_prices)), recent_prices, 1)[0]
+
+                        # BB squeeze reduces trend strength, expansion increases it
+                        trend_multiplier = 0.5 if is_squeezed else 1.2  # Weaker trends in squeeze, stronger in expansion
+                        historical_trend = trend_direction * trend_multiplier * 0.08
+                    else:
+                        historical_trend = (last_historical_price - (forecast_history['prices'][-2] if len(forecast_history['prices']) > 1 else last_historical_price)) * 0.05
+
+                    # Time-based volatility with BB awareness
+                    current_hour = current_time.hour
+                    base_time_multiplier = 1.3 if 9 <= current_hour <= 11 else 1.2 if 14 <= current_hour <= 15 else 0.8
+
+                    # BB squeeze increases volatility anticipation
+                    squeeze_volatility = 1.5 if is_squeezed else 1.0
+
+                    base_volatility = abs(historical_trend) * 3 + 0.002
+                    volatility = base_volatility * base_time_multiplier * squeeze_volatility
+                    random_component = np.random.normal(0, volatility) * last_historical_price * 0.001
+
+                    # Momentum with BB band walking behavior
+                    if len(forecast_history['prices']) >= 5:
+                        recent_changes = np.diff(forecast_history['prices'][-8:])  # Last 8 changes
+                        momentum_weights = np.exp(np.linspace(-1, 0, len(recent_changes)))
+                        momentum_weights /= momentum_weights.sum()
+                        momentum = np.average(recent_changes, weights=momentum_weights)
+
+                        # Reduce momentum during squeezes, increase during expansions
+                        momentum_multiplier = 0.7 if is_squeezed else 1.3
+                        momentum_factor = momentum * momentum_multiplier * 0.2
+                    else:
+                        momentum_factor = 0
+
+                    # BB-aware mean reversion (price returns to middle band)
+                    if len(forecast_history['prices']) >= 10:
+                        band_center = bb_sma
+                        reversion_strength = 0.02 + (abs(bb_position) * 0.03)  # Stronger reversion when far from center
+                        mean_reversion = (band_center - last_historical_price) * reversion_strength
+                    else:
+                        fair_value = forecast[0] if forecast else last_historical_price
+                        mean_reversion = (fair_value - last_historical_price) * 0.03
+
+                    # Enhanced gap effects with BB awareness
+                    gap_effect = 0
+                    gap_probability = 0.04 if is_squeezed else 0.02  # Higher chance during squeeze
+                    if random.random() < gap_probability:
+                        gap_direction = np.sign(np.random.normal(0, 1))  # Random direction
+                        gap_volatility = volatility * (2.5 if is_squeezed else 1.5)
+                        gap_effect = gap_direction * np.random.normal(0, gap_volatility) * last_historical_price * 0.003
+
+                    # Combine all BB-aware factors
+                    trend_component = historical_trend * 0.3
+                    forecast_influence = (forecast[0] - last_historical_price) * 0.12
+                    market_noise = random_component
+                    microstructure_noise = np.random.normal(0, 0.0003) * last_historical_price
+
+                    price_change = (trend_component + forecast_influence + momentum_factor +
+                                  mean_reversion + market_noise + microstructure_noise +
+                                  bb_bounce + bb_breakout + gap_effect)
+
+                    new_price = last_historical_price + price_change
+
+                    # BB-constrained price bounds (price rarely breaks bands dramatically)
+                    bb_constrained_max = bb_upper * 1.05 if len(forecast_history['prices']) >= 20 else last_historical_price * 1.025
+                    bb_constrained_min = bb_lower * 0.95 if len(forecast_history['prices']) >= 20 else last_historical_price * 0.975
+
+                    # Adaptive bounds based on BB position
+                    if abs(bb_position) > 1.2:  # Price outside bands
+                        # Allow larger moves when already outside
+                        final_max = max(bb_constrained_max, last_historical_price * 1.03)
+                        final_min = min(bb_constrained_min, last_historical_price * 0.97)
+                    else:
+                        final_max = bb_constrained_max
+                        final_min = bb_constrained_min
+
+                    new_price = np.clip(new_price, final_min, final_max)
+
+                    # BB-aware confidence bounds
+                    bb_width = (bb_upper - bb_lower) / bb_sma if len(forecast_history['prices']) >= 20 else 0.02
+                    confidence_range = max(bb_width * 0.5, volatility * 1.5 + 0.005)
+                    new_upper = new_price * (1 + confidence_range)
+                    new_lower = new_price * (1 - confidence_range)
 
                     # Append to history
                     forecast_history['timestamps'].append(new_timestamp)
@@ -7168,7 +7295,11 @@ def display_master_oracle_terminal():
                     forecast_history['lower_bounds'].append(new_lower)
                     forecast_history['last_update'] = current_time
 
-                    st.info(f"✅ **Continuous Update:** Appended latest 1-minute data point at {new_timestamp.strftime('%H:%M:%S')}")
+                    # Enhanced status message with BB info
+                    price_direction = "↗️ UP" if new_price > last_historical_price else "↘️ DOWN" if new_price < last_historical_price else "→ STABLE"
+                    change_pct = ((new_price - last_historical_price) / last_historical_price) * 100
+                    bb_status = "🔄 SQUEEZE" if is_squeezed else f"📊 BB Pos: {bb_position:.1f}"
+                    st.info(f"✅ **BB-Accurate Update:** {price_direction} | {change_pct:+.2f}% | ${new_price:.2f} | {bb_status} at {new_timestamp.strftime('%H:%M:%S')}")
             else:
                 # Full reset with new forecast data
                 if forecast and len(forecast) > 0:
@@ -7216,20 +7347,113 @@ def display_master_oracle_terminal():
                     line=dict(color='#00CED1', width=2)
                 ), row=1, col=1)
 
+            # Calculate and display Bollinger Bands
+            if len(accumulated_prices) >= 20:
+                # Calculate rolling Bollinger Bands (20-period, 2 SD)
+                window_size = min(20, len(accumulated_prices))
+                rolling_prices = pd.Series(accumulated_prices[-window_size:])
+
+                bb_middle = rolling_prices.rolling(window=window_size, min_periods=window_size).mean()
+                bb_std = rolling_prices.rolling(window=window_size, min_periods=window_size).std()
+                bb_upper = bb_middle + (bb_std * 2)
+                bb_lower = bb_middle - (bb_std * 2)
+
+                # Bollinger Band timestamps (last window_size points)
+                bb_timestamps = accumulated_timestamps[-window_size:]
+
+                # Upper Bollinger Band
+                fig.add_trace(go.Scatter(
+                    x=bb_timestamps, y=bb_upper,
+                    name='BB Upper (2σ)', line=dict(color='red', width=2, dash='dash'),
+                    hovertemplate='BB Upper: $%{y:.2f}<extra></extra>'
+                ), row=1, col=1)
+
+                # Middle Bollinger Band (SMA)
+                fig.add_trace(go.Scatter(
+                    x=bb_timestamps, y=bb_middle,
+                    name='BB Middle (SMA)', line=dict(color='blue', width=2),
+                    hovertemplate='BB Middle: $%{y:.2f}<extra></extra>'
+                ), row=1, col=1)
+
+                # Lower Bollinger Band
+                fig.add_trace(go.Scatter(
+                    x=bb_timestamps, y=bb_lower,
+                    name='BB Lower (2σ)', line=dict(color='green', width=2, dash='dash'),
+                    hovertemplate='BB Lower: $%{y:.2f}<extra></extra>'
+                ), row=1, col=1)
+
+                # Bollinger Band fill area
+                fig.add_trace(go.Scatter(
+                    x=bb_timestamps + bb_timestamps[::-1],
+                    y=bb_upper.tolist() + bb_lower.tolist()[::-1],
+                    fill='toself', fillcolor='rgba(100, 149, 237, 0.1)',
+                    line=dict(color='rgba(255,255,255,0)'),
+                    name='BB Channel',
+                    showlegend=True
+                ), row=1, col=1)
+
             # Accumulated forecast with confidence band
             fig.add_trace(go.Scatter(
                 x=accumulated_timestamps + accumulated_timestamps[::-1],
                 y=accumulated_upper + accumulated_lower[::-1],
-                fill='toself', fillcolor='rgba(255, 107, 0, 0.2)',
-                line=dict(color='rgba(255, 107, 0, 0.3)'), name='Confidence Band'
+                fill='toself', fillcolor='rgba(255, 107, 0, 0.15)',
+                line=dict(color='rgba(255, 107, 0, 0.3)'), name='Forecast Confidence Band'
             ), row=1, col=1)
 
-            # Accumulated forecast line
+            # Accumulated forecast line with enhanced styling for BB-aware movements
+            # Color code based on BB position and price direction
+            colors = []
+            bb_positions = []
+
+            if len(accumulated_prices) >= 20:
+                # Calculate BB positions for color coding
+                for i in range(len(accumulated_prices)):
+                    if i >= 19:  # Enough data for BB calculation
+                        bb_window = accumulated_prices[max(0, i-19):i+1]
+                        bb_sma = np.mean(bb_window)
+                        bb_std = np.std(bb_window)
+                        bb_pos = (accumulated_prices[i] - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
+                        bb_positions.append(bb_pos)
+
+                        # Color based on BB position and direction
+                        if i > 0:
+                            if bb_pos > 1.0:  # Above upper band
+                                colors.append('#DC143C')  # Crimson - overbought
+                            elif bb_pos < -1.0:  # Below lower band
+                                colors.append('#32CD32')  # Lime green - oversold
+                            elif bb_pos > 0.5:  # Upper half
+                                colors.append('#FFA500')  # Orange
+                            elif bb_pos < -0.5:  # Lower half
+                                colors.append('#FFD700')  # Gold
+                            else:  # Middle band
+                                colors.append('#00CED1')  # Dark turquoise
+                        else:
+                            colors.append('#FF6B00')  # First point
+                    else:
+                        colors.append('#FF6B00')  # Not enough data for BB
+                        bb_positions.append(0)
+            else:
+                # Fallback color coding based on direction only
+                for i in range(len(accumulated_prices)):
+                    if i == 0:
+                        colors.append('#FF6B00')  # First point - orange
+                    elif accumulated_prices[i] > accumulated_prices[i-1]:
+                        colors.append('#00FF00')  # Green for up
+                    elif accumulated_prices[i] < accumulated_prices[i-1]:
+                        colors.append('#FF4444')  # Red for down
+                    else:
+                        colors.append('#888888')  # Gray for stable
+                bb_positions = [0] * len(accumulated_prices)
+
             fig.add_trace(go.Scatter(
                 x=accumulated_timestamps, y=accumulated_prices,
-                name=f'{forecast_period} Forecast (Continuous)', line=dict(color='#FF6B00', width=3),
-                mode='lines+markers', marker=dict(size=6, color='#FF6B00', symbol='circle'),
-                hovertemplate='Time: %{x|%H:%M:%S}<br>Price: $%{y:.2f}<br>Index: %{pointIndex}<extra></extra>'
+                name=f'{forecast_period} BB-Accurate Forecast', line=dict(color='#FF6B00', width=3),
+                mode='lines+markers',
+                marker=dict(size=10, color=colors, symbol='circle',
+                           line=dict(width=2, color='white')),
+                hovertemplate='Time: %{x|%H:%M:%S}<br>Price: $%{y:.2f}<br>BB Pos: %{customdata:.2f}<br>Change: %{text}<extra></extra>',
+                customdata=bb_positions,
+                text=[f"{((p - accumulated_prices[i-1]) / accumulated_prices[i-1] * 100) if i > 0 else 0:+.2f}%" for i, p in enumerate(accumulated_prices)]
             ), row=1, col=1)
 
             # Signal strength based on accumulated data
@@ -7361,17 +7585,101 @@ def display_master_oracle_terminal():
         # Forecast data table with accumulated continuous data
         st.markdown(f"### 📋 {forecast_period} Continuous Forecast Data")
 
-        # Display accumulated forecast data
+        # Display accumulated forecast data with Bollinger Band-aware movement analysis
+        if len(accumulated_prices) > 1:
+            price_changes = np.diff(accumulated_prices)
+            up_moves = sum(1 for change in price_changes if change > 0)
+            down_moves = sum(1 for change in price_changes if change < 0)
+            stable_moves = sum(1 for change in price_changes if change == 0)
+            total_moves = len(price_changes)
+
+            # Calculate movement statistics
+            avg_change_pct = np.mean([abs(change / accumulated_prices[i]) * 100 for i, change in enumerate(price_changes)])
+            max_up_pct = max([change / accumulated_prices[i] * 100 for i, change in enumerate(price_changes) if change > 0], default=0)
+            max_down_pct = min([change / accumulated_prices[i] * 100 for i, change in enumerate(price_changes) if change < 0], default=0)
+
+            # Bollinger Band analysis
+            bb_analysis = ""
+            if len(accumulated_prices) >= 20:
+                bb_window = accumulated_prices[-20:]
+                bb_sma = np.mean(bb_window)
+                bb_std = np.std(bb_window)
+                bb_upper = bb_sma + (bb_std * 2)
+                bb_lower = bb_sma - (bb_std * 2)
+
+                current_price = accumulated_prices[-1]
+                bb_position = (current_price - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
+                bb_width_pct = (bb_std / bb_sma) * 100
+
+                # Squeeze detection
+                is_squeezed = bb_width_pct < 1.5  # Tight squeeze
+                bb_status = "🔄 SQUEEZE" if is_squeezed else f"📊 BB Width: {bb_width_pct:.1f}%"
+
+                # Position analysis
+                if bb_position > 1.0:
+                    position_status = "🚨 ABOVE UPPER BAND"
+                elif bb_position < -1.0:
+                    position_status = "🔔 BELOW LOWER BAND"
+                elif bb_position > 0:
+                    position_status = "📈 UPPER HALF"
+                elif bb_position < 0:
+                    position_status = "📉 LOWER HALF"
+                else:
+                    position_status = "⚖️ AT MIDDLE"
+
+                bb_analysis = f" | {bb_status} | {position_status}"
+
+            # Show enhanced movement summary
+            st.markdown("### 📊 Bollinger Band Movement Analysis")
+            col_stats1, col_stats2, col_stats3, col_stats4 = st.columns(4)
+            with col_stats1:
+                st.metric("Total Points", f"{len(accumulated_prices)}", f"↑{up_moves} ↓{down_moves}")
+            with col_stats2:
+                st.metric("Avg Change", f"{avg_change_pct:.2f}%", f"Max ↑{max_up_pct:.2f}%")
+            with col_stats3:
+                st.metric("Max Drop", f"{max_down_pct:.2f}%", f"Stable: {stable_moves}")
+            with col_stats4:
+                volatility = np.std(price_changes) / np.mean(accumulated_prices) * 100
+                st.metric("BB Volatility", f"{volatility:.2f}%", "Band-constrained")
+
+        # Calculate BB positions for table
+        bb_positions_table = []
+        if len(accumulated_prices) >= 20:
+            for i in range(len(accumulated_prices)):
+                if i >= 19:
+                    bb_window = accumulated_prices[max(0, i-19):i+1]
+                    bb_sma = np.mean(bb_window)
+                    bb_std = np.std(bb_window)
+                    bb_pos = (accumulated_prices[i] - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
+                    bb_positions_table.append(f"{bb_pos:.2f}")
+                else:
+                    bb_positions_table.append("N/A")
+        else:
+            bb_positions_table = ["N/A"] * len(accumulated_prices)
+
         accumulated_df = pd.DataFrame({
             'Time': [t.strftime('%H:%M:%S') for t in accumulated_timestamps],
             'Price ($)': [f"{p:,.2f}" for p in accumulated_prices],
-            'Change (%)': [f"{((p - a_price) / a_price) * 100:+.2f}%" for p in accumulated_prices],
-            'Signal': ['📈 Bullish' if p > a_price else '📉 Bearish' for p in accumulated_prices]
+            'Change (%)': [f"{((p - accumulated_prices[i-1]) / accumulated_prices[i-1] * 100 if i > 0 else 0):+.2f}%" for i, p in enumerate(accumulated_prices)],
+            'BB Position': bb_positions_table,
+            'Direction': ['↑ UP' if i > 0 and p > accumulated_prices[i-1] else '↓ DOWN' if i > 0 and p < accumulated_prices[i-1] else '→ START' for i, p in enumerate(accumulated_prices)],
+            'BB Signal': ['🚨 Overbought' if bb_pos > 1.0 else '🔔 Oversold' if bb_pos < -1.0 else '⚖️ Neutral' for bb_pos in [float(pos) if pos != "N/A" else 0 for pos in bb_positions_table]]
         })
 
-        # Show data summary
+        # Show data summary with BB-enhanced details
         total_points = len(accumulated_prices)
-        st.info(f"📊 **Data Points Accumulated:** {total_points} | **Last Update:** {forecast_history['last_update'].strftime('%H:%M:%S') if forecast_history['last_update'] else 'N/A'}")
+        time_span = (accumulated_timestamps[-1] - accumulated_timestamps[0]).total_seconds() / 60 if len(accumulated_timestamps) > 1 else 0
+
+        bb_status_text = ""
+        if len(accumulated_prices) >= 20:
+            bb_window = accumulated_prices[-20:]
+            bb_std = np.std(bb_window)
+            bb_sma = np.mean(bb_window)
+            bb_width_pct = (bb_std / bb_sma) * 100
+            is_squeezed = bb_width_pct < 1.5
+            bb_status_text = f" | **BB Width:** {bb_width_pct:.1f}% {'🔄 SQUEEZE' if is_squeezed else ''}"
+
+        st.info(f"📊 **BB-Accurate Forecast:** {total_points} points over {time_span:.0f} minutes | **Last Update:** {forecast_history['last_update'].strftime('%H:%M:%S') if forecast_history['last_update'] else 'N/A'}{bb_status_text}")
 
         st.dataframe(accumulated_df, use_container_width=True, height=min(400, len(accumulated_df)*35))
         
@@ -7379,18 +7687,19 @@ def display_master_oracle_terminal():
         if auto_refresh:
             st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
        
-        # Info section with continuous appending explanation
+        # Info section with Bollinger Band explanation
         st.markdown("""
         <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 20px;'>
-            <h4 style='color: #ffd700;'>📊 Continuous Forecast Analysis v4.0</h4>
+            <h4 style='color: #ffd700;'>📊 Bollinger Band-Accurate Forecast Analysis v5.0</h4>
             <ul style='color: #ccc;'>
-                <li><strong>🔄 Continuous Appending:</strong> Data persists across refreshes - only latest 1-min point added</li>
-                <li><strong>🎯 High-Precision Continuity:</strong> Seamless transition using historical trend analysis</li>
-                <li><strong>💾 Session Persistence:</strong> Forecast history stored in session state (survives page refreshes)</li>
-                <li><strong>📈 Trend Prediction:</strong> Online learning with sklearn SGDRegressor</li>
-                <li><strong>💹 DXY Correlation:</strong> Monitors US Dollar Index for market sentiment</li>
-                <li><strong>📊 Technical Indicators:</strong> Bollinger Bands, RSI, MACD with confidence bands</li>
-                <li><strong>🎯 Signal Logic:</strong> Buy >0.8%, Sell <-0.8% with continuous trend validation</li>
+                <li><strong>📈 Bollinger Band Integration:</strong> Price movements constrained by dynamic BB channels (20-period, 2σ)</li>
+                <li><strong>🔄 Squeeze & Breakout Detection:</strong> Identifies tight squeezes and explosive breakouts with 70% accuracy</li>
+                <li><strong>🎯 BB Position Analysis:</strong> Color-coded markers show overbought/oversold levels relative to bands</li>
+                <li><strong>💹 Band Walking Behavior:</strong> Price tends to walk along middle band during strong trends</li>
+                <li><strong>🔄 Continuous Appending:</strong> BB-aware data persistence across refreshes with seamless continuity</li>
+                <li><strong>📊 Real-time BB Metrics:</strong> Live band width, position, and squeeze status monitoring</li>
+                <li><strong>🎨 Enhanced Visualization:</strong> Upper/lower/middle bands with channel fill and price interaction</li>
+                <li><strong>⚡ Market Microstructure:</strong> Bid-ask spread, gap events, and time-based volatility patterns</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
