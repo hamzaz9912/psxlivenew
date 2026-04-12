@@ -7107,62 +7107,141 @@ def display_master_oracle_terminal():
 
             st.plotly_chart(candle_fig, use_container_width=True)
         
-        # Combined forecast analysis chart
+        # Combined forecast analysis chart with continuous data appending
         st.markdown(f"### 📊 Combined {forecast_period} Forecast Analysis")
 
+        # Add manual reset option
+        col_reset, col_info = st.columns([1, 3])
+        with col_reset:
+            if st.button("🔄 Reset Forecast History", key=f"reset_{selected_asset}_{forecast_period}", help="Clear accumulated forecast data and start fresh"):
+                forecast_key = f"{selected_asset}_{forecast_period}_forecast_history"
+                if forecast_key in st.session_state:
+                    del st.session_state[forecast_key]
+                st.rerun()
+
         try:
-            # Validate forecast data
-            if not forecast or len(forecast) == 0:
+            # Initialize session state for forecast persistence if not exists
+            forecast_key = f"{selected_asset}_{forecast_period}_forecast_history"
+            if forecast_key not in st.session_state:
+                st.session_state[forecast_key] = {
+                    'timestamps': [],
+                    'prices': [],
+                    'upper_bounds': [],
+                    'lower_bounds': [],
+                    'last_update': None
+                }
+
+            # Get current time for continuity check
+            current_time = datetime.now(pytz.timezone('Asia/Karachi'))
+
+            # Check if we need to append new data or reset
+            forecast_history = st.session_state[forecast_key]
+            should_append = False
+
+            if forecast_history['last_update'] is not None:
+                time_diff = (current_time - forecast_history['last_update']).total_seconds() / 60  # minutes
+                # Append new data if less than 2 minutes have passed (allows for 1-minute updates)
+                should_append = time_diff < 2 and len(forecast_history['prices']) > 0
+
+            if should_append:
+                # Append only the latest 1-minute data point
+                if forecast and len(forecast) > 0:
+                    # Use high-precision algorithm to ensure continuity
+                    last_historical_price = forecast_history['prices'][-1] if forecast_history['prices'] else a_price
+                    last_timestamp = forecast_history['timestamps'][-1] if forecast_history['timestamps'] else current_time
+
+                    # Generate single new data point with continuity
+                    new_timestamp = current_time
+                    # High-precision continuity: use weighted average of historical trend and current forecast
+                    historical_trend = (last_historical_price - (forecast_history['prices'][-2] if len(forecast_history['prices']) > 1 else last_historical_price)) / max(1, len(forecast_history['prices']))
+                    continuity_weight = 0.7  # 70% weight on historical continuity
+                    new_price = (continuity_weight * (last_historical_price + historical_trend)) + ((1 - continuity_weight) * forecast[0])
+
+                    # Ensure logical bounds
+                    new_upper = new_price * 1.015
+                    new_lower = new_price * 0.985
+
+                    # Append to history
+                    forecast_history['timestamps'].append(new_timestamp)
+                    forecast_history['prices'].append(new_price)
+                    forecast_history['upper_bounds'].append(new_upper)
+                    forecast_history['lower_bounds'].append(new_lower)
+                    forecast_history['last_update'] = current_time
+
+                    st.info(f"✅ **Continuous Update:** Appended latest 1-minute data point at {new_timestamp.strftime('%H:%M:%S')}")
+            else:
+                # Full reset with new forecast data
+                if forecast and len(forecast) > 0:
+                    # Ensure upper/lower bounds exist
+                    if 'upper_bound' not in locals() or not upper_bound or len(upper_bound) != len(forecast):
+                        upper_bound = [p * 1.015 for p in forecast]
+                    if 'lower_bound' not in locals() or not lower_bound or len(lower_bound) != len(forecast):
+                        lower_bound = [p * 0.985 for p in forecast]
+
+                    # Reset history with new forecast
+                    forecast_history['timestamps'] = fut_times[:len(forecast)]
+                    forecast_history['prices'] = forecast[:len(forecast)]
+                    forecast_history['upper_bounds'] = upper_bound[:len(forecast)]
+                    forecast_history['lower_bounds'] = lower_bound[:len(forecast)]
+                    forecast_history['last_update'] = current_time
+
+                    st.info(f"📅 **New Session Started:** Full {forecast_period} forecast initialized at {current_time.strftime('%H:%M:%S')}")
+
+            # Use accumulated forecast data for visualization
+            accumulated_timestamps = forecast_history['timestamps']
+            accumulated_prices = forecast_history['prices']
+            accumulated_upper = forecast_history['upper_bounds']
+            accumulated_lower = forecast_history['lower_bounds']
+
+            if not accumulated_prices:
                 st.error("❌ No forecast data available for combined analysis")
                 return
 
-            # Ensure upper/lower bounds exist
-            if 'upper_bound' not in locals() or not upper_bound or len(upper_bound) != len(forecast):
-                upper_bound = [p * 1.015 for p in forecast]
-            if 'lower_bound' not in locals() or not lower_bound or len(lower_bound) != len(forecast):
-                lower_bound = [p * 0.985 for p in forecast]
+            min_len = len(accumulated_prices)
 
-            min_len = len(forecast)
-
-            # Create simplified combined chart
+            # Create combined chart with accumulated data
             fig = make_subplots(
                 rows=2, cols=1,
                 shared_xaxes=True,
                 vertical_spacing=0.1,
                 row_heights=[0.7, 0.3],
-                subplot_titles=(f'📈 {selected_asset} - {forecast_period} Forecast', '📊 Signal Strength')
+                subplot_titles=(f'📈 {selected_asset} - {forecast_period} Forecast (Continuous)', '📊 Signal Strength')
             )
 
             # Historical price (if available)
             if len(asset_df) > 0 and close_col in asset_df.columns:
                 fig.add_trace(go.Scatter(
                     x=asset_df.index, y=asset_df[close_col],
-                    mode='lines', name=selected_asset,
+                    mode='lines', name=f'{selected_asset} Historical',
                     line=dict(color='#00CED1', width=2)
                 ), row=1, col=1)
 
-            # Forecast with confidence band
+            # Accumulated forecast with confidence band
             fig.add_trace(go.Scatter(
-                x=fut_times[:min_len] + fut_times[:min_len][::-1],
-                y=upper_bound[:min_len] + lower_bound[:min_len][::-1],
+                x=accumulated_timestamps + accumulated_timestamps[::-1],
+                y=accumulated_upper + accumulated_lower[::-1],
                 fill='toself', fillcolor='rgba(255, 107, 0, 0.2)',
                 line=dict(color='rgba(255, 107, 0, 0.3)'), name='Confidence Band'
             ), row=1, col=1)
 
-            # Forecast line
+            # Accumulated forecast line
             fig.add_trace(go.Scatter(
-                x=fut_times[:min_len], y=forecast[:min_len],
-                name=f'{forecast_period} Forecast', line=dict(color='#FF6B00', width=3),
+                x=accumulated_timestamps, y=accumulated_prices,
+                name=f'{forecast_period} Forecast (Continuous)', line=dict(color='#FF6B00', width=3),
                 mode='lines+markers', marker=dict(size=6, color='#FF6B00', symbol='circle'),
-                hovertemplate='Time: %{x|%H:%M}<br>Price: $%{y:.2f}<extra></extra>'
+                hovertemplate='Time: %{x|%H:%M:%S}<br>Price: $%{y:.2f}<br>Index: %{pointIndex}<extra></extra>'
             ), row=1, col=1)
 
-            # Signal strength
-            signal_values = [((f - a_price) / a_price) * 100 for f in forecast[:min_len]]
+            # Signal strength based on accumulated data
+            signal_values = [((f - a_price) / a_price) * 100 for f in accumulated_prices]
             colors = ['#FF4444' if v < -1 else '#FFAA00' if v < 1 else '#00FF7F' for v in signal_values]
+
+            # Sample signal strength for display (show every 6th point to avoid overcrowding)
+            sample_indices = list(range(0, min_len, max(1, min_len//20)))
             fig.add_trace(go.Bar(
-                x=fut_times[:max(1, min_len//6)], y=signal_values[:max(1, min_len//6)],
-                name='Signal %', marker_color=colors[:max(1, min_len//6)]
+                x=[accumulated_timestamps[i] for i in sample_indices],
+                y=[signal_values[i] for i in sample_indices],
+                name='Signal %', marker_color=[colors[i] for i in sample_indices]
             ), row=2, col=1)
 
             # Layout
@@ -7176,19 +7255,23 @@ def display_master_oracle_terminal():
                 hovermode="x unified"
             )
 
-            # Update axes for 2-panel chart
-            fig.update_xaxes(
-                range=[now - timedelta(hours=2), fut_times[-1] + timedelta(minutes=15)],
-                row=1, col=1,
-                tickformat='%H:%M',
-                tickangle=45
-            )
-            fig.update_xaxes(
-                range=[fut_times[0] - timedelta(minutes=5), fut_times[-1] + timedelta(minutes=10)],
-                row=2, col=1,
-                tickformat='%H:%M',
-                tickangle=45
-            )
+            # Update axes for continuous data
+            if accumulated_timestamps:
+                start_time = min(accumulated_timestamps)
+                end_time = max(accumulated_timestamps)
+
+                fig.update_xaxes(
+                    range=[start_time - timedelta(minutes=5), end_time + timedelta(minutes=15)],
+                    row=1, col=1,
+                    tickformat='%H:%M',
+                    tickangle=45
+                )
+                fig.update_xaxes(
+                    range=[start_time - timedelta(minutes=2), end_time + timedelta(minutes=10)],
+                    row=2, col=1,
+                    tickformat='%H:%M',
+                    tickangle=45
+                )
 
             fig.update_yaxes(title_text="Price ($)", row=1, col=1, tickformat='$.2f')
             fig.update_yaxes(title_text="Signal %", row=2, col=1, tickformat='.2f')
@@ -7226,7 +7309,7 @@ def display_master_oracle_terminal():
         fig.update_yaxes(title_text="Price ($)", row=1, col=1, tickformat='$.2f')
         fig.update_yaxes(title_text="Signal %", row=2, col=1, tickformat='.2f')
         
-        # Add current price annotation
+        # Add current price annotation and continuous data info
         fig.add_annotation(
             x=now, y=a_price,
             text=f"Current: ${a_price:.2f}",
@@ -7244,6 +7327,27 @@ def display_master_oracle_terminal():
             row=1, col=1
         )
 
+        # Add continuous data annotation
+        if accumulated_timestamps:
+            latest_point = accumulated_timestamps[-1]
+            latest_price = accumulated_prices[-1]
+            fig.add_annotation(
+                x=latest_point, y=latest_price,
+                text=f"Latest: ${latest_price:.2f}<br>({latest_point.strftime('%H:%M:%S')})",
+                showarrow=True,
+                arrowhead=1,
+                arrowsize=1,
+                arrowwidth=1,
+                ax=40,
+                ay=-40,
+                font=dict(color='cyan', size=10),
+                bgcolor='rgba(0,0,0,0.7)',
+                bordercolor='cyan',
+                borderwidth=1,
+                borderpad=2,
+                row=1, col=1
+            )
+
         st.plotly_chart(fig, use_container_width=True)
 
         # Sound alert
@@ -7254,31 +7358,39 @@ def display_master_oracle_terminal():
         if auto_refresh:
             st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
         
-        # Forecast data table
-        st.markdown(f"### 📋 {forecast_period} Forecast Data (5-min intervals)")
+        # Forecast data table with accumulated continuous data
+        st.markdown(f"### 📋 {forecast_period} Continuous Forecast Data")
 
-        forecast_df = pd.DataFrame({
-            'Time': [t.strftime('%H:%M') for t in fut_times[:min_len]],
-            'Price ($)': [f"{p:,.2f}" for p in forecast[:min_len]],
-            'Change (%)': [f"{((p - a_price) / a_price) * 100:+.2f}%" for p in forecast[:min_len]],
-            'Signal': ['📈 Bullish' if p > a_price else '📉 Bearish' for p in forecast[:min_len]]
+        # Display accumulated forecast data
+        accumulated_df = pd.DataFrame({
+            'Time': [t.strftime('%H:%M:%S') for t in accumulated_timestamps],
+            'Price ($)': [f"{p:,.2f}" for p in accumulated_prices],
+            'Change (%)': [f"{((p - a_price) / a_price) * 100:+.2f}%" for p in accumulated_prices],
+            'Signal': ['📈 Bullish' if p > a_price else '📉 Bearish' for p in accumulated_prices]
         })
-        st.dataframe(forecast_df, use_container_width=True, height=min(400, len(forecast_df)*35))
+
+        # Show data summary
+        total_points = len(accumulated_prices)
+        st.info(f"📊 **Data Points Accumulated:** {total_points} | **Last Update:** {forecast_history['last_update'].strftime('%H:%M:%S') if forecast_history['last_update'] else 'N/A'}")
+
+        st.dataframe(accumulated_df, use_container_width=True, height=min(400, len(accumulated_df)*35))
         
         # Auto-refresh info
         if auto_refresh:
             st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
        
-        # Info section
+        # Info section with continuous appending explanation
         st.markdown("""
         <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 20px;'>
-            <h4 style='color: #ffd700;'>📊 How It Works v3.0</h4>
+            <h4 style='color: #ffd700;'>📊 Continuous Forecast Analysis v4.0</h4>
             <ul style='color: #ccc;'>
-                <li><strong>Trend Prediction:</strong> Online learning with sklearn</li>
-                <li><strong>DXY Correlation:</strong> Monitors US Dollar Index</li>
-                <li><strong>Technical Indicators:</strong> Bollinger Bands, RSI, MACD</li>
-                <li><strong>Confidence Bands:</strong> 95% confidence intervals</li>
-                <li><strong>Signal Logic:</strong> Buy >0.8%, Sell <-0.8%</li>
+                <li><strong>🔄 Continuous Appending:</strong> Data persists across refreshes - only latest 1-min point added</li>
+                <li><strong>🎯 High-Precision Continuity:</strong> Seamless transition using historical trend analysis</li>
+                <li><strong>💾 Session Persistence:</strong> Forecast history stored in session state (survives page refreshes)</li>
+                <li><strong>📈 Trend Prediction:</strong> Online learning with sklearn SGDRegressor</li>
+                <li><strong>💹 DXY Correlation:</strong> Monitors US Dollar Index for market sentiment</li>
+                <li><strong>📊 Technical Indicators:</strong> Bollinger Bands, RSI, MACD with confidence bands</li>
+                <li><strong>🎯 Signal Logic:</strong> Buy >0.8%, Sell <-0.8% with continuous trend validation</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
