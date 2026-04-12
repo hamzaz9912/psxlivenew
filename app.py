@@ -7110,255 +7110,121 @@ def display_master_oracle_terminal():
         # Combined forecast analysis chart
         st.markdown(f"### 📊 Combined {forecast_period} Forecast Analysis")
 
-        # Ensure upper/lower bounds exist and match lengths
-        if 'upper_bound' not in locals() or len(upper_bound) != len(forecast):
-            upper_bound = [p * 1.015 for p in forecast]
-        if 'lower_bound' not in locals() or len(lower_bound) != len(forecast):
-            lower_bound = [p * 0.985 for p in forecast]
+        try:
+            # Validate forecast data
+            if not forecast or len(forecast) == 0:
+                st.error("❌ No forecast data available for combined analysis")
+                return
 
-        # Ensure min_len is defined properly
-        min_len = len(forecast)
+            # Ensure upper/lower bounds exist
+            if 'upper_bound' not in locals() or not upper_bound or len(upper_bound) != len(forecast):
+                upper_bound = [p * 1.015 for p in forecast]
+            if 'lower_bound' not in locals() or not lower_bound or len(lower_bound) != len(forecast):
+                lower_bound = [p * 0.985 for p in forecast]
 
-        fig = make_subplots(
-            rows=3, cols=1,
-            shared_xaxes=True,
-            vertical_spacing=0.08,
-            row_heights=[0.55, 0.25, 0.2],
-            subplot_titles=(f'📈 {selected_asset} - {forecast_period} Forecast with Confidence', '💱 DXY Dollar Index', '📊 Signal Strength')
-        )
-        
-        # Historical price with MA lines
-        fig.add_trace(go.Scatter(
-            x=asset_df.index, y=asset_df[close_col],
-            mode='lines', name=selected_asset,
-            line=dict(color='#00CED1', width=3),
-            fill='tozeroy', fillcolor='rgba(0, 206, 209, 0.15)'
-        ), row=1, col=1)
+            min_len = len(forecast)
 
-        # MA lines
-        if len(asset_df) >= 20:
-            ma20 = asset_df[close_col].rolling(window=20).mean()
-            ma50 = asset_df[close_col].rolling(window=50).mean()
-            fig.add_trace(go.Scatter(x=asset_df.index, y=ma20, name='MA20',
-                                   line=dict(color='orange', width=2)), row=1, col=1)
-            if len(asset_df) >= 50:
-                fig.add_trace(go.Scatter(x=asset_df.index, y=ma50, name='MA50',
-                                       line=dict(color='purple', width=2)), row=1, col=1)
+            # Create simplified combined chart
+            fig = make_subplots(
+                rows=2, cols=1,
+                shared_xaxes=True,
+                vertical_spacing=0.1,
+                row_heights=[0.7, 0.3],
+                subplot_titles=(f'📈 {selected_asset} - {forecast_period} Forecast', '📊 Signal Strength')
+            )
 
-        # Volume
-        volume_col = None
-        for col in asset_df.columns:
-            if 'volume' in col.lower() or 'vol' in col.lower():
-                volume_col = col
-                break
+            # Historical price (if available)
+            if len(asset_df) > 0 and close_col in asset_df.columns:
+                fig.add_trace(go.Scatter(
+                    x=asset_df.index, y=asset_df[close_col],
+                    mode='lines', name=selected_asset,
+                    line=dict(color='#00CED1', width=2)
+                ), row=1, col=1)
 
-        fig.add_trace(go.Bar(
-            x=asset_df.index,
-            y=asset_df[volume_col] if volume_col else [0]*len(asset_df),
-            name='Volume', marker_color='rgba(128,128,128,0.5)', yaxis='y3'
-        ), row=1, col=1)
-        
-        # Forecast with confidence band
-        fig.add_trace(go.Scatter(
-            x=fut_times[:min_len] + fut_times[:min_len][::-1],
-            y=upper_bound[:min_len] + lower_bound[:min_len][::-1],
-            fill='toself', fillcolor='rgba(255, 107, 0, 0.2)',
-            line=dict(color='rgba(255, 107, 0, 0.3)'), name='Confidence Band'
-        ), row=1, col=1)
-        
-        # Forecast line
-        fig.add_trace(go.Scatter(
-            x=fut_times[:min_len], y=forecast[:min_len],
-            name='6H Forecast', line=dict(color='#FF6B00', width=3),
-            mode='lines+markers', marker=dict(size=6, color='#FF6B00', symbol='circle'),
-            hovertemplate='Time: %{x|%H:%M}<br>Price: $%{y:.2f}<extra></extra>'
-        ), row=1, col=1)
-        
-        # Price labels
-        step = max(1, min_len // 6)
-        fig.add_trace(go.Scatter(
-            x=fut_times[::step], y=forecast[::step],
-            text=[f"${p:,.0f}" for p in forecast[::step]],
-            mode='text', textposition='top center',
-            textfont=dict(color='#FF6B00', size=11, family='Arial Black'),
-            showlegend=False, hoverinfo='skip'
-        ), row=1, col=1)
-        
-        # DXY chart
-        fig.add_trace(go.Scatter(
-            x=dxy_df.index, y=dxy_df[dxy_close_col],
-            name="DXY Index", line=dict(color='#00FF7F', width=3),
-            fill='tozeroy', fillcolor='rgba(0, 255, 127, 0.2)'
-        ), row=2, col=1)
-        
-        # Signal strength
-        signal_values = [((f - a_price) / a_price) * 100 for f in forecast[:min_len]]
-        colors = ['#FF4444' if v < -1 else '#FFAA00' if v < 1 else '#00FF7F' for v in signal_values[::max(1, min_len//6)]]
-        fig.add_trace(go.Bar(
-            x=fut_times[::max(1, min_len//6)], y=signal_values[::max(1, min_len//6)],
-            name='Signal %', marker_color=colors
-        ), row=3, col=1)
-        fig.add_hline(y=0, line_dash="dash", line_color="white", row=3, col=1)
-        
-        # Layout
-        fig.update_layout(
-            template="plotly_dark", height=950,
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-            plot_bgcolor='#0E1117', paper_bgcolor='#0E1117', hovermode="x unified"
-        )
-        
-        # Axes
-        fig.update_xaxes(range=[now - timedelta(hours=2), fut_times[min_len-1] + timedelta(minutes=15)], 
-                        row=1, col=1, tickformat='%H:%M', tickangle=45)
-        fig.update_xaxes(range=[now - timedelta(hours=2), fut_times[min_len-1] + timedelta(minutes=15)], 
-                        row=2, col=1, tickformat='%H:%M', tickangle=45)
-        fig.update_xaxes(range=[fut_times[0] - timedelta(minutes=5), fut_times[min_len-1] + timedelta(minutes=10)], 
-                        row=3, col=1, tickformat='%H:%M', tickangle=45)
-        
-        fig.update_yaxes(title_text="Price ($", row=1, col=1, side="left", tickformat='$.2f')
-        fig.update_yaxes(title_text="Volume", row=1, col=1, side="right", overlaying="y", showgrid=False, visible=False)
-        fig.update_yaxes(title_text="DXY Index", row=2, col=1, tickformat='.2f')
-        fig.update_yaxes(title_text="Signal %", row=3, col=1, tickformat='.2f')
-        
-        # Current price annotation
-        fig.add_annotation(
-            x=now, y=a_price, text=f"Current: ${a_price:,.2f}",
-            showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, ax=-40, ay=-40,
-            font=dict(color='gold', size=12), bgcolor='rgba(0,0,0,0.8)',
-            bordercolor='gold', borderwidth=1, borderpad=4, row=1, col=1
-        )
-        
-        # Historical price line - LINEAR STYLE for clean look
-        fig.add_trace(go.Scatter(
-            x=asset_df.index,
-            y=asset_df['Close'],
-            mode='lines',
-            name=selected_asset,
-            line=dict(color='#00CED1', width=3),
-            fill='tozeroy',
-            fillcolor='rgba(0, 206, 209, 0.15)'
-        ), row=1, col=1)
-        
-        # Add MA lines (overlay on candlestick)
-        if len(asset_df) >= 20:
-            ma20 = asset_df['Close'].rolling(window=20).mean()
-            ma50 = asset_df['Close'].rolling(window=50).mean()
-            fig.add_trace(go.Scatter(x=asset_df.index, y=ma20, name='MA20', 
-                                   line=dict(color='orange', width=2), hovertemplate='MA20: %{y:.2f}'), row=1, col=1)
-            if len(asset_df) >= 50:
-                fig.add_trace(go.Scatter(x=asset_df.index, y=ma50, name='MA50',
-                                       line=dict(color='purple', width=2), hovertemplate='MA50: %{y:.2f}'), row=1, col=1)
-        
-        # Volume bars at bottom of chart 1
-        fig.add_trace(go.Bar(
-            x=asset_df.index,
-            y=asset_df['Volume'] if 'Volume' in asset_df.columns else [0]*len(asset_df),
-            name='Volume',
-            marker_color='rgba(128,128,128,0.5)',
-            yaxis='y3'
-        ), row=1, col=1)
-        
-        # Calculate confidence interval (wider as we go further)
-        upper_bound = [p * 1.015 for p in forecast]
-        lower_bound = [p * 0.985 for p in forecast]
-        
-        # Add confidence band
-        fig.add_trace(go.Scatter(
-            x=fut_times + fut_times[::-1],
-            y=upper_bound + lower_bound[::-1],
-            fill='toself',
-            fillcolor='rgba(0, 255, 0, 0.2)',
-            line=dict(color='rgba(0, 255, 0, 0.3)'),
-            name='Confidence Band'
-        ), row=1, col=1)
-        
-        # Forecast line - 5-MINUTE INTERVALS for proper movement display
-        fig.add_trace(go.Scatter(
-            x=fut_times,  # Every 5 minutes
-            y=forecast, 
-            name='6H Forecast (5-min)', 
-            line=dict(color='#FF6B00', width=3),
-            mode='lines+markers',
-            marker=dict(size=6, color='#FF6B00', symbol='circle'),
-            hovertemplate='Time: %{x|%H:%M}<br>Price: $%{y:.2f}<extra></extra>'
-        ), row=1, col=1)
-        
-        # Add price labels on forecast points - HOURLY
-        fig.add_trace(go.Scatter(
-            x=fut_times[::12],  # Every hour
-            y=[forecast[i] for i in range(0, 72, 12)],
-            text=[f"${forecast[i]:.2f}" for i in range(0, 72, 12)],
-            mode='text',
-            textposition='top center',
-            textfont=dict(color='#FF6B00', size=12, family='Arial Black'),
-            showlegend=False,
-            hoverinfo='skip'
-        ), row=1, col=1)
-        
-        # DXY chart - LINEAR STYLE for correlation view
-        fig.add_trace(go.Scatter(
-            x=dxy_df.index, 
-            y=dxy_df['Close'], 
-            name="DXY Index (Linear)", 
-            line=dict(color='#00FF7F', width=3),
-            fill='tozeroy',
-            fillcolor='rgba(0, 255, 127, 0.2)'
-        ), row=2, col=1)
-        
-        # Signal strength visualization - LINEAR STYLE
-        signal_values = []
-        for i, f in enumerate(forecast):
-            pct_chg = ((f - a_price) / a_price) * 100
-            signal_values.append(pct_chg)
-        
-        # Color gradient from red to green
-        colors = ['#FF4444' if v < -1 else '#FFAA00' if v < 1 else '#00FF7F' for v in signal_values[::12]]
-        fig.add_trace(go.Bar(
-            x=fut_times[::12],  # Show every hour (cleaner)
-            y=signal_values[::12],
-            name='Signal %',
-            marker_color=colors
-        ), row=3, col=1)
-        
-        # Add zero line
-        fig.add_hline(y=0, line_dash="dash", line_color="white", row=3, col=1)
-        
-        # Update layout
-        fig.update_layout(
-            template="plotly_dark",
-            height=950,
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-            plot_bgcolor='#0E1117', 
-            paper_bgcolor='#0E1117', 
-            hovermode="x unified"
-        )
-        
-        # Update axes for better 5-min visibility
+            # Forecast with confidence band
+            fig.add_trace(go.Scatter(
+                x=fut_times[:min_len] + fut_times[:min_len][::-1],
+                y=upper_bound[:min_len] + lower_bound[:min_len][::-1],
+                fill='toself', fillcolor='rgba(255, 107, 0, 0.2)',
+                line=dict(color='rgba(255, 107, 0, 0.3)'), name='Confidence Band'
+            ), row=1, col=1)
+
+            # Forecast line
+            fig.add_trace(go.Scatter(
+                x=fut_times[:min_len], y=forecast[:min_len],
+                name=f'{forecast_period} Forecast', line=dict(color='#FF6B00', width=3),
+                mode='lines+markers', marker=dict(size=6, color='#FF6B00', symbol='circle'),
+                hovertemplate='Time: %{x|%H:%M}<br>Price: $%{y:.2f}<extra></extra>'
+            ), row=1, col=1)
+
+            # Signal strength
+            signal_values = [((f - a_price) / a_price) * 100 for f in forecast[:min_len]]
+            colors = ['#FF4444' if v < -1 else '#FFAA00' if v < 1 else '#00FF7F' for v in signal_values]
+            fig.add_trace(go.Bar(
+                x=fut_times[:max(1, min_len//6)], y=signal_values[:max(1, min_len//6)],
+                name='Signal %', marker_color=colors[:max(1, min_len//6)]
+            ), row=2, col=1)
+
+            # Layout
+            fig.update_layout(
+                template="plotly_dark",
+                height=600,
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                plot_bgcolor='#0E1117',
+                paper_bgcolor='#0E1117',
+                hovermode="x unified"
+            )
+
+            # Update axes for 2-panel chart
+            fig.update_xaxes(
+                range=[now - timedelta(hours=2), fut_times[-1] + timedelta(minutes=15)],
+                row=1, col=1,
+                tickformat='%H:%M',
+                tickangle=45
+            )
+            fig.update_xaxes(
+                range=[fut_times[0] - timedelta(minutes=5), fut_times[-1] + timedelta(minutes=10)],
+                row=2, col=1,
+                tickformat='%H:%M',
+                tickangle=45
+            )
+
+            fig.update_yaxes(title_text="Price ($)", row=1, col=1, tickformat='$.2f')
+            fig.update_yaxes(title_text="Signal %", row=2, col=1, tickformat='.2f')
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        except Exception as e:
+            st.error(f"❌ Error creating Combined Forecast Analysis chart: {str(e)}")
+            st.info("💡 Try refreshing the page or selecting a different asset")
+            # Create a simple fallback chart
+            try:
+                fallback_fig = go.Figure()
+                fallback_fig.add_annotation(
+                    text=f"Combined {forecast_period} Forecast Analysis<br>Chart Unavailable<br>Asset: {selected_asset}",
+                    xref="paper", yref="paper",
+                    x=0.5, y=0.5,
+                    showarrow=False,
+                    font=dict(size=14, color='orange')
+                )
+                fallback_fig.update_layout(
+                    template='plotly_dark',
+                    height=400,
+                    title=f"📊 Combined {forecast_period} Forecast (Error)"
+                )
+                st.plotly_chart(fallback_fig, use_container_width=True)
+            except:
+                st.warning("Unable to create even a basic chart")
         fig.update_xaxes(
-            range=[now - timedelta(hours=2), fut_times[-1] + timedelta(minutes=15)], 
-            row=1, col=1,
-            tickformat='%H:%M',
-            tickangle=45
-        )
-        fig.update_xaxes(
-            range=[now - timedelta(hours=2), fut_times[-1] + timedelta(minutes=15)], 
+            range=[fut_times[0] - timedelta(minutes=5), fut_times[-1] + timedelta(minutes=10)],
             row=2, col=1,
             tickformat='%H:%M',
             tickangle=45
         )
-        fig.update_xaxes(
-            range=[fut_times[0] - timedelta(minutes=5), fut_times[-1] + timedelta(minutes=10)], 
-            row=3, col=1,
-            tickformat='%H:%M',
-            tickangle=45
-        )
-        
-        fig.update_yaxes(title_text="Price ($)", row=1, col=1, side="left", tickformat='$.2f')
-        fig.update_yaxes(title_text="Volume", row=1, col=1, side="right", overlaying="y", showgrid=False, visible=False)
-        fig.update_yaxes(title_text="DXY Index", row=2, col=1, tickformat='.2f')
-        fig.update_yaxes(title_text="Signal %", row=3, col=1, tickformat='.2f')
+
+        fig.update_yaxes(title_text="Price ($)", row=1, col=1, tickformat='$.2f')
+        fig.update_yaxes(title_text="Signal %", row=2, col=1, tickformat='.2f')
         
         # Add current price annotation
         fig.add_annotation(
@@ -7377,13 +7243,13 @@ def display_master_oracle_terminal():
             borderpad=4,
             row=1, col=1
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
-        
+
         # Sound alert
         if sound_alert and ("STRONG" in mode):
             st.markdown('<audio autoplay><source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19v" type="audio/wav"></audio>', unsafe_allow_html=True)
-        
+
         # Auto-refresh message
         if auto_refresh:
             st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
@@ -7399,14 +7265,10 @@ def display_master_oracle_terminal():
         })
         st.dataframe(forecast_df, use_container_width=True, height=min(400, len(forecast_df)*35))
         
-        # Sound alert
-        if sound_alert and ("STRONG" in mode):
-            st.markdown('<audio autoplay><source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19v" type="audio/wav"></audio>', unsafe_allow_html=True)
-        
         # Auto-refresh info
         if auto_refresh:
             st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
-        
+       
         # Info section
         st.markdown("""
         <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 20px;'>
