@@ -52,7 +52,7 @@ from enhanced_live_dashboard import get_enhanced_live_dashboard
 # Page configuration
 st.set_page_config(
     page_title="PSX KSE-100 Forecasting Dashboard",
-    page_icon="📈",
+    page_icon="ðŸ“ˆ",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -214,13 +214,13 @@ def main():
     
     st.session_state.process_stock_data_sector = process_stock_data_sector
 
-    st.title("📈 PSX KSE-100 Forecasting Dashboard")
+    st.title("ðŸ“ˆ PSX KSE-100 Forecasting Dashboard")
     st.markdown("---")
 
     # Check market status
     if not is_market_open():
-        st.warning("⚠️ **Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
-        st.info("💡 You can still use file upload analysis, historical data, and forecasting features.")
+        st.warning("âš ï¸ **Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
+        st.info("ðŸ’¡ You can still use file upload analysis, historical data, and forecasting features.")
 
     # Auto-refresh every 5 minutes (300 seconds)
     # count = st_autorefresh(interval=300000, limit=None, key="data_refresh")
@@ -231,7 +231,7 @@ def main():
         # Attractive header with gradient
         st.markdown("""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;'>
-            <h2 style='color: white; margin: 0; font-size: 24px;'>📊 Dashboard Controls</h2>
+            <h2 style='color: white; margin: 0; font-size: 24px;'>ðŸ“Š Dashboard Controls</h2>
             <p style='color: #e8eaf6; margin: 5px 0 0 0; font-size: 14px;'>PSX Forecasting Hub</p>
         </div>
         """, unsafe_allow_html=True)
@@ -257,13 +257,13 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-        if st.button("🔄 Refresh Data Now", key="refresh_data_btn", type="primary"):
+        if st.button("ðŸ”„ Refresh Data Now", key="refresh_data_btn", type="primary"):
             st.session_state.last_update = None
             st.rerun()
 
         # Auto-refresh timer display in sidebar
         st.markdown("---")
-        st.markdown("**⏱️ 5-Minute Auto-Refresh Timer**")
+        st.markdown("**â±ï¸ 5-Minute Auto-Refresh Timer**")
         
         # Check if we're in the 15-minute live predictions section
         # This will be shown based on session state
@@ -289,7 +289,7 @@ def main():
             # Timer display
             st.markdown(f"""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; text-align: center;'>
-                <h3 style='margin: 0; color: #1565c0;'>⏱️ {minutes_left:02d}:{seconds_left:02d}</h3>
+                <h3 style='margin: 0; color: #1565c0;'>â±ï¸ {minutes_left:02d}:{seconds_left:02d}</h3>
                 <small style='color: #1976d2;'>Next refresh</small>
             </div>
             <div style='margin-top: 5px; font-size: 12px; color: #666;'>
@@ -303,14 +303,14 @@ def main():
         if st.session_state.last_update:
             st.markdown(f"""
             <div style='background-color: #e8f5e8; padding: 8px; border-radius: 5px; border-left: 3px solid #4caf50; margin: 10px 0;'>
-                <small style='color: #2e7d32; font-weight: bold;'>🕒 Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
+                <small style='color: #2e7d32; font-weight: bold;'>ðŸ•’ Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
             </div>
             """, unsafe_allow_html=True)
 
         # Live Price Display with enhanced styling
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;'>
-            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>🔴 Live PSX Price</h4>
+            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>ðŸ”´ Live PSX Price</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -327,7 +327,7 @@ def main():
                 change = random.uniform(-200, 200)
                 change_pct = (change / price) * 100
                 color = "green" if change > 0 else "red" if change < 0 else "gray"
-                arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
+                arrow = "â†—" if change > 0 else "â†˜" if change < 0 else "â†’"
 
                 st.markdown(f"""
                 <div style='background-color: {color}15; padding: 8px; border-radius: 4px; border-left: 3px solid {color}; margin-bottom: 10px;'>
@@ -337,11 +337,11 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                st.info("📊 Live price data not available at the moment.")
+                st.info("ðŸ“Š Live price data not available at the moment.")
         else:
             st.markdown("""
             <div style='background-color: #ffebee; padding: 8px; border-radius: 4px; border-left: 3px solid #f44336; margin-bottom: 10px;'>
-                <small style='color: #c62828; font-weight: bold;'>🏢 Market Closed - No live data available</small>
+                <small style='color: #c62828; font-weight: bold;'>ðŸ¢ Market Closed - No live data available</small>
             </div>
             """, unsafe_allow_html=True)
         
@@ -353,20 +353,20 @@ def main():
         # Analysis type selection with styled container
         st.markdown("""
         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #2196f3;'>
-            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>🎯 Analysis Type</h4>
+            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>ðŸŽ¯ Analysis Type</h4>
         </div>
         """, unsafe_allow_html=True)
 
         analysis_type = st.selectbox(
             "",
-            ["📊 Enhanced Live Dashboard (Top 80 KSE-100)", "🔍 Comprehensive Brand Predictions", "🔴 Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "⚡ 15-Minute Live Predictions", "🏛️ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "📁 Universal File Upload", "📰 News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "📈 Technical Analysis Indicators", "Database Overview", "💎 Master Oracle Terminal (Crypto + Commodities)"],
+            ["ðŸ“Š Enhanced Live Dashboard (Top 80 KSE-100)", "ðŸ” Comprehensive Brand Predictions", "ðŸ”´ Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "âš¡ 15-Minute Live Predictions", "ðŸ›ï¸ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "ðŸ“ Universal File Upload", "ðŸ“° News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "ðŸ“ˆ Technical Analysis Indicators", "Database Overview", "ðŸ’Ž Master Oracle Terminal (Crypto + Commodities)"],
             key="analysis_type"
         )
 
         # Forecast Settings with enhanced styling
         st.markdown("""
         <div style='background-color: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;'>
-            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>⚙️ Forecast Settings</h4>
+            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>âš™ï¸ Forecast Settings</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -382,7 +382,7 @@ def main():
         if forecast_type == "Custom Date Range":
             st.markdown("""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>📅 Select Target Date</label>
+                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>ðŸ“… Select Target Date</label>
             </div>
             """, unsafe_allow_html=True)
             custom_date = st.date_input(
@@ -404,7 +404,7 @@ def main():
         if analysis_type == "Individual Companies":
             st.markdown("""
             <div style='background-color: #f3e5f5; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>🏢 Select Company</label>
+                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>ðŸ¢ Select Company</label>
             </div>
             """, unsafe_allow_html=True)
             companies = st.session_state.data_fetcher.get_kse100_companies()
@@ -415,13 +415,13 @@ def main():
             )
         
         # Debug section for file upload issues
-        if analysis_type == "📁 Universal File Upload":
+        if analysis_type == "ðŸ“ Universal File Upload":
             st.markdown("""
             <div style='background-color: #fff8e1; padding: 10px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;'>
-                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>🧪 File Upload Debug</h5>
+                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>ðŸ§ª File Upload Debug</h5>
             </div>
             """, unsafe_allow_html=True)
-            with st.expander("🔍 Quick File Upload Test", expanded=False):
+            with st.expander("ðŸ” Quick File Upload Test", expanded=False):
                 st.markdown("### Test Your File Upload Here")
                 debug_file = st.file_uploader("Upload test file (for debugging)", type=['csv', 'xlsx', 'xls'], key="debug_uploader")
                 
@@ -440,7 +440,7 @@ def main():
                         # Test 2: Try to decode
                         try:
                             text_content = raw_content.decode('utf-8')
-                            st.success("✓ UTF-8 decode successful")
+                            st.success("âœ“ UTF-8 decode successful")
                             
                             lines = text_content.split('\n')
                             st.write(f"**Number of lines:** {len(lines)}")
@@ -454,7 +454,7 @@ def main():
                             debug_file.seek(0)
                             try:
                                 test_df = pd.read_csv(debug_file)
-                                st.success("✓ Pandas read successful")
+                                st.success("âœ“ Pandas read successful")
                                 st.write(f"**Dataframe shape:** {test_df.shape}")
                                 st.write(f"**Columns:** {list(test_df.columns)}")
                                 st.dataframe(test_df.head(3))
@@ -462,7 +462,7 @@ def main():
                                 st.success("Your file is perfectly readable! The issue is likely in the universal predictor logic.")
                                 
                             except Exception as pandas_error:
-                                st.error(f"✗ Pandas read failed: {str(pandas_error)}")
+                                st.error(f"âœ— Pandas read failed: {str(pandas_error)}")
                                 
                                 # Try alternative methods
                                 st.write("**Trying alternative methods:**")
@@ -470,40 +470,40 @@ def main():
                                     try:
                                         debug_file.seek(0)
                                         alt_df = pd.read_csv(debug_file, delimiter=delimiter)
-                                        st.success(f"✓ Alternative method with '{delimiter}' delimiter: {alt_df.shape}")
+                                        st.success(f"âœ“ Alternative method with '{delimiter}' delimiter: {alt_df.shape}")
                                         st.dataframe(alt_df.head(3))
                                         break
                                     except Exception as alt_error:
-                                        st.write(f"✗ Delimiter '{delimiter}': {str(alt_error)}")
+                                        st.write(f"âœ— Delimiter '{delimiter}': {str(alt_error)}")
                             
                         except Exception as decode_error:
-                            st.error(f"✗ UTF-8 decode failed: {str(decode_error)}")
+                            st.error(f"âœ— UTF-8 decode failed: {str(decode_error)}")
                             
                             # Try other encodings
                             st.write("**Trying other encodings:**")
                             for encoding in ['latin-1', 'cp1252', 'iso-8859-1']:
                                 try:
                                     alt_content = raw_content.decode(encoding)
-                                    st.success(f"✓ {encoding} decode successful")
+                                    st.success(f"âœ“ {encoding} decode successful")
                                     break
                                 except Exception as enc_error:
-                                    st.write(f"✗ {encoding}: {str(enc_error)}")
+                                    st.write(f"âœ— {encoding}: {str(enc_error)}")
                                     
                     except Exception as e:
                         st.error(f"**Error processing file:** {str(e)}")
     
     # Main content area
-    if analysis_type == "📊 Enhanced Live Dashboard (Top 80 KSE-100)":
+    if analysis_type == "ðŸ“Š Enhanced Live Dashboard (Top 80 KSE-100)":
         # Enhanced Live Dashboard with top 80 companies
         st.session_state.enhanced_live_dashboard.display_live_dashboard()
         
-    elif analysis_type == "🔴 Live KSE-40 (5-Min Updates)":
+    elif analysis_type == "ðŸ”´ Live KSE-40 (5-Min Updates)":
         st.session_state.live_kse40_dashboard.display_live_dashboard()
     elif analysis_type == "Live Market Dashboard":
         display_live_market_dashboard()
-    elif analysis_type == "⚡ 15-Minute Live Predictions":
+    elif analysis_type == "âš¡ 15-Minute Live Predictions":
         display_five_minute_live_predictions()
-    elif analysis_type == "🔍 Comprehensive Brand Predictions":
+    elif analysis_type == "ðŸ” Comprehensive Brand Predictions":
         st.session_state.brand_predictor.display_comprehensive_brand_predictions()
     elif analysis_type == "KSE-100 Index":
         display_kse100_analysis(forecast_type, days_ahead, custom_date)
@@ -512,13 +512,13 @@ def main():
     elif analysis_type == "Advanced Forecasting Hub":
         from advanced_forecasting import display_advanced_forecasting_dashboard
         display_advanced_forecasting_dashboard()
-    elif analysis_type == "📁 Universal File Upload":
+    elif analysis_type == "ðŸ“ Universal File Upload":
         display_universal_file_upload()
-    elif analysis_type == "📰 News-Based Predictions":
+    elif analysis_type == "ðŸ“° News-Based Predictions":
         display_news_based_predictions()
     elif analysis_type == "Enhanced File Upload":
         display_enhanced_file_upload()
-    elif analysis_type == "🏛️ All KSE-100 Companies (Live Prices)":
+    elif analysis_type == "ðŸ›ï¸ All KSE-100 Companies (Live Prices)":
         display_all_kse100_live_prices()
     elif analysis_type == "All Companies Live Prices":
         display_all_companies_live_prices()
@@ -527,9 +527,9 @@ def main():
     elif analysis_type == "Comprehensive Intraday Forecasts":
         from comprehensive_intraday import display_comprehensive_intraday_forecasts
         display_comprehensive_intraday_forecasts()
-    elif analysis_type == "📈 Technical Analysis Indicators":
+    elif analysis_type == "ðŸ“ˆ Technical Analysis Indicators":
         display_technical_analysis()
-    elif analysis_type == "💎 Master Oracle Terminal (Crypto + Commodities)":
+    elif analysis_type == "ðŸ’Ž Master Oracle Terminal (Crypto + Commodities)":
         display_master_oracle_terminal()
     else:
         display_cache_overview()
@@ -561,15 +561,15 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
     col0, col1, col2 = st.columns([1, 2, 1])
     
     with col0:
-        if st.button("📈 Comprehensive Intraday", use_container_width=True, key="kse100_intraday_btn"):
+        if st.button("ðŸ“ˆ Comprehensive Intraday", use_container_width=True, key="kse100_intraday_btn"):
             st.session_state['analysis_type'] = "Comprehensive Intraday Forecasts"
             st.rerun()
     
     with col1:
-        st.subheader("📊 KSE-100 Index Analysis")
+        st.subheader("ðŸ“Š KSE-100 Index Analysis")
     
     with col2:
-        if st.button("💾 Export Data", use_container_width=True):
+        if st.button("ðŸ’¾ Export Data", use_container_width=True):
             if st.session_state.kse_data is not None:
                 csv = export_to_csv(st.session_state.kse_data, "KSE-100")
                 st.download_button(
@@ -600,7 +600,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 if hasattr(st.session_state, 'enhanced_psx_fetcher'):
                     kse_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
                     if kse_data is not None and not kse_data.empty:
-                        st.success("📡 Fetched historical data from Yahoo Finance")
+                        st.success("ðŸ“¡ Fetched historical data from Yahoo Finance")
                 
                 # Fallback to data_fetcher if enhanced fails
                 if (kse_data is None or kse_data.empty) and hasattr(st.session_state, 'data_fetcher'):
@@ -650,14 +650,14 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                     st.metric("Low", format_currency(kse_data['low'].iloc[-1]))
                 
                 # Historical chart
-                st.subheader("📈 Live Price Movement")
+                st.subheader("ðŸ“ˆ Live Price Movement")
                 historical_chart = st.session_state.visualizer.create_price_chart(
                     kse_data, "KSE-100 Index - Live Data"
                 )
                 st.plotly_chart(historical_chart, use_container_width=True)
                 
                 # Forecasting
-                st.subheader("🔮 Price Forecast")
+                st.subheader("ðŸ”® Price Forecast")
                 
                 with st.spinner("Generating forecast..."):
                     try:
@@ -710,7 +710,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 # COMPREHENSIVE INTRADAY FORECAST SECTION
                 # ==========================================
                 st.markdown("---")
-                st.subheader("📈 Comprehensive Intraday Forecast")
+                st.subheader("ðŸ“ˆ Comprehensive Intraday Forecast")
                 
                 # Import and display comprehensive intraday forecast
                 from comprehensive_intraday import ComprehensiveIntradayForecaster, is_trading_day, get_next_trading_day
@@ -783,12 +783,12 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 col_graph_sel, col_graph_main = st.columns([1, 4])
                 
                 with col_graph_sel:
-                    st.markdown("### 📊 Select Session")
+                    st.markdown("### ðŸ“Š Select Session")
                     
                     # Use radio buttons for session selection
                     selected_session = st.radio(
                         "Choose Forecast Session:",
-                        options=["🌅 Full Day (9:30-15:30)", "🌅 Morning (9:45-12:00)", "☀️ Afternoon (12:00-15:30)", "📊 Main Session (9:36-15:30)", "📅 Yesterday Last Hour"],
+                        options=["ðŸŒ… Full Day (9:30-15:30)", "ðŸŒ… Morning (9:45-12:00)", "â˜€ï¸ Afternoon (12:00-15:30)", "ðŸ“Š Main Session (9:36-15:30)", "ðŸ“… Yesterday Last Hour"],
                         key="intraday_session_select",
                         label_visibility="collapsed"
                     )
@@ -797,7 +797,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 import plotly.graph_objects as go
                 
                 if "Full Day" in selected_session and full_day is not None and not full_day.empty:
-                    st.info("💡 **Full Day Forecast:** Complete trading day from 9:30 AM to 3:30 PM")
+                    st.info("ðŸ’¡ **Full Day Forecast:** Complete trading day from 9:30 AM to 3:30 PM")
                     
                     fig = go.Figure()
                     
@@ -826,7 +826,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="📈 KSE-100 Full Day Forecast (9:30 AM - 3:30 PM)",
+                        title="ðŸ“ˆ KSE-100 Full Day Forecast (9:30 AM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -848,7 +848,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Morning" in selected_session and morning_session is not None and not morning_session.empty:
-                    st.info("💡 **Morning Session Forecast:** 9:45 AM to 12:00 PM")
+                    st.info("ðŸ’¡ **Morning Session Forecast:** 9:45 AM to 12:00 PM")
                     
                     fig = go.Figure()
                     
@@ -884,7 +884,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="🌅 KSE-100 Morning Session Forecast (9:45 AM - 12:00 PM)",
+                        title="ðŸŒ… KSE-100 Morning Session Forecast (9:45 AM - 12:00 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -908,7 +908,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Afternoon" in selected_session and afternoon_session is not None and not afternoon_session.empty:
-                    st.info("💡 **Afternoon Session Forecast:** 12:00 PM to 3:30 PM")
+                    st.info("ðŸ’¡ **Afternoon Session Forecast:** 12:00 PM to 3:30 PM")
                     
                     fig = go.Figure()
                     
@@ -944,7 +944,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="☀️ KSE-100 Afternoon Session Forecast (12:00 PM - 3:30 PM)",
+                        title="â˜€ï¸ KSE-100 Afternoon Session Forecast (12:00 PM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -968,7 +968,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Main Session" in selected_session and main_session is not None and not main_session.empty:
-                    st.info("💡 **Main Session Forecast:** 9:36 AM to 3:30 PM (New Workflow)")
+                    st.info("ðŸ’¡ **Main Session Forecast:** 9:36 AM to 3:30 PM (New Workflow)")
                     
                     fig = go.Figure()
                     
@@ -1004,7 +1004,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="📊 KSE-100 Main Session Forecast (9:36 AM - 3:30 PM)",
+                        title="ðŸ“Š KSE-100 Main Session Forecast (9:36 AM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -1028,7 +1028,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Yesterday" in selected_session and yesterday_last_hour is not None and not yesterday_last_hour.empty:
-                    st.info("💡 **Yesterday's Last Hour:** 2:00 PM to 3:30 PM (Used as input for today's forecast)")
+                    st.info("ðŸ’¡ **Yesterday's Last Hour:** 2:00 PM to 3:30 PM (Used as input for today's forecast)")
                     
                     price_col = 'close' if 'close' in yesterday_last_hour.columns else 'price'
                     
@@ -1045,7 +1045,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                     ))
                     
                     fig.update_layout(
-                        title="📅 KSE-100 Yesterday Last Hour (2:00 PM - 3:30 PM)",
+                        title="ðŸ“… KSE-100 Yesterday Last Hour (2:00 PM - 3:30 PM)",
                         xaxis_title="Time",
                         yaxis_title="Price (PKR)",
                         height=500,
@@ -1070,7 +1070,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                             st.metric("Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
                 
                 # Show next day forecast info
-                st.info("🌙 **After 3:00 PM:** View the 'Comprehensive Intraday Forecasts' option in sidebar for next day's full forecast")
+                st.info("ðŸŒ™ **After 3:00 PM:** View the 'Comprehensive Intraday Forecasts' option in sidebar for next day's full forecast")
                 
             else:
                 st.error("Unable to fetch KSE-100 data. Please try again later.")
@@ -1088,10 +1088,10 @@ def display_company_analysis(selected_company, forecast_type, days_ahead, custom
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader(f"📊 {selected_company} Analysis")
+        st.subheader(f"ðŸ“Š {selected_company} Analysis")
     
     with col2:
-        if st.button("💾 Export Data", use_container_width=True):
+        if st.button("ðŸ’¾ Export Data", use_container_width=True):
             if selected_company in st.session_state.companies_data:
                 csv = export_to_csv(st.session_state.companies_data[selected_company], selected_company)
                 st.download_button(
@@ -1149,14 +1149,14 @@ def display_company_analysis(selected_company, forecast_type, days_ahead, custom
                     st.metric("Low", format_currency(company_data['low'].iloc[-1]))
                 
                 # Historical chart
-                st.subheader("📈 Live Price Movement")
+                st.subheader("ðŸ“ˆ Live Price Movement")
                 historical_chart = st.session_state.visualizer.create_price_chart(
                     company_data, f"{selected_company} - Live Data"
                 )
                 st.plotly_chart(historical_chart, use_container_width=True)
                 
                 # Forecasting
-                st.subheader("🔮 Price Forecast")
+                st.subheader("ðŸ”® Price Forecast")
                 
                 with st.spinner("Generating forecast..."):
                     try:
@@ -1214,7 +1214,7 @@ def display_company_analysis(selected_company, forecast_type, days_ahead, custom
 def display_cache_overview():
     """Display cache overview and management tools"""
     
-    st.subheader("💾 Cache Overview")
+    st.subheader("ðŸ’¾ Cache Overview")
     st.markdown("Manage and view cached stock data and system information.")
     
     # Cache statistics
@@ -1223,7 +1223,7 @@ def display_cache_overview():
     cache_stats = st.session_state.cache_manager.get_cache_stats()
     
     with col1:
-        st.metric("Cache Status", "Active ✅")
+        st.metric("Cache Status", "Active âœ…")
     
     with col2:
         st.metric("Cached Entries", cache_stats['valid_entries'])
@@ -1234,7 +1234,7 @@ def display_cache_overview():
     st.markdown("---")
     
     # Cache management options
-    tab1, tab2 = st.tabs(["📊 Cache Status", "⚙️ Settings"])
+    tab1, tab2 = st.tabs(["ðŸ“Š Cache Status", "âš™ï¸ Settings"])
     
     with tab1:
         st.subheader("Cache Information")
@@ -1261,21 +1261,21 @@ def display_cache_overview():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🗑️ Clear Cache", help="Clear all cached data"):
+            if st.button("ðŸ—‘ï¸ Clear Cache", help="Clear all cached data"):
                 st.session_state.cache_manager.clear_cache()
                 st.session_state.kse_data = None
                 st.session_state.companies_data = {}
                 st.success("Cache cleared successfully!")
         
         with col2:
-            if st.button("📊 Refresh Data"):
+            if st.button("ðŸ“Š Refresh Data"):
                 st.session_state.last_update = None
                 st.success("Data refresh triggered!")
 
 def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
     """Display intraday trading sessions analysis with live prices and half-day forecasts"""
     
-    st.subheader("🕘 Intraday Trading Sessions - Live Analysis")
+    st.subheader("ðŸ•˜ Intraday Trading Sessions - Live Analysis")
     st.markdown("**PSX Trading Hours:** 9:30 AM - 3:30 PM (Monday to Friday)")
     
     # Get live price for current analysis
@@ -1324,7 +1324,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
             if hasattr(st.session_state, 'enhanced_psx_fetcher'):
                 kse_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
                 if kse_data is not None and not kse_data.empty:
-                    st.success("📡 Fetched historical data from Yahoo Finance")
+                    st.success("ðŸ“¡ Fetched historical data from Yahoo Finance")
             
             # Fallback to data_fetcher if enhanced fails
             if (kse_data is None or kse_data.empty) and hasattr(st.session_state, 'data_fetcher'):
@@ -1332,7 +1332,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
             
             if kse_data is not None and not kse_data.empty:
                 # Session-based forecasting
-                st.subheader("📈 Session-Based Predictions")
+                st.subheader("ðŸ“ˆ Session-Based Predictions")
                 
                 tab1, tab2, tab3, tab4 = st.tabs([
                     "Morning Session (9:45-12:00)", 
@@ -1350,9 +1350,9 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     morning_end = current_time.replace(hour=12, minute=0, second=0, microsecond=0)
 
                     if current_time < morning_start:
-                        st.info("🕘 Morning session starts at 9:45 AM PKT")
+                        st.info("ðŸ•˜ Morning session starts at 9:45 AM PKT")
                     elif current_time > morning_end:
-                        st.info("🏁 Morning session ended at 12:00 PM PKT")
+                        st.info("ðŸ Morning session ended at 12:00 PM PKT")
                     else:
                         # Generate morning session intraday data
                         morning_data = generate_morning_session_data(current_price)
@@ -1391,7 +1391,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             )
 
                             fig.update_layout(
-                                title="📈 Morning Session Intraday Chart (9:45 AM - 12:00 PM)",
+                                title="ðŸ“ˆ Morning Session Intraday Chart (9:45 AM - 12:00 PM)",
                                 xaxis_title="Time (PKT)",
                                 yaxis_title="Price (PKR)",
                                 height=500,
@@ -1456,7 +1456,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             )
                             
                             fig.update_layout(
-                                title="📈 Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
+                                title="ðŸ“ˆ Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
                                 xaxis_title="Time (PKT)",
                                 yaxis_title="Price (PKR)",
                                 height=500,
@@ -1485,7 +1485,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     
                     elif current_time >= eleven_am:
                         # After 11:00 AM but before 12:00 PM - show half day completed message and graph
-                        st.info("✅ **After 1st Half Completed (11:00 AM)** - Showing Half Day Graph")
+                        st.info("âœ… **After 1st Half Completed (11:00 AM)** - Showing Half Day Graph")
                         st.write("**Half Day Analysis (9:45 AM - 12:00 PM)**")
                         
                         # Generate half day data
@@ -1525,7 +1525,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             )
                             
                             fig.update_layout(
-                                title="📈 Half Day Chart - First Half Completed (9:45 AM - 12:00 PM)",
+                                title="ðŸ“ˆ Half Day Chart - First Half Completed (9:45 AM - 12:00 PM)",
                                 xaxis_title="Time (PKT)",
                                 yaxis_title="Price (PKR)",
                                 height=500,
@@ -1554,7 +1554,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     
                     else:
                         # Before 11:00 AM - show waiting message
-                        st.info("🕐 Afternoon session forecast will be available after 11:00 AM PKT")
+                        st.info("ðŸ• Afternoon session forecast will be available after 11:00 AM PKT")
                 
                 with tab3:
                     st.write("**Today's Full Day Forecast (9:45 AM - 3:30 PM)**")
@@ -1586,7 +1586,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         )
                         
                         fig.update_layout(
-                            title="📈 Today's Full Trading Day Forecast (9:45 AM - 3:30 PM)",
+                            title="ðŸ“ˆ Today's Full Trading Day Forecast (9:45 AM - 3:30 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -1622,9 +1622,9 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     afternoon_cutoff = current_time.replace(hour=15, minute=0, second=0, microsecond=0)
                     
                     if current_time >= afternoon_cutoff:
-                        st.info("🔄 **Updated at 3:00 PM** - Fresh next day forecast generated daily after 3:00 PM")
+                        st.info("ðŸ”„ **Updated at 3:00 PM** - Fresh next day forecast generated daily after 3:00 PM")
                     else:
-                        st.info("💡 **Note**: This forecast refreshes daily at 3:00 PM with updated predictions for tomorrow")
+                        st.info("ðŸ’¡ **Note**: This forecast refreshes daily at 3:00 PM with updated predictions for tomorrow")
                     
                     # Generate next day full data
                     next_day_full_data = generate_next_day_full_data(current_price)
@@ -1653,7 +1653,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         )
                         
                         fig.update_layout(
-                            title="📈 Next Day Full Trading Day Forecast (9:45 AM - 3:30 PM)",
+                            title="ðŸ“ˆ Next Day Full Trading Day Forecast (9:45 AM - 3:30 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -1885,13 +1885,13 @@ def generate_next_day_full_data(current_price):
 def display_all_companies_live_prices():
     """Display live prices for all KSE-100 companies with sector-wise organization"""
     
-    st.subheader("📊 All KSE-100 Companies - Complete Brand Data")
+    st.subheader("ðŸ“Š All KSE-100 Companies - Complete Brand Data")
     st.markdown("Comprehensive brand data for all companies listed in KSE-100 index with live prices and estimated ranges")
     
     # Add refresh button
     col1, col2 = st.columns([1, 4])
     with col1:
-        if st.button("🔄 Refresh All Data", use_container_width=True):
+        if st.button("ðŸ”„ Refresh All Data", use_container_width=True):
             st.rerun()
     
     # Fetch all companies data
@@ -1900,7 +1900,7 @@ def display_all_companies_live_prices():
     
     if companies_data:
         # Create comprehensive overview table
-        st.subheader("📊 Complete KSE-100 Brand Data Overview")
+        st.subheader("ðŸ“Š Complete KSE-100 Brand Data Overview")
         
         # Prepare data for overview table
         overview_data = []
@@ -1917,11 +1917,11 @@ def display_all_companies_live_prices():
             
             # Format source display
             if source == 'estimated_range_fallback':
-                source_display = "📊 Estimated"
+                source_display = "ðŸ“Š Estimated"
             elif source == 'unavailable':
-                source_display = "❌ Unavailable"
+                source_display = "âŒ Unavailable"
             else:
-                source_display = f"✅ {source}"
+                source_display = f"âœ… {source}"
             
             overview_data.append({
                 'Company': company_name,
@@ -2013,7 +2013,7 @@ def display_all_companies_live_prices():
                             change = random.uniform(-5, 5)
                             change_pct = (change / current_price) * 100
                             color = "green" if change > 0 else "red" if change < 0 else "gray"
-                            arrow = "↗" if change > 0 else "↘" if change < 0 else "→"
+                            arrow = "â†—" if change > 0 else "â†˜" if change < 0 else "â†’"
                             
                             # Display company card
                             st.markdown(f"""
@@ -2024,13 +2024,13 @@ def display_all_companies_live_prices():
                                 <h4 style='color: {color}; margin: 5px 0;'>PKR {current_price:,.2f}</h4>
                                 <small style='color: {color};'>{arrow} {change:+.2f} ({change_pct:+.2f}%)</small><br>
                                 <small style='color: #888; font-size: 10px;'>
-                                    {source.upper()} • {timestamp.strftime('%H:%M:%S')}
+                                    {source.upper()} â€¢ {timestamp.strftime('%H:%M:%S')}
                                 </small>
                             </div>
                             """, unsafe_allow_html=True)
                             
                             # Quick forecast button
-                            if st.button(f"📈 Forecast {symbol}", key=f"forecast_{symbol}"):
+                            if st.button(f"ðŸ“ˆ Forecast {symbol}", key=f"forecast_{symbol}"):
                                 st.session_state.quick_forecast_company = company_name
                                 st.rerun()
                         
@@ -2057,7 +2057,7 @@ def display_all_companies_live_prices():
         
         # Overall market summary
         st.markdown("---")
-        st.subheader("📈 Market Summary")
+        st.subheader("ðŸ“ˆ Market Summary")
         
         total_companies = len(companies_data)
         total_market_value = sum(comp['current_price'] for comp in companies_data.values())
@@ -2078,7 +2078,7 @@ def display_all_companies_live_prices():
         with col2:
             st.write("**Data Sources:**")
             for source, count in live_sources.items():
-                st.write(f"• {source.upper()}: {count} companies")
+                st.write(f"â€¢ {source.upper()}: {count} companies")
         
         with col3:
             st.write("**Market Status:**")
@@ -2087,9 +2087,9 @@ def display_all_companies_live_prices():
             market_close = datetime.strptime("15:30", "%H:%M").time()
             
             if market_open <= current_time <= market_close:
-                st.success("🟢 Market is OPEN")
+                st.success("ðŸŸ¢ Market is OPEN")
             else:
-                st.error("🔴 Market is CLOSED")
+                st.error("ðŸ”´ Market is CLOSED")
             
             st.write(f"Last Updated: {datetime.now().strftime('%H:%M:%S')}")
         
@@ -2101,7 +2101,7 @@ def display_all_companies_live_prices():
             st.write("**Export Options:**")
         
         with col2:
-            if st.button("💾 Export All Prices", use_container_width=True):
+            if st.button("ðŸ’¾ Export All Prices", use_container_width=True):
                 # Create export DataFrame
                 export_data = []
                 for company_name, data in companies_data.items():
@@ -2129,7 +2129,7 @@ def display_all_companies_live_prices():
             company_name = st.session_state.quick_forecast_company
             if company_name in companies_data:
                 st.markdown("---")
-                st.subheader(f"📊 Quick Forecast: {companies_data[company_name]['symbol']}")
+                st.subheader(f"ðŸ“Š Quick Forecast: {companies_data[company_name]['symbol']}")
                 
                 # Generate and display forecast
                 historical_data = companies_data[company_name]['historical_data']
@@ -2168,7 +2168,7 @@ def display_all_companies_live_prices():
                     st.plotly_chart(fig, use_container_width=True)
                     
                     # Clear the forecast selection
-                    if st.button("✖ Close Forecast"):
+                    if st.button("âœ– Close Forecast"):
                         del st.session_state.quick_forecast_company
                         st.rerun()
     
@@ -2178,7 +2178,7 @@ def display_all_companies_live_prices():
 def display_live_market_dashboard():
     """Real-time market dashboard with 5-minute updates and live forecasting"""
     
-    st.subheader("🔴 LIVE PSX Market Dashboard")
+    st.subheader("ðŸ”´ LIVE PSX Market Dashboard")
     st.markdown("**Real-time data with 5-minute auto-refresh and live predictions**")
     
     # Auto-refresh every 5 minutes (300 seconds) - using placeholder
@@ -2224,7 +2224,7 @@ def display_live_market_dashboard():
     
     # Live KSE-100 Index
     st.markdown("---")
-    st.subheader("📈 KSE-100 Index - Live")
+    st.subheader("ðŸ“ˆ KSE-100 Index - Live")
     
     # Fetch live KSE-100 price
     live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
@@ -2259,7 +2259,7 @@ def display_live_market_dashboard():
             st.metric("Market Cap", "PKR 8.2T")
         
         # Show data source information - remove simulated data message
-        st.success(f"📊 **Live PSX Data** | Source: {source.upper()} | Last updated: {timestamp.strftime('%H:%M:%S PKT')}")
+        st.success(f"ðŸ“Š **Live PSX Data** | Source: {source.upper()} | Last updated: {timestamp.strftime('%H:%M:%S PKT')}")
         
         # Generate intraday data for today
         intraday_data = generate_intraday_market_data(current_price, market_status['is_market_open'])
@@ -2310,7 +2310,7 @@ def display_live_market_dashboard():
         
         # Next day forecast
         st.markdown("---")
-        st.subheader("🔮 Next Day Forecast")
+        st.subheader("ðŸ”® Next Day Forecast")
         
         # Get historical data for forecasting
         # Try enhanced fetcher first for historical data
@@ -2318,7 +2318,7 @@ def display_live_market_dashboard():
         if hasattr(st.session_state, 'enhanced_psx_fetcher'):
             historical_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
             if historical_data is not None and not historical_data.empty:
-                st.success("📡 Fetched historical data from Yahoo Finance")
+                st.success("ðŸ“¡ Fetched historical data from Yahoo Finance")
 
         # Fallback to data_fetcher if enhanced fails
         if (historical_data is None or historical_data.empty) and hasattr(st.session_state, 'data_fetcher'):
@@ -2391,7 +2391,7 @@ def display_live_market_dashboard():
     
     # Brand selection for individual predictions - Now with ALL KSE-100 companies
     st.markdown("---")
-    st.subheader("🏢 Individual Company Live Tracking - All KSE-100 Brands")
+    st.subheader("ðŸ¢ Individual Company Live Tracking - All KSE-100 Brands")
 
     # Use the comprehensive symbol_options instead of limited companies list
     all_companies = {symbol: name for symbol, name in symbol_options.items() if symbol != 'KSE-100'}
@@ -2467,12 +2467,12 @@ def display_live_market_dashboard():
                             st.write(f"**Source:** {live_price['source'].upper()}")
                             st.write(f"**Last Update:** {live_price['timestamp'].strftime('%H:%M:%S')}")
                     else:
-                        st.warning(f"⚠️ Live price data unavailable for {symbol}")
+                        st.warning(f"âš ï¸ Live price data unavailable for {symbol}")
                         st.info("Data sources may be temporarily unavailable. Trying to fetch from authentic PSX sources...")
                         
                         with col2:
                             # Quick forecast for this company
-                            if st.button(f"📊 Forecast {symbol}", key=f"forecast_btn_{symbol}"):
+                            if st.button(f"ðŸ“Š Forecast {symbol}", key=f"forecast_btn_{symbol}"):
                                 company_data = st.session_state.data_fetcher.fetch_company_data(brand_name)
                                 if company_data is not None and not company_data.empty:
                                     forecast = st.session_state.forecaster.forecast_stock(company_data, days_ahead=1)
@@ -2507,7 +2507,7 @@ def display_live_market_dashboard():
     
     # Performance summary
     st.markdown("---")
-    st.subheader("📊 Market Performance Summary")
+    st.subheader("ðŸ“Š Market Performance Summary")
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -2521,7 +2521,7 @@ def display_live_market_dashboard():
         st.metric("Most Active", "HBL 15.2M")
     
     with col4:
-        st.metric("Market Trend", "Bullish 📈")
+        st.metric("Market Trend", "Bullish ðŸ“ˆ")
 
 def generate_intraday_market_data(current_price, is_market_open):
     """Generate realistic intraday market data for today"""
@@ -2544,7 +2544,7 @@ def generate_intraday_market_data(current_price, is_market_open):
     while current_time <= end_time:
         times.append(current_time)
 
-        # Add realistic price movement (±0.5% per 5-minute interval)
+        # Add realistic price movement (Â±0.5% per 5-minute interval)
         change = np.random.uniform(-0.005, 0.005)
         price = price * (1 + change)
         prices.append(price)
@@ -2560,7 +2560,7 @@ def generate_intraday_market_data(current_price, is_market_open):
 def display_file_upload_prediction():
     """File upload functionality for custom data prediction"""
     
-    st.subheader("📁 Upload Custom Data for Prediction")
+    st.subheader("ðŸ“ Upload Custom Data for Prediction")
     st.markdown("Upload your own CSV file to generate market predictions")
     
     # File upload widget
@@ -2576,12 +2576,12 @@ def display_file_upload_prediction():
             custom_data = pd.read_csv(uploaded_file)
             
             # Display file info
-            st.success(f"✅ File uploaded successfully!")
+            st.success(f"âœ… File uploaded successfully!")
             st.write(f"**File name:** {uploaded_file.name}")
             st.write(f"**Data shape:** {custom_data.shape[0]} rows, {custom_data.shape[1]} columns")
             
             # Show data preview
-            st.subheader("📋 Data Preview")
+            st.subheader("ðŸ“‹ Data Preview")
             st.dataframe(custom_data.head(10), use_container_width=True)
             
             # Data validation
@@ -2589,7 +2589,7 @@ def display_file_upload_prediction():
             missing_columns = [col for col in required_columns if col not in custom_data.columns]
             
             if missing_columns:
-                st.error(f"❌ Missing required columns: {missing_columns}")
+                st.error(f"âŒ Missing required columns: {missing_columns}")
                 st.write("**Required columns:** date, close")
                 st.write("**Optional columns:** open, high, low, volume")
                 return
@@ -2600,10 +2600,10 @@ def display_file_upload_prediction():
                 custom_data = custom_data.sort_values('date').reset_index(drop=True)
                 custom_data = custom_data.dropna(subset=['date', 'close'])
                 
-                st.success("✅ Data validation passed!")
+                st.success("âœ… Data validation passed!")
                 
                 # Prediction options
-                st.subheader("🔮 Prediction Options")
+                st.subheader("ðŸ”® Prediction Options")
                 
                 col1, col2 = st.columns(2)
                 
@@ -2623,7 +2623,7 @@ def display_file_upload_prediction():
                         key="upload_model_type"
                     )
                 
-                if st.button("🚀 Generate Prediction", use_container_width=True):
+                if st.button("ðŸš€ Generate Prediction", use_container_width=True):
                     with st.spinner("Generating predictions..."):
                         # Generate forecast
                         if model_type == "Prophet (Advanced)":
@@ -2645,7 +2645,7 @@ def display_file_upload_prediction():
                         
                         if forecast is not None and not forecast.empty:
                             # Display forecast results
-                            st.subheader("📈 Prediction Results")
+                            st.subheader("ðŸ“ˆ Prediction Results")
                             
                             # Create comprehensive forecast chart
                             fig = go.Figure()
@@ -2712,7 +2712,7 @@ def display_file_upload_prediction():
                             st.plotly_chart(fig, use_container_width=True)
                             
                             # Forecast summary
-                            st.subheader("📊 Forecast Summary")
+                            st.subheader("ðŸ“Š Forecast Summary")
                             
                             if model_type == "Prophet (Advanced)":
                                 current_price = custom_data['close'].iloc[-1]
@@ -2734,15 +2734,15 @@ def display_file_upload_prediction():
                                 
                                 with col3:
                                     confidence_range = forecast['yhat_upper'].iloc[-1] - forecast['yhat_lower'].iloc[-1]
-                                    st.metric("Confidence Range", f"±{confidence_range/2:.2f}")
+                                    st.metric("Confidence Range", f"Â±{confidence_range/2:.2f}")
                             
                             # Export forecast data
-                            st.subheader("💾 Export Results")
+                            st.subheader("ðŸ’¾ Export Results")
                             
                             col1, col2 = st.columns(2)
                             
                             with col1:
-                                if st.button("📥 Download Forecast Data"):
+                                if st.button("ðŸ“¥ Download Forecast Data"):
                                     csv = forecast.to_csv(index=False)
                                     st.download_button(
                                         label="Download CSV",
@@ -2753,26 +2753,26 @@ def display_file_upload_prediction():
                                     )
                             
                             with col2:
-                                if st.button("📊 View Detailed Analysis"):
+                                if st.button("ðŸ“Š View Detailed Analysis"):
                                     st.write("**Forecast Statistics:**")
                                     if model_type == "Prophet (Advanced)":
-                                        st.write(f"• Mean Prediction: {forecast['yhat'].mean():.2f}")
-                                        st.write(f"• Prediction Std: {forecast['yhat'].std():.2f}")
-                                        st.write(f"• Trend Direction: {'Upward' if forecast['yhat'].iloc[-1] > forecast['yhat'].iloc[0] else 'Downward'}")
+                                        st.write(f"â€¢ Mean Prediction: {forecast['yhat'].mean():.2f}")
+                                        st.write(f"â€¢ Prediction Std: {forecast['yhat'].std():.2f}")
+                                        st.write(f"â€¢ Trend Direction: {'Upward' if forecast['yhat'].iloc[-1] > forecast['yhat'].iloc[0] else 'Downward'}")
                         else:
-                            st.error("❌ Unable to generate forecast. Please check your data.")
+                            st.error("âŒ Unable to generate forecast. Please check your data.")
                             
             except Exception as e:
-                st.error(f"❌ Data processing error: {str(e)}")
+                st.error(f"âŒ Data processing error: {str(e)}")
                 st.write("Please ensure your data has the correct format and date column.")
                 
         except Exception as e:
-            st.error(f"❌ File reading error: {str(e)}")
+            st.error(f"âŒ File reading error: {str(e)}")
             st.write("Please upload a valid CSV file.")
     
     else:
         # Show sample data format
-        st.subheader("📋 Required Data Format")
+        st.subheader("ðŸ“‹ Required Data Format")
         st.write("Your CSV file should have the following structure:")
         
         sample_data = pd.DataFrame({
@@ -2811,7 +2811,7 @@ def create_fallback_forecast_chart(asset, period):
     fig.update_layout(
         template='plotly_dark',
         height=300,
-        title=f"📊 {period} Forecast (Loading...)",
+        title=f"ðŸ“Š {period} Forecast (Loading...)",
         plot_bgcolor='#1a1a2e',
         paper_bgcolor='#1a1a2e'
     )
@@ -2842,15 +2842,15 @@ def display_five_minute_live_predictions():
     if 'auto_refresh_start_time' not in st.session_state:
         st.session_state.auto_refresh_start_time = None
 
-    st.title("⚡ 15-Minute Live Predictions - Complete KSE-100 Brands")
+    st.title("âš¡ 15-Minute Live Predictions - Complete KSE-100 Brands")
     st.markdown("**Real-time market data scraping with continuous 15-minute predictions for all 100 KSE-100 companies**")
-    st.markdown("**✅ Complete KSE-100 coverage with accurate current prices and live 15-minute predictions for every brand**")
+    st.markdown("**âœ… Complete KSE-100 coverage with accurate current prices and live 15-minute predictions for every brand**")
     
     # Market status and real-time updates
     market_status = format_market_status()
 
     # Auto-refresh checkbox
-    auto_refresh_enabled = st.checkbox("🔄 Enable Auto-Refresh (every 5 minutes)", key="auto_refresh_checkbox")
+    auto_refresh_enabled = st.checkbox("ðŸ”„ Enable Auto-Refresh (every 5 minutes)", key="auto_refresh_checkbox")
 
     # Track auto-refresh start time
     if auto_refresh_enabled:
@@ -2882,13 +2882,13 @@ def display_five_minute_live_predictions():
     col1, col2, col3 = st.columns(3)
     with col1:
         if market_status['is_market_open']:
-            st.success(f"🟢 **{market_status['status']}**")
+            st.success(f"ðŸŸ¢ **{market_status['status']}**")
         else:
-            st.info(f"🔴 **{market_status['status']}**")
+            st.info(f"ðŸ”´ **{market_status['status']}**")
     
     with col2:
         # Use the already defined current_time_pkt
-        st.info(f"📅 **PKT Time:** {current_time_pkt.strftime('%H:%M:%S')}")
+        st.info(f"ðŸ“… **PKT Time:** {current_time_pkt.strftime('%H:%M:%S')}")
     
     with col3:
         if auto_refresh_enabled:
@@ -2902,14 +2902,14 @@ def display_five_minute_live_predictions():
             
             time_since_last = (now_pkt - last_refresh).total_seconds()
             minutes_left = max(0, (300 - time_since_last) / 60)
-            st.success(f"🔄 **Auto-refresh enabled** ({minutes_left:.1f} min left)")
+            st.success(f"ðŸ”„ **Auto-refresh enabled** ({minutes_left:.1f} min left)")
         else:
             # Manual refresh button
-            if st.button("🔄 Refresh Market Data", type="primary", key="manual_refresh_15min"):
+            if st.button("ðŸ”„ Refresh Market Data", type="primary", key="manual_refresh_15min"):
                 pkt = pytz.timezone('Asia/Karachi')
                 st.session_state.last_refresh_15min = datetime.now(pkt)
                 st.rerun()
-            st.info("📊 **Manual Refresh Mode**")
+            st.info("ðŸ“Š **Manual Refresh Mode**")
     
     st.markdown("---")
     
@@ -3080,7 +3080,7 @@ def display_five_minute_live_predictions():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader(f"📊 Live Data: {selected_symbol}")
+        st.subheader(f"ðŸ“Š Live Data: {selected_symbol}")
         
         # Get live price using enhanced PSX fetcher for comprehensive KSE-100 coverage
         try:
@@ -3137,7 +3137,7 @@ def display_five_minute_live_predictions():
             
             # Validate current_price is not None before division
             if current_price is None or current_price == 0:
-                st.warning("⚠️ Live price data incomplete")
+                st.warning("âš ï¸ Live price data incomplete")
                 current_price = 100.0  # Default fallback
             
             # Display current price with trend indicator
@@ -3147,13 +3147,13 @@ def display_five_minute_live_predictions():
             
             if price_change > 0:
                 color = "green"
-                trend = "📈"
+                trend = "ðŸ“ˆ"
             elif price_change < 0:
                 color = "red"
-                trend = "📉"
+                trend = "ðŸ“‰"
             else:
                 color = "gray"
-                trend = "➡️"
+                trend = "âž¡ï¸"
             
             st.markdown(f"""
             <div style='background-color: {color}15; padding: 20px; border-radius: 10px; border-left: 5px solid {color}; margin: 10px 0;'>
@@ -3164,7 +3164,7 @@ def display_five_minute_live_predictions():
             """, unsafe_allow_html=True)
             
             # Generate Complete Day 5-Minute Data
-            st.subheader("📈 Complete Trading Day 5-Minute Chart")
+            st.subheader("ðŸ“ˆ Complete Trading Day 5-Minute Chart")
 
             # Create comprehensive full-day 5-minute data
             try:
@@ -3287,13 +3287,13 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(fig, use_container_width=True)
                 
                 # Display daily statistics
-                st.subheader("📊 Daily Trading Statistics")
+                st.subheader("ðŸ“Š Daily Trading Statistics")
                 
                 # Debug information
                 from datetime import datetime
                 start_dt = datetime.fromisoformat(complete_day_times[0])
                 end_dt = datetime.fromisoformat(complete_day_times[-1])
-                st.info(f"📊 Chart Data: {len(complete_day_times)} intervals from {start_dt.strftime('%H:%M')} to {end_dt.strftime('%H:%M')}")
+                st.info(f"ðŸ“Š Chart Data: {len(complete_day_times)} intervals from {start_dt.strftime('%H:%M')} to {end_dt.strftime('%H:%M')}")
                 
                 opening_price = complete_day_prices[0]
                 closing_price = complete_day_prices[-1]
@@ -3312,7 +3312,7 @@ def display_five_minute_live_predictions():
                     st.metric("Daily Change", f"{daily_change:+.2f} PKR", f"{daily_change_pct:+.2f}%")
                 
                 # Volume and additional metrics
-                st.subheader("📈 Additional Analysis")
+                st.subheader("ðŸ“ˆ Additional Analysis")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -3334,19 +3334,19 @@ def display_five_minute_live_predictions():
                 with col3:
                     # Market trend analysis
                     if daily_change_pct > 1:
-                        trend_status = "📈 Strong Bullish"
+                        trend_status = "ðŸ“ˆ Strong Bullish"
                         trend_color = "green"
                     elif daily_change_pct > 0:
-                        trend_status = "📊 Bullish"
+                        trend_status = "ðŸ“Š Bullish"
                         trend_color = "lightgreen"
                     elif daily_change_pct < -1:
-                        trend_status = "📉 Strong Bearish"
+                        trend_status = "ðŸ“‰ Strong Bearish"
                         trend_color = "red"
                     elif daily_change_pct < 0:
-                        trend_status = "📊 Bearish"
+                        trend_status = "ðŸ“Š Bearish"
                         trend_color = "lightcoral"
                     else:
-                        trend_status = "➡️ Neutral"
+                        trend_status = "âž¡ï¸ Neutral"
                         trend_color = "gray"
                     
                     st.markdown(f"**Market Trend:**")
@@ -3381,7 +3381,7 @@ def display_five_minute_live_predictions():
             st.warning("Unable to fetch live price data")
     
     with col2:
-        st.subheader("📈 Prediction Metrics")
+        st.subheader("ðŸ“ˆ Prediction Metrics")
         
         if live_price:
             try:
@@ -3417,7 +3417,7 @@ def display_five_minute_live_predictions():
     # ==========================================
     # 15-MINUTE LIVE PREDICTION SESSION GRAPH
     # ==========================================
-    st.subheader("⏱️ 15-Minute Live Prediction Session")
+    st.subheader("â±ï¸ 15-Minute Live Prediction Session")
     
     # Auto-refresh status display with start time
     col_15min_1, col_15min_2, col_15min_3 = st.columns([2, 2, 1])
@@ -3427,11 +3427,11 @@ def display_five_minute_live_predictions():
             # Show start time
             start_time = st.session_state.auto_refresh_start_time
             if start_time:
-                st.success(f"▶️ Auto-Refresh Started: {start_time.strftime('%H:%M:%S')}")
+                st.success(f"â–¶ï¸ Auto-Refresh Started: {start_time.strftime('%H:%M:%S')}")
             else:
-                st.success("▶️ Auto-Refresh Active")
+                st.success("â–¶ï¸ Auto-Refresh Active")
         else:
-            st.info("📌 Auto-Refresh: OFF")
+            st.info("ðŸ“Œ Auto-Refresh: OFF")
     
     with col_15min_2:
         if auto_refresh_enabled:
@@ -3456,19 +3456,19 @@ def display_five_minute_live_predictions():
             progress_pct = min(100, (time_since_start / 300) * 100)
             
             st.progress(progress_pct / 100)
-            st.markdown(f"**⏰ Next refresh in: {minutes_left:02d}:{seconds_left:02d}**")
+            st.markdown(f"**â° Next refresh in: {minutes_left:02d}:{seconds_left:02d}**")
         else:
-            st.markdown("**⏰ Refresh every 5 minutes when enabled**")
+            st.markdown("**â° Refresh every 5 minutes when enabled**")
     
     with col_15min_3:
         if not auto_refresh_enabled:
-            if st.button("🔄 Refresh", key="refresh_15min_session_btn"):
+            if st.button("ðŸ”„ Refresh", key="refresh_15min_session_btn"):
                 pkt = pytz.timezone('Asia/Karachi')
                 st.session_state.last_15min_session_refresh = datetime.now(pkt)
                 st.rerun()
         else:
             # Show refresh now button
-            if st.button("🔄 Refresh Now", key="refresh_now_15min_btn"):
+            if st.button("ðŸ”„ Refresh Now", key="refresh_now_15min_btn"):
                 pkt = pytz.timezone('Asia/Karachi')
                 st.session_state.last_refresh_15min = datetime.now(pkt)
                 st.session_state.auto_refresh_start_time = datetime.now(pkt)  # Reset timer
@@ -3572,7 +3572,7 @@ def display_five_minute_live_predictions():
             st.plotly_chart(fig_15min, use_container_width=True)
             
             # Display prediction metrics for 15-minute session
-            st.markdown("**📊 15-Minute Session Prediction Summary:**")
+            st.markdown("**ðŸ“Š 15-Minute Session Prediction Summary:**")
             metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
             
             with metric_col1:
@@ -3592,7 +3592,7 @@ def display_five_minute_live_predictions():
     st.markdown("---")
     
     # Trading Sessions Analysis
-    st.subheader("🕐 Intraday Trading Sessions")
+    st.subheader("ðŸ• Intraday Trading Sessions")
     
     # Session tabs
     session_tab1, session_tab2, session_tab3 = st.tabs([
@@ -3608,11 +3608,11 @@ def display_five_minute_live_predictions():
         morning_end = current_time_pkt.replace(hour=12, minute=0, second=0, microsecond=0)
         
         if morning_start <= current_time_pkt <= morning_end:
-            st.success("🟢 Currently in Morning Session")
+            st.success("ðŸŸ¢ Currently in Morning Session")
         elif current_time_pkt < morning_start:
-            st.info("⏰ Morning Session starts soon")
+            st.info("â° Morning Session starts soon")
         else:
-            st.info("✅ Morning Session completed")
+            st.info("âœ… Morning Session completed")
         
         # Morning session predictions with graph
         if live_price and 'current_price' in locals() and current_price and current_price > 0:
@@ -3628,7 +3628,7 @@ def display_five_minute_live_predictions():
                 st.metric("Expected Volume", morning_volume)
             
             # Generate Morning Session Forecast Graph
-            st.subheader("📈 Morning Session Forecast Chart")
+            st.subheader("ðŸ“ˆ Morning Session Forecast Chart")
             
             try:
                 # Create time points for morning session (9:30 AM to 12:00 PM)
@@ -3702,7 +3702,7 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(morning_fig, use_container_width=True)
                 
                 # Morning session insights
-                st.markdown("**📊 Morning Session Insights:**")
+                st.markdown("**ðŸ“Š Morning Session Insights:**")
                 opening_price = morning_prices[0]
                 closing_price = morning_prices[-1]
                 session_change = closing_price - opening_price
@@ -3726,11 +3726,11 @@ def display_five_minute_live_predictions():
         afternoon_end = current_time_pkt.replace(hour=15, minute=30, second=0, microsecond=0)
         
         if afternoon_start <= current_time_pkt <= afternoon_end:
-            st.success("🟢 Currently in Afternoon Session")
+            st.success("ðŸŸ¢ Currently in Afternoon Session")
         elif current_time_pkt < afternoon_start:
-            st.info("⏰ Afternoon Session starts soon")
+            st.info("â° Afternoon Session starts soon")
         else:
-            st.info("✅ Afternoon Session completed")
+            st.info("âœ… Afternoon Session completed")
         
         # Afternoon session predictions with graph
         if live_price and 'current_price' in locals() and current_price and current_price > 0:
@@ -3746,7 +3746,7 @@ def display_five_minute_live_predictions():
                 st.metric("Expected Volume", afternoon_volume)
             
             # Generate Afternoon Session Forecast Graph
-            st.subheader("📈 Afternoon Session Forecast Chart")
+            st.subheader("ðŸ“ˆ Afternoon Session Forecast Chart")
             
             try:
                 # Create time points for afternoon session (12:00 PM to 3:30 PM)
@@ -3816,7 +3816,7 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(afternoon_fig, use_container_width=True)
                 
                 # Afternoon session insights
-                st.markdown("**📊 Afternoon Session Insights:**")
+                st.markdown("**ðŸ“Š Afternoon Session Insights:**")
                 session_opening = afternoon_prices[0]
                 session_closing = afternoon_prices[-1]
                 session_change = session_closing - session_opening
@@ -3871,7 +3871,7 @@ def display_five_minute_live_predictions():
                 st.metric("Volatility", f"{volatility:.2f}%")
             
             # Generate Full Day Forecast Graph
-            st.subheader("📈 Complete Trading Day Forecast")
+            st.subheader("ðŸ“ˆ Complete Trading Day Forecast")
             
             try:
                 # Import required modules
@@ -3955,7 +3955,7 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(full_day_fig, use_container_width=True)
                 
                 # Full day insights
-                st.markdown("**📊 Full Trading Day Insights:**")
+                st.markdown("**ðŸ“Š Full Trading Day Insights:**")
                 day_opening = full_day_prices[0]
                 day_closing = full_day_prices[-1]
                 day_change = day_closing - day_opening
@@ -3980,22 +3980,22 @@ def display_five_minute_live_predictions():
                 st.error(f"Error generating full day forecast: {e}")
             
             # Trading recommendations
-            st.subheader("💡 Trading Recommendations")
+            st.subheader("ðŸ’¡ Trading Recommendations")
             
             if price_change_pct > 1:
-                st.success("🟢 **BULLISH TREND** - Consider buying opportunities")
+                st.success("ðŸŸ¢ **BULLISH TREND** - Consider buying opportunities")
             elif price_change_pct < -1:
-                st.error("🔴 **BEARISH TREND** - Consider selling or shorting")
+                st.error("ðŸ”´ **BEARISH TREND** - Consider selling or shorting")
             else:
-                st.info("🟡 **NEUTRAL TREND** - Monitor for breakout signals")
+                st.info("ðŸŸ¡ **NEUTRAL TREND** - Monitor for breakout signals")
     
     # Data sources info
     st.markdown("---")
-    st.info("📊 **Data Sources:** Live scraping from PSX, Yahoo Finance, and Investing.com | Updates every 5 seconds")
+    st.info("ðŸ“Š **Data Sources:** Live scraping from PSX, Yahoo Finance, and Investing.com | Updates every 5 seconds")
 
 def display_universal_file_upload():
     """Universal file upload functionality for any brand prediction"""
-    st.subheader("📁 Universal File Upload & Prediction")
+    st.subheader("ðŸ“ Universal File Upload & Prediction")
     
     st.markdown("""
     **Upload financial data for ANY brand or instrument**
@@ -4007,10 +4007,10 @@ def display_universal_file_upload():
     
     # Add sample data download option
     st.markdown("---")
-    st.subheader("📋 Sample Data")
+    st.subheader("ðŸ“‹ Sample Data")
     st.markdown("If you're testing the functionality, you can download and use this sample XAUSD data:")
     
-    if st.button("📥 Download Sample XAUSD Data"):
+    if st.button("ðŸ“¥ Download Sample XAUSD Data"):
         sample_data = """Date,Close,Open,High,Low,Volume
 2025-01-01,2654.32,2650.00,2658.45,2647.23,12500
 2025-01-02,2658.91,2654.32,2662.18,2651.67,15200
@@ -4024,7 +4024,7 @@ def display_universal_file_upload():
 2025-01-10,2685.67,2681.23,2691.45,2678.90,18900"""
         
         st.download_button(
-            label="💾 Download sample_xausd.csv",
+            label="ðŸ’¾ Download sample_xausd.csv",
             data=sample_data,
             file_name="sample_xausd.csv",
             mime="text/csv"
@@ -4069,7 +4069,7 @@ def display_universal_file_upload():
                     file_analysis = analyze_uploaded_file(uploaded_file)
                 
                 # Show comprehensive debug information
-                with st.expander("🔍 Comprehensive File Analysis", expanded=True):
+                with st.expander("ðŸ” Comprehensive File Analysis", expanded=True):
                     st.write("### Basic File Information")
                     st.write(f"**File name:** {file_analysis.get('file_name', 'Unknown')}")
                     st.write(f"**File size:** {file_analysis.get('file_size', 0)} bytes")
@@ -4112,7 +4112,7 @@ def display_universal_file_upload():
                                         st.write(f"{i+1}. {header}")
                                 
                                 st.write(f"**Consistent data rows:** {file_analysis.get('consistent_data_rows', 0)}")
-                                st.write(f"**Data consistency:** {'✓' if file_analysis.get('data_consistency', False) else '✗'}")
+                                st.write(f"**Data consistency:** {'âœ“' if file_analysis.get('data_consistency', False) else 'âœ—'}")
                         
                         # Show first few lines
                         if 'first_5_lines' in file_analysis:
@@ -4131,11 +4131,11 @@ def display_universal_file_upload():
                         
                         for attempt in file_analysis['pandas_attempts']:
                             if attempt['success']:
-                                st.success(f"✓ {attempt['method']}: {attempt['rows']} rows, {attempt['columns']} columns")
+                                st.success(f"âœ“ {attempt['method']}: {attempt['rows']} rows, {attempt['columns']} columns")
                                 if 'column_names' in attempt:
                                     st.write(f"   Columns: {attempt['column_names']}")
                             else:
-                                st.error(f"✗ {attempt['method']}: {attempt['error']}")
+                                st.error(f"âœ— {attempt['method']}: {attempt['error']}")
                         
                         # Show recommended method
                         if 'recommended_method' in file_analysis:
@@ -4144,13 +4144,13 @@ def display_universal_file_upload():
                 
                 # Enhanced manual processing
                 st.markdown("---")
-                st.subheader("🔧 Enhanced Manual Processing")
+                st.subheader("ðŸ”§ Enhanced Manual Processing")
                 
                 if file_analysis.get('decode_success', False) and file_analysis.get('data_consistency', False):
                     st.success("File appears to have consistent structure. Try automatic processing:")
                     
                     # Automatic processing with detected parameters
-                    if st.button("🚀 Try Automatic Processing with Detected Parameters", key="auto_process"):
+                    if st.button("ðŸš€ Try Automatic Processing with Detected Parameters", key="auto_process"):
                         try:
                             uploaded_file.seek(0)
                             if file_analysis.get('suggested_delimiter') == 'comma':
@@ -4203,7 +4203,7 @@ def display_universal_file_upload():
                     encoding_options = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252', 'ascii']
                     selected_encoding = st.selectbox("Select encoding:", encoding_options, key="manual_encoding_select")
                 
-                if st.button("🔄 Try Manual Processing", key="manual_process"):
+                if st.button("ðŸ”„ Try Manual Processing", key="manual_process"):
                     try:
                         uploaded_file.seek(0)
                         raw_content = uploaded_file.read().decode(selected_encoding)
@@ -4228,7 +4228,7 @@ def display_universal_file_upload():
                 return
             
             # Display file analysis
-            st.subheader(f"📊 Data Analysis for {brand_name}")
+            st.subheader(f"ðŸ“Š Data Analysis for {brand_name}")
             
             col1, col2, col3, col4 = st.columns(4)
             
@@ -4254,7 +4254,7 @@ def display_universal_file_upload():
                     st.metric("Current Price", "N/A")
             
             # Show detailed column information
-            st.subheader("📋 Column Information")
+            st.subheader("ðŸ“‹ Column Information")
             col_info = []
             columns = analysis.get('columns', [])
             data_types = analysis.get('data_types', {})
@@ -4275,7 +4275,7 @@ def display_universal_file_upload():
                 st.warning("No column information available.")
             
             # Show data preview
-            st.subheader("📋 Data Preview")
+            st.subheader("ðŸ“‹ Data Preview")
             try:
                 if 'data' in analysis and isinstance(analysis['data'], pd.DataFrame):
                     st.dataframe(analysis['data'].head(10), use_container_width=True)
@@ -4292,26 +4292,26 @@ def display_universal_file_upload():
                 st.write("Raw sample data type:", type(analysis.get('sample_data', 'None')))
             
             # Column mapping
-            st.subheader("🎯 Column Mapping")
+            st.subheader("ðŸŽ¯ Column Mapping")
             
             col1, col2 = st.columns(2)
             
             with col1:
                 if analysis['price_column']:
-                    st.success(f"✅ Price column detected: {analysis['price_column']}")
+                    st.success(f"âœ… Price column detected: {analysis['price_column']}")
                     price_column = analysis['price_column']
                 else:
                     price_column = st.selectbox("Select Price Column:", analysis['columns'])
             
             with col2:
                 if analysis['date_column']:
-                    st.success(f"✅ Date column detected: {analysis['date_column']}")
+                    st.success(f"âœ… Date column detected: {analysis['date_column']}")
                     date_column = analysis['date_column']
                 else:
                     date_column = st.selectbox("Select Date Column:", ['None'] + analysis['columns'])
             
             # Generate predictions
-            if st.button("🔮 Generate Predictions", key="generate_universal_prediction"):
+            if st.button("ðŸ”® Generate Predictions", key="generate_universal_prediction"):
                 if price_column:
                     with st.spinner("Generating comprehensive predictions..."):
                         # Use the already loaded dataframe
@@ -4327,7 +4327,7 @@ def display_universal_file_upload():
                             return
                         
                         # Display prediction results
-                        st.subheader(f"🔮 Prediction Results for {brand_name}")
+                        st.subheader(f"ðŸ”® Prediction Results for {brand_name}")
                         
                         # Current statistics
                         col1, col2, col3, col4 = st.columns(4)
@@ -4349,15 +4349,15 @@ def display_universal_file_upload():
                         
                         # Prediction tabs
                         pred_tab1, pred_tab2, pred_tab3, pred_tab4, pred_tab5 = st.tabs([
-                            "📅 Next 7 Days", 
-                            "⚡ Intraday 5-Min",
-                            "📆 Medium-term (1-4 weeks)", 
-                            "📊 Long-term (1-3 months)",
-                            "🔧 Technical Analysis"
+                            "ðŸ“… Next 7 Days", 
+                            "âš¡ Intraday 5-Min",
+                            "ðŸ“† Medium-term (1-4 weeks)", 
+                            "ðŸ“Š Long-term (1-3 months)",
+                            "ðŸ”§ Technical Analysis"
                         ])
                         
                         with pred_tab1:
-                            st.markdown("**📅 Next 7 Days Detailed Predictions**")
+                            st.markdown("**ðŸ“… Next 7 Days Detailed Predictions**")
                             next_7_days = predictions['predictions']['next_7_days']
                             
                             # Display predictions in enhanced table
@@ -4452,7 +4452,7 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_7days, use_container_width=True)
                         
                         with pred_tab2:
-                            st.markdown("**⚡ Intraday 5-Minute Predictions with Day Selection**")
+                            st.markdown("**âš¡ Intraday 5-Minute Predictions with Day Selection**")
                             
                             intraday_data = predictions['predictions']['intraday_5min']
                             available_days = list(intraday_data.keys())
@@ -4471,7 +4471,7 @@ def display_universal_file_upload():
                                 st.metric("Daily Change", f"{day_summary['daily_change']:+.2f}%")
                             
                             # Display day summary
-                            st.subheader(f"📊 {selected_day} Trading Session Summary")
+                            st.subheader(f"ðŸ“Š {selected_day} Trading Session Summary")
                             
                             col1, col2, col3, col4 = st.columns(4)
                             with col1:
@@ -4589,7 +4589,7 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_intraday, use_container_width=True)
                         
                         with pred_tab3:
-                            st.markdown("**📆 Medium-term Predictions (Next 4 Weeks)**")
+                            st.markdown("**ðŸ“† Medium-term Predictions (Next 4 Weeks)**")
                             medium_term = predictions['predictions']['medium_term']
                             
                             df_medium = pd.DataFrame(medium_term)
@@ -4665,7 +4665,7 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_medium, use_container_width=True)
                         
                         with pred_tab4:
-                            st.markdown("**📊 Long-term Predictions (Next 3 Months)**")
+                            st.markdown("**ðŸ“Š Long-term Predictions (Next 3 Months)**")
                             long_term = predictions['predictions']['long_term']
                             
                             df_long = pd.DataFrame(long_term)
@@ -4741,7 +4741,7 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_long, use_container_width=True)
                         
                         with pred_tab5:
-                            st.markdown("**🔧 Technical Analysis**")
+                            st.markdown("**ðŸ”§ Technical Analysis**")
                             tech_analysis = predictions['technical_analysis']
                             
                             if 'error' not in tech_analysis:
@@ -4778,7 +4778,7 @@ def display_universal_file_upload():
     # Check if manual processing was successful
     if 'manual_df' in st.session_state and 'manual_brand' in st.session_state:
         st.markdown("---")
-        st.subheader("🔮 Generate Predictions from Manual Processing")
+        st.subheader("ðŸ”® Generate Predictions from Manual Processing")
         
         manual_df = st.session_state.manual_df
         manual_brand = st.session_state.manual_brand
@@ -4796,7 +4796,7 @@ def display_universal_file_upload():
         with col2:
             date_column = st.selectbox("Select Date Column:", ['None'] + manual_df.columns.tolist(), key="manual_date_col")
         
-        if st.button("🔮 Generate Predictions from Manual Data", key="manual_predictions"):
+        if st.button("ðŸ”® Generate Predictions from Manual Data", key="manual_predictions"):
             with st.spinner("Generating predictions from manually processed data..."):
                 try:
                     # Generate predictions using the manual dataframe
@@ -4809,7 +4809,7 @@ def display_universal_file_upload():
                         st.error(predictions['error'])
                     else:
                         # Display prediction results
-                        st.subheader(f"🔮 Prediction Results for {manual_brand}")
+                        st.subheader(f"ðŸ”® Prediction Results for {manual_brand}")
                         
                         # Current statistics
                         col1, col2, col3, col4 = st.columns(4)
@@ -4831,7 +4831,7 @@ def display_universal_file_upload():
                         # Market and timezone information
                         if 'market_info' in predictions:
                             st.markdown("---")
-                            st.subheader("🌍 Market & Timezone Information")
+                            st.subheader("ðŸŒ Market & Timezone Information")
                             
                             market_info = predictions['market_info']
                             
@@ -4862,7 +4862,7 @@ def display_universal_file_upload():
                                 st.write(f"**Timezone**: {market_info['timezone']}")
                         
                         # Show short-term predictions
-                        st.subheader("📅 Short-term Predictions (Next 7 Days)")
+                        st.subheader("ðŸ“… Short-term Predictions (Next 7 Days)")
                         short_term = predictions['predictions']['short_term']
                         df_short = pd.DataFrame(short_term)
                         st.dataframe(df_short, use_container_width=True)
@@ -4915,7 +4915,7 @@ def display_universal_file_upload():
 
 def display_news_based_predictions():
     """Display news-based market predictions"""
-    st.subheader("📰 News-Based Market Predictions")
+    st.subheader("ðŸ“° News-Based Market Predictions")
     
     st.markdown("""
     **Live Market Predictions Based on News Sentiment Analysis**
@@ -4934,7 +4934,7 @@ def display_news_based_predictions():
         )
     
     with col2:
-        if st.button("🔄 Fetch Live News & Predict", key="fetch_news_predict"):
+        if st.button("ðŸ”„ Fetch Live News & Predict", key="fetch_news_predict"):
             with st.spinner("Fetching live news and analyzing sentiment..."):
                 # Get current price
                 live_price_data = st.session_state.data_fetcher.get_live_company_price(symbol)
@@ -4945,7 +4945,7 @@ def display_news_based_predictions():
                 
                 if news_prediction:
                     # Display prediction results
-                    st.subheader(f"📊 News-Based Prediction for {symbol}")
+                    st.subheader(f"ðŸ“Š News-Based Prediction for {symbol}")
                     
                     # Current vs predicted metrics
                     col1, col2, col3, col4 = st.columns(4)
@@ -4967,20 +4967,20 @@ def display_news_based_predictions():
                         st.metric("Confidence", f"{confidence:.1f}%")
                     
                     # Sentiment analysis results
-                    st.subheader("📈 Sentiment Analysis")
+                    st.subheader("ðŸ“ˆ Sentiment Analysis")
                     sentiment = news_prediction['sentiment']
                     
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
                         if sentiment['sentiment'] == 'positive':
-                            st.success(f"✅ **Positive Sentiment**")
+                            st.success(f"âœ… **Positive Sentiment**")
                             st.write(f"Prediction: **{sentiment['prediction'].upper()}**")
                         elif sentiment['sentiment'] == 'negative':
-                            st.error(f"❌ **Negative Sentiment**")
+                            st.error(f"âŒ **Negative Sentiment**")
                             st.write(f"Prediction: **{sentiment['prediction'].upper()}**")
                         else:
-                            st.info(f"➡️ **Neutral Sentiment**")
+                            st.info(f"âž¡ï¸ **Neutral Sentiment**")
                             st.write(f"Prediction: **{sentiment['prediction'].upper()}**")
                     
                     with col2:
@@ -4991,14 +4991,14 @@ def display_news_based_predictions():
                         st.metric("Analysis Confidence", f"{sentiment['confidence']*100:.1f}%")
                         trend = news_prediction['trend']
                         if trend == 'upward':
-                            st.success("📈 Upward Trend")
+                            st.success("ðŸ“ˆ Upward Trend")
                         elif trend == 'downward':
-                            st.error("📉 Downward Trend")
+                            st.error("ðŸ“‰ Downward Trend")
                         else:
-                            st.info("➡️ Stable Trend")
+                            st.info("âž¡ï¸ Stable Trend")
                     
                     # Price prediction chart
-                    st.subheader("📊 Price Prediction Visualization")
+                    st.subheader("ðŸ“Š Price Prediction Visualization")
                     
                     fig = go.Figure()
                     
@@ -5041,7 +5041,7 @@ def display_news_based_predictions():
                     st.plotly_chart(fig, use_container_width=True)
                     
                     # News insights
-                    st.subheader("📝 Market Insights")
+                    st.subheader("ðŸ“ Market Insights")
                     
                     if sentiment['sentiment'] == 'positive':
                         st.success(f"""
@@ -5076,7 +5076,7 @@ def display_news_based_predictions():
 
 def display_all_kse100_live_prices():
     """Display live prices for all KSE-100 companies using enhanced PSX fetcher"""
-    st.header("🏛️ All KSE-100 Companies - Live Prices")
+    st.header("ðŸ›ï¸ All KSE-100 Companies - Live Prices")
     st.markdown("Real-time market data from Pakistan Stock Exchange (PSX)")
     
     # Check if we need to fetch fresh data (cache for 5 minutes)
@@ -5087,7 +5087,7 @@ def display_all_kse100_live_prices():
             need_refresh = False
     
     # Fetch data if needed
-    if need_refresh or st.button("🔄 Refresh All Data", key="refresh_kse100"):
+    if need_refresh or st.button("ðŸ”„ Refresh All Data", key="refresh_kse100"):
         with st.spinner("Fetching live prices for all KSE-100 companies..."):
             st.session_state.all_kse100_data = st.session_state.enhanced_psx_fetcher.fetch_all_kse100_live_prices()
             st.session_state.kse100_last_fetch = datetime.now()
@@ -5097,7 +5097,7 @@ def display_all_kse100_live_prices():
         companies_data = st.session_state.all_kse100_data
         
         # Summary metrics
-        st.subheader("📊 Market Summary")
+        st.subheader("ðŸ“Š Market Summary")
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -5125,12 +5125,12 @@ def display_all_kse100_live_prices():
         table_data = []
         for symbol, data in companies_data.items():
             source_display = {
-                'psx_official_direct_match': '🟢 PSX Live',
-                'psx_official_name_match': '🟢 PSX Live', 
-                'psx_official_partial_match': '🟡 PSX Match',
-                'sector_based_estimate': '📊 Estimated',
-                'unavailable': '❌ N/A'
-            }.get(data['source'], '🔄 Other')
+                'psx_official_direct_match': 'ðŸŸ¢ PSX Live',
+                'psx_official_name_match': 'ðŸŸ¢ PSX Live', 
+                'psx_official_partial_match': 'ðŸŸ¡ PSX Match',
+                'sector_based_estimate': 'ðŸ“Š Estimated',
+                'unavailable': 'âŒ N/A'
+            }.get(data['source'], 'ðŸ”„ Other')
             
             table_data.append({
                 'Symbol': symbol,
@@ -5167,7 +5167,7 @@ def display_all_kse100_live_prices():
             sector_data = [item for item in table_data if item['Symbol'] in sector_symbols]
             
             if sector_data:
-                with st.expander(f"🏢 {sector_name} ({len(sector_data)} companies)", expanded=False):
+                with st.expander(f"ðŸ¢ {sector_name} ({len(sector_data)} companies)", expanded=False):
                     df = pd.DataFrame(sector_data)
                     st.dataframe(df, use_container_width=True, hide_index=True)
                     
@@ -5177,14 +5177,14 @@ def display_all_kse100_live_prices():
                         cols = st.columns(min(len(sector_data), 4))
                         for idx, company in enumerate(sector_data):
                             with cols[idx % 4]:
-                                if st.button(f"📊 {company['Symbol']}", key=f"analyze_{company['Symbol']}", use_container_width=True):
+                                if st.button(f"ðŸ“Š {company['Symbol']}", key=f"analyze_{company['Symbol']}", use_container_width=True):
                                     display_individual_company_forecast(company['Symbol'], company['Company Name'])
                     else:
                         # For larger sectors, show sector summary
                         st.markdown("**Sector Summary:**")
                         sector_symbols = [item['Symbol'] for item in sector_data]
                         avg_price = sum(float(item['Current Price (PKR)'].replace(',', '')) for item in sector_data) / len(sector_data)
-                        live_count = sum(1 for item in sector_data if '🟢' in item['Data Source'])
+                        live_count = sum(1 for item in sector_data if 'ðŸŸ¢' in item['Data Source'])
                         
                         col1, col2, col3 = st.columns(3)
                         with col1:
@@ -5199,12 +5199,12 @@ def display_all_kse100_live_prices():
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            if st.button("💾 Export All Data to CSV", use_container_width=True):
+            if st.button("ðŸ’¾ Export All Data to CSV", use_container_width=True):
                 df_export = pd.DataFrame(table_data)
                 csv_data = df_export.to_csv(index=False)
                 
                 st.download_button(
-                    label="📥 Download KSE-100 Data",
+                    label="ðŸ“¥ Download KSE-100 Data",
                     data=csv_data,
                     file_name=f"kse100_all_companies_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                     mime="text/csv",
@@ -5218,10 +5218,10 @@ def display_all_kse100_live_prices():
         st.markdown("---")
         st.markdown("""
         **Data Source Information:**
-        - 🟢 **PSX Live**: Real-time data from Pakistan Stock Exchange official website
-        - 🟡 **PSX Match**: Price data matched from PSX market summary
-        - 📊 **Estimated**: Sector-based estimates when live data unavailable
-        - ❌ **N/A**: Data currently unavailable from all sources
+        - ðŸŸ¢ **PSX Live**: Real-time data from Pakistan Stock Exchange official website
+        - ðŸŸ¡ **PSX Match**: Price data matched from PSX market summary
+        - ðŸ“Š **Estimated**: Sector-based estimates when live data unavailable
+        - âŒ **N/A**: Data currently unavailable from all sources
         
         **Note:** This application uses official PSX data for educational purposes. 
         For commercial use, proper licensing from PSX is required (contact: marketdatarequest@psx.com.pk)
@@ -5232,7 +5232,7 @@ def display_all_kse100_live_prices():
 
 def display_individual_company_forecast(symbol, company_name):
     """Display comprehensive forecasting analysis for individual company"""
-    st.subheader(f"📊 {company_name} ({symbol}) - Comprehensive Analysis")
+    st.subheader(f"ðŸ“Š {company_name} ({symbol}) - Comprehensive Analysis")
     
     # Generate synthetic historical data for forecasting (since we have live prices)
     historical_data = generate_company_historical_data(symbol)
@@ -5262,7 +5262,7 @@ def display_individual_company_forecast(symbol, company_name):
             st.metric("52W High", f"PKR {high_52w:,.2f}")
         
         # Forecasting tabs
-        tab1, tab2, tab3, tab4 = st.tabs(["📈 Price Chart", "🔮 7-Day Forecast", "⚡ Intraday Analysis", "📊 Technical Analysis"])
+        tab1, tab2, tab3, tab4 = st.tabs(["ðŸ“ˆ Price Chart", "ðŸ”® 7-Day Forecast", "âš¡ Intraday Analysis", "ðŸ“Š Technical Analysis"])
         
         with tab1:
             # Historical price chart
@@ -5606,7 +5606,7 @@ def generate_intraday_data(symbol, current_price):
         # Generate realistic intraday price movements
         np.random.seed(hash(symbol + str(datetime.now().date())) % 2**32)
 
-        # Start with opening price (±2% from current)
+        # Start with opening price (Â±2% from current)
         open_price = current_price * np.random.uniform(0.98, 1.02)
 
         # Generate price movements
@@ -5695,7 +5695,7 @@ def calculate_technical_indicators(historical_data):
 def display_technical_analysis():
     """Display comprehensive technical analysis with candlestick charts and indicators"""
 
-    st.title("📈 Technical Analysis Indicators")
+    st.title("ðŸ“ˆ Technical Analysis Indicators")
     st.markdown("---")
 
     # Company selection
@@ -5717,13 +5717,13 @@ def display_technical_analysis():
 
                 if cached_data is not None and not cached_data.empty:
                     stock_data = cached_data
-                    st.success(f"✅ Loaded cached data for {company_name}")
+                    st.success(f"âœ… Loaded cached data for {company_name}")
                 else:
                     # Fetch fresh data
                     stock_data = st.session_state.data_fetcher.fetch_company_data(selected_company, days=90)
                     if stock_data is not None and not stock_data.empty:
                         st.session_state.cache_manager.store_stock_data(selected_company, company_name, stock_data)
-                        st.success(f"📡 Fetched fresh data for {company_name}")
+                        st.success(f"ðŸ“¡ Fetched fresh data for {company_name}")
 
                 if stock_data is not None and not stock_data.empty and len(stock_data) >= 30:
                     st.session_state.last_update = datetime.now()
@@ -5789,7 +5789,7 @@ def display_technical_analysis():
                         col2.metric("Columns", len(stock_data.columns))
 
                     # Technical Analysis Chart
-                    st.subheader("📊 Complete Technical Analysis")
+                    st.subheader("ðŸ“Š Complete Technical Analysis")
                     tech_chart = st.session_state.visualizer.create_technical_analysis_chart(
                         stock_data, f"{company_name} ({selected_company})"
                     )
@@ -5797,7 +5797,7 @@ def display_technical_analysis():
 
                     # Current Indicator Values
                     st.markdown("---")
-                    st.subheader("📊 Current Technical Indicator Values")
+                    st.subheader("ðŸ“Š Current Technical Indicator Values")
 
                     try:
                         # Calculate latest values
@@ -5850,50 +5850,50 @@ def display_technical_analysis():
 
                     # Indicator Explanations
                     st.markdown("---")
-                    st.subheader("📋 Complete Technical Analysis Guide")
+                    st.subheader("ðŸ“‹ Complete Technical Analysis Guide")
 
-                    with st.expander("🔍 Understanding All Indicators", expanded=True):
+                    with st.expander("ðŸ” Understanding All Indicators", expanded=True):
                         st.markdown("""
-                        ### 📈 **Candlestick Price Chart**
+                        ### ðŸ“ˆ **Candlestick Price Chart**
                         - **Green candles**: Price increased (bullish)
                         - **Red candles**: Price decreased (bearish)
                         - **Body**: Difference between open/close
                         - **Wicks**: High/low range
 
-                        ### 📊 **Bollinger Bands (Dedicated Graph)**
+                        ### ðŸ“Š **Bollinger Bands (Dedicated Graph)**
                         - **Upper Band**: +2 SD from SMA 20 (overbought zone)
                         - **Middle Band**: 20-period SMA (trend indicator)
                         - **Lower Band**: -2 SD from SMA 20 (oversold zone)
                         - **Strategy**: Buy when price touches lower band, sell when touches upper band
 
-                        ### 📈 **Moving Averages (SMA 20 & EMA 20)**
+                        ### ðŸ“ˆ **Moving Averages (SMA 20 & EMA 20)**
                         - **SMA 20**: Simple Moving Average (equal weight)
                         - **EMA 20**: Exponential Moving Average (recent prices weighted more)
                         - **Golden Cross**: Short MA crosses above long MA (bullish)
                         - **Death Cross**: Short MA crosses below long MA (bearish)
 
-                        ### 🎯 **RSI (Relative Strength Index)**
+                        ### ðŸŽ¯ **RSI (Relative Strength Index)**
                         - **Scale**: 0-100
                         - **Overbought**: > 70 (potential sell signal)
                         - **Oversold**: < 30 (potential buy signal)
                         - **Neutral**: 30-70 (no clear signal)
                         - **Divergence**: RSI vs price can signal reversals
 
-                        ### 📊 **MACD (Moving Average Convergence Divergence)**
+                        ### ðŸ“Š **MACD (Moving Average Convergence Divergence)**
                         - **MACD Line**: 12-period EMA minus 26-period EMA
                         - **Signal Line**: 9-period EMA of MACD
                         - **Histogram**: Difference between MACD and Signal
                         - **Bullish Signal**: MACD crosses above Signal line
                         - **Bearish Signal**: MACD crosses below Signal line
 
-                        ### 🎲 **Stochastic Oscillator**
+                        ### ðŸŽ² **Stochastic Oscillator**
                         - **%K Line**: Main stochastic line
                         - **%D Line**: 3-period SMA of %K (signal line)
                         - **Overbought**: > 80 (potential sell)
                         - **Oversold**: < 20 (potential buy)
                         - **Crossovers**: %K crossing %D generates signals
 
-                        ### 📊 **Volume Analysis**
+                        ### ðŸ“Š **Volume Analysis**
                         - **Green bars**: Volume on up days
                         - **Red bars**: Volume on down days
                         - **High volume**: Confirms trend strength
@@ -5901,32 +5901,32 @@ def display_technical_analysis():
                         """)
 
                         # Trading Signals Summary
-                        st.markdown("### 🚀 **Quick Trading Signals Summary**")
+                        st.markdown("### ðŸš€ **Quick Trading Signals Summary**")
                         signals = []
 
                         # RSI signals
                         if latest_rsi > 70:
-                            signals.append("⚠️ RSI Overbought - Consider Selling")
+                            signals.append("âš ï¸ RSI Overbought - Consider Selling")
                         elif latest_rsi < 30:
-                            signals.append("✅ RSI Oversold - Consider Buying")
+                            signals.append("âœ… RSI Oversold - Consider Buying")
 
                         # MACD signals
                         if macd_value > signal_value:
-                            signals.append("✅ MACD Bullish Crossover")
+                            signals.append("âœ… MACD Bullish Crossover")
                         else:
-                            signals.append("⚠️ MACD Bearish Crossover")
+                            signals.append("âš ï¸ MACD Bearish Crossover")
 
                         # Stochastic signals
                         if stoch_k > 80:
-                            signals.append("⚠️ Stochastic Overbought")
+                            signals.append("âš ï¸ Stochastic Overbought")
                         elif stoch_k < 20:
-                            signals.append("✅ Stochastic Oversold")
+                            signals.append("âœ… Stochastic Oversold")
 
                         # Bollinger Band signals
                         if current_price < current_bb_lower:
-                            signals.append("✅ Price near Lower BB - Potential Buy")
+                            signals.append("âœ… Price near Lower BB - Potential Buy")
                         elif current_price > current_bb_upper:
-                            signals.append("⚠️ Price near Upper BB - Potential Sell")
+                            signals.append("âš ï¸ Price near Upper BB - Potential Sell")
 
                         if signals:
                             for signal in signals:
@@ -6005,7 +6005,7 @@ def display_master_oracle_terminal():
                     }
             except Exception as e:
                 if debug_mode:
-                    st.write(f"🐛 Yahoo Finance crypto failed: {e}")
+                    st.write(f"ðŸ› Yahoo Finance crypto failed: {e}")
                 pass
 
             # Fallback: CoinGecko API (only if requests available)
@@ -6027,7 +6027,7 @@ def display_master_oracle_terminal():
                             }
                 except Exception as e:
                     if debug_mode:
-                        st.write(f"🐛 CoinGecko API failed: {e}")
+                        st.write(f"ðŸ› CoinGecko API failed: {e}")
                     pass
 
             return None
@@ -6050,7 +6050,7 @@ def display_master_oracle_terminal():
                     }
             except Exception as e:
                 if debug_mode:
-                    st.write(f"🐛 Yahoo Finance commodity failed: {e}")
+                    st.write(f"ðŸ› Yahoo Finance commodity failed: {e}")
                 pass
 
             return None
@@ -6064,7 +6064,7 @@ def display_master_oracle_terminal():
                     return data
             except Exception as e:
                 if debug_mode:
-                    st.write(f"🐛 Historical data fetch failed for {symbol}: {e}")
+                    st.write(f"ðŸ› Historical data fetch failed for {symbol}: {e}")
                 pass
 
             # Return empty DataFrame if all methods fail
@@ -6103,7 +6103,7 @@ def display_master_oracle_terminal():
     }
     </style>
     <div class="oracle-header">
-        <h1>💎 Master Oracle Terminal v3.0</h1>
+        <h1>ðŸ’Ž Master Oracle Terminal v3.0</h1>
         <p style="color: #aaa;">Advanced Technical Analysis & AI Forecasting</p>
     </div>
     """, unsafe_allow_html=True)
@@ -6279,31 +6279,31 @@ def display_master_oracle_terminal():
     
     # Sidebar controls
     with st.sidebar:
-        st.markdown("### 💎 Oracle Settings v4.0")
+        st.markdown("### ðŸ’Ž Oracle Settings v4.0")
         selected_asset = st.selectbox("Select Trading Asset:", list(ASSETS.keys()))
         sound_alert = st.checkbox("Enable Sound Alert", value=True)
         show_indicators = st.checkbox("Show Advanced Technical Indicators", value=True)
         show_candles = st.checkbox("Show Enhanced Candlestick Chart", value=True)
         real_time_data = st.checkbox("Enable Real-Time Data Scraping", value=True)
         forecast_period = st.selectbox("Forecast Period:", ["1H", "6H", "12H", "24H"], index=1)
-        debug_mode = st.checkbox("🐛 Debug Mode", value=False)
+        debug_mode = st.checkbox("ðŸ› Debug Mode", value=False)
 
-        if st.button("🚨 Reset Oracle Models"):
+        if st.button("ðŸš¨ Reset Oracle Models"):
             st.session_state.oracle_models_v3[selected_asset] = EnhancedTrendModel()
             st.success("Models reset successfully!")
     
-    auto_refresh = st.checkbox("🔄 Enable Auto-Refresh (3 min)", value=False)
+    auto_refresh = st.checkbox("ðŸ”„ Enable Auto-Refresh (3 min)", value=False)
 
     # Calculate forecast hours for status display
     period_hours = {"1H": 1, "6H": 6, "12H": 12, "24H": 24}[forecast_period]
 
     try:
         # Enhanced data fetching with real-time scraper
-        with st.spinner("📡 Fetching real-time market data..."):
+        with st.spinner("ðŸ“¡ Fetching real-time market data..."):
             data_fetch_success = False
 
             if debug_mode:
-                st.write("🐛 **DEBUG MODE ENABLED**")
+                st.write("ðŸ› **DEBUG MODE ENABLED**")
                 st.write(f"Selected asset: {selected_asset}")
                 st.write(f"Real-time data: {real_time_data}")
                 st.write(f"Forecast period: {forecast_period}")
@@ -6339,7 +6339,7 @@ def display_master_oracle_terminal():
                                     'Volume': [real_time_price.get('volume', asset_df.get('Volume', pd.Series([0])).iloc[-1] if 'Volume' in asset_df.columns else 0)]
                                 }, index=[latest_time])
                                 asset_df = pd.concat([asset_df, new_row])
-                                st.success(f"✅ Real-time data integrated from {real_time_price.get('source', 'Unknown')}")
+                                st.success(f"âœ… Real-time data integrated from {real_time_price.get('source', 'Unknown')}")
                             except Exception as e:
                                 st.warning(f"Could not append real-time data: {e}")
                     else:
@@ -6356,15 +6356,15 @@ def display_master_oracle_terminal():
                     if not asset_df.empty:
                         data_fetch_success = True
                         if real_time_data:
-                            st.info("📊 Using Yahoo Finance fallback data")
+                            st.info("ðŸ“Š Using Yahoo Finance fallback data")
                 except Exception as e:
                     st.error(f"Error loading market data: {e}")
                     data_fetch_success = False
 
             if not data_fetch_success:
                 # Ultimate fallback: Generate demo data
-                st.warning("⚠️ All data sources failed. Using demo data for demonstration.")
-                st.info("💡 This allows you to explore the interface and features even without live market data.")
+                st.warning("âš ï¸ All data sources failed. Using demo data for demonstration.")
+                st.info("ðŸ’¡ This allows you to explore the interface and features even without live market data.")
 
                 # Generate demo data based on selected asset
                 base_price = {
@@ -6409,7 +6409,7 @@ def display_master_oracle_terminal():
         
         # Demo data if market closed
         if asset_df.empty:
-            st.warning("📊 Market currently closed. Showing demo data for visualization.")
+            st.warning("ðŸ“Š Market currently closed. Showing demo data for visualization.")
             base_price = 2500 if selected_asset == "Gold (XAU)" else 45000 if selected_asset == "Bitcoin (BTC)" else 100
             times = pd.date_range(end=pd.Timestamp.now(tz='UTC'), periods=72, freq='5min')
             random.seed(42)
@@ -6434,7 +6434,7 @@ def display_master_oracle_terminal():
             dxy_df = pd.DataFrame({'Close': [106] * 71}, index=asset_df.index)
 
         # Main content - Status display after data fetching
-        st.markdown("### 🔧 System Status")
+        st.markdown("### ðŸ”§ System Status")
         status_col1, status_col2, status_col3 = st.columns(3)
         with status_col1:
             if not data_fetch_success:
@@ -6444,7 +6444,7 @@ def display_master_oracle_terminal():
                 st.metric("Data Sources", data_source, "Real-time enabled" if real_time_data else "Standard mode")
 
                 if "demo" in str(asset_df).lower():
-                    st.info("🎯 **Demo Mode Active**: Using simulated data to showcase features. Live market data is not currently available.")
+                    st.info("ðŸŽ¯ **Demo Mode Active**: Using simulated data to showcase features. Live market data is not currently available.")
         with status_col2:
             st.metric("Forecast Period", forecast_period, f"{period_hours} hours")
         with status_col3:
@@ -6466,11 +6466,11 @@ def display_master_oracle_terminal():
         # Get current prices with comprehensive error handling
         try:
             if debug_mode:
-                st.write(f"🐛 Asset DF shape: {asset_df.shape}")
-                st.write(f"🐛 Asset DF columns: {list(asset_df.columns)}")
-                st.write(f"🐛 Asset DF index type: {type(asset_df.index)}")
-                st.write(f"🐛 DXY DF shape: {dxy_df.shape}")
-                st.write(f"🐛 DXY DF columns: {list(dxy_df.columns)}")
+                st.write(f"ðŸ› Asset DF shape: {asset_df.shape}")
+                st.write(f"ðŸ› Asset DF columns: {list(asset_df.columns)}")
+                st.write(f"ðŸ› Asset DF index type: {type(asset_df.index)}")
+                st.write(f"ðŸ› DXY DF shape: {dxy_df.shape}")
+                st.write(f"ðŸ› DXY DF columns: {list(dxy_df.columns)}")
 
             # Find required columns dynamically
             close_col = None
@@ -6480,7 +6480,7 @@ def display_master_oracle_terminal():
                     break
 
             if asset_df.empty or close_col is None or len(asset_df) < 4:
-                st.error("❌ Insufficient asset data for analysis. DataFrame is empty or missing required columns.")
+                st.error("âŒ Insufficient asset data for analysis. DataFrame is empty or missing required columns.")
                 st.write(f"DataFrame shape: {asset_df.shape if hasattr(asset_df, 'shape') else 'No shape'}")
                 st.write(f"Columns: {list(asset_df.columns) if hasattr(asset_df, 'columns') else 'No columns'}")
                 return
@@ -6506,13 +6506,13 @@ def display_master_oracle_terminal():
             d_chg = ((d_price - float(dxy_df[dxy_close_col].iloc[-4])) / float(dxy_df[dxy_close_col].iloc[-4])) * 100
 
         except KeyError as e:
-            st.error(f"❌ Column access error: {e}. Available columns: {list(asset_df.columns) if hasattr(asset_df, 'columns') else 'None'}")
+            st.error(f"âŒ Column access error: {e}. Available columns: {list(asset_df.columns) if hasattr(asset_df, 'columns') else 'None'}")
             return
         except IndexError as e:
-            st.error(f"❌ Index access error: {e}. DataFrame length: {len(asset_df) if hasattr(asset_df, 'shape') else 'Unknown'}")
+            st.error(f"âŒ Index access error: {e}. DataFrame length: {len(asset_df) if hasattr(asset_df, 'shape') else 'Unknown'}")
             return
         except Exception as e:
-            st.error(f"❌ Unexpected error in data processing: {e}")
+            st.error(f"âŒ Unexpected error in data processing: {e}")
             st.write(f"Error type: {type(e).__name__}")
             return
         
@@ -6621,13 +6621,13 @@ def display_master_oracle_terminal():
         
         # Signal logic
         if a_chg > 0.05 and d_chg > 0.05:
-            mode, m_col = "⚠️ SAFE HAVEN: Both Rising", "#FFA500"
+            mode, m_col = "âš ï¸ SAFE HAVEN: Both Rising", "#FFA500"
         elif a_chg > 0.08:
-            mode, m_col = "✅ STRONG BUY", "#00FF00"
+            mode, m_col = "âœ… STRONG BUY", "#00FF00"
         elif a_chg < -0.08:
-            mode, m_col = "❌ STRONG SELL", "#FF4B4B"
+            mode, m_col = "âŒ STRONG SELL", "#FF4B4B"
         else:
-            mode, m_col = "⚖️ NEUTRAL / STABLE", "#808080"
+            mode, m_col = "âš–ï¸ NEUTRAL / STABLE", "#808080"
         
         # Display header
         st.markdown(f"<h1 style='text-align:center; color:gold;'>{selected_asset} Oracle</h1>", unsafe_allow_html=True)
@@ -6640,12 +6640,12 @@ def display_master_oracle_terminal():
         m3.metric(f"{forecast_period} AI Target", f"${forecast[-1]:,.2f}")
         
         # Enhanced forecast graph with confidence intervals
-        st.markdown(f"### 📊 {forecast_period} Price Forecast Graph with Confidence Bands")
+        st.markdown(f"### ðŸ“Š {forecast_period} Price Forecast Graph with Confidence Bands")
 
         try:
             # Validate forecast data
             if not forecast or len(forecast) == 0:
-                st.error("❌ No forecast data available")
+                st.error("âŒ No forecast data available")
                 st.plotly_chart(create_fallback_forecast_chart(selected_asset, forecast_period), use_container_width=True)
                 return
 
@@ -6669,7 +6669,7 @@ def display_master_oracle_terminal():
             # Ensure forecast and times match in length
             min_len = min(len(forecast), len(forecast_times), len(upper_bound), len(lower_bound))
             if min_len == 0:
-                st.error("❌ Insufficient forecast data for visualization")
+                st.error("âŒ Insufficient forecast data for visualization")
                 st.plotly_chart(create_fallback_forecast_chart(selected_asset, forecast_period), use_container_width=True)
                 return
 
@@ -6683,13 +6683,13 @@ def display_master_oracle_terminal():
                 total_change = float(forecast[-1]) - float(forecast[0])
                 if total_change > 0:
                     trend_color = '#00FF00'
-                    trend_name = '📈 Bullish Trend'
+                    trend_name = 'ðŸ“ˆ Bullish Trend'
                 elif total_change < 0:
                     trend_color = '#FF4B4B'
-                    trend_name = '📉 Bearish Trend'
+                    trend_name = 'ðŸ“‰ Bearish Trend'
                 else:
                     trend_color = '#FFD700'
-                    trend_name = '⚖️ Sideways'
+                    trend_name = 'âš–ï¸ Sideways'
             except:
                 trend_color = '#00CED1'
                 trend_name = 'Forecast'
@@ -6802,7 +6802,7 @@ def display_master_oracle_terminal():
                     font=dict(color='white', size=12)
                 ),
                 title=dict(
-                    text=f'📊 {selected_asset} - {forecast_period} Professional Price Forecast',
+                    text=f'ðŸ“Š {selected_asset} - {forecast_period} Professional Price Forecast',
                     font=dict(size=20, color='#2C3E50', family='Arial Black'),
                     x=0.5,
                     y=0.95
@@ -6846,7 +6846,7 @@ def display_master_oracle_terminal():
             st.plotly_chart(forecast_graph, use_container_width=True)
 
             # Add forecast analysis summary
-            st.markdown("### 📈 Forecast Analysis Summary")
+            st.markdown("### ðŸ“ˆ Forecast Analysis Summary")
 
             if len(forecast) > 1:
                 # Calculate forecast statistics
@@ -6894,10 +6894,10 @@ def display_master_oracle_terminal():
 
                 # Add risk assessment
                 if abs(total_return) > 5:
-                    risk_level = "🔴 HIGH VOLATILITY" if abs(total_return) > 10 else "🟡 MODERATE MOVEMENT"
+                    risk_level = "ðŸ”´ HIGH VOLATILITY" if abs(total_return) > 10 else "ðŸŸ¡ MODERATE MOVEMENT"
                     risk_color = "#E74C3C" if abs(total_return) > 10 else "#F39C12"
                 else:
-                    risk_level = "🟢 STABLE FORECAST"
+                    risk_level = "ðŸŸ¢ STABLE FORECAST"
                     risk_color = "#27AE60"
 
                 st.markdown(f"""
@@ -6912,14 +6912,14 @@ def display_master_oracle_terminal():
                 """, unsafe_allow_html=True)
 
         except Exception as e:
-            st.error(f"❌ Error creating forecast graph: {str(e)}")
-            st.info("💡 Try refreshing the page or selecting a different asset/forecast period")
+            st.error(f"âŒ Error creating forecast graph: {str(e)}")
+            st.info("ðŸ’¡ Try refreshing the page or selecting a different asset/forecast period")
             # Create a simple fallback chart
             st.plotly_chart(create_fallback_forecast_chart(selected_asset, forecast_period), use_container_width=True)
         
         # ============== ENHANCED TECHNICAL INDICATORS SECTION ==============
         if show_indicators:
-            st.markdown("### 📊 Complete Technical Analysis Dashboard")
+            st.markdown("### ðŸ“Š Complete Technical Analysis Dashboard")
 
             # Use the comprehensive technical analysis chart from visualization.py
             try:
@@ -6930,7 +6930,7 @@ def display_master_oracle_terminal():
             except Exception as e:
                 st.warning(f"Could not generate advanced technical chart: {e}")
                 # Fallback to basic indicators
-                st.markdown("### 📈 Basic Technical Indicators")
+                st.markdown("### ðŸ“ˆ Basic Technical Indicators")
 
                 # Find the close column (could be 'close', 'Close', etc.)
                 close_col = None
@@ -6979,7 +6979,7 @@ def display_master_oracle_terminal():
                             col2.metric("Data Points", len(close_prices))
 
             # Technical Analysis Summary
-            st.markdown("### 🎯 Technical Analysis Summary")
+            st.markdown("### ðŸŽ¯ Technical Analysis Summary")
 
             # Calculate signals
             signals = []
@@ -7001,46 +7001,46 @@ def display_master_oracle_terminal():
                     rsi = st.session_state.visualizer.calculate_rsi(asset_df)
                     if len(rsi) > 0 and not pd.isna(rsi.iloc[-1]):
                         if rsi.iloc[-1] > 70:
-                            signals.append("⚠️ RSI Overbought - Consider Selling")
+                            signals.append("âš ï¸ RSI Overbought - Consider Selling")
                         elif rsi.iloc[-1] < 30:
-                            signals.append("✅ RSI Oversold - Consider Buying")
+                            signals.append("âœ… RSI Oversold - Consider Buying")
 
                     # MACD signals
                     macd, signal_line, _ = st.session_state.visualizer.calculate_macd(asset_df)
                     if len(macd) > 0 and len(signal_line) > 0 and not pd.isna(macd.iloc[-1]) and not pd.isna(signal_line.iloc[-1]):
                         if macd.iloc[-1] > signal_line.iloc[-1]:
-                            signals.append("✅ MACD Bullish Crossover")
+                            signals.append("âœ… MACD Bullish Crossover")
                         else:
-                            signals.append("⚠️ MACD Bearish Crossover")
+                            signals.append("âš ï¸ MACD Bearish Crossover")
 
                     # Bollinger Band signals
                     bb_upper, bb_middle, bb_lower = st.session_state.visualizer.calculate_bollinger_bands(asset_df)
                     if len(bb_upper) > 0 and len(bb_lower) > 0 and not pd.isna(bb_upper.iloc[-1]) and not pd.isna(bb_lower.iloc[-1]):
                         current_price = close_prices[-1]
                         if current_price < bb_lower.iloc[-1]:
-                            signals.append("✅ Price Below Lower BB - Potential Long")
+                            signals.append("âœ… Price Below Lower BB - Potential Long")
                         elif current_price > bb_upper.iloc[-1]:
-                            signals.append("⚠️ Price Above Upper BB - Potential Short")
+                            signals.append("âš ï¸ Price Above Upper BB - Potential Short")
 
                 except Exception as e:
-                    signals.append(f"⚠️ Unable to calculate signals: {str(e)}")
+                    signals.append(f"âš ï¸ Unable to calculate signals: {str(e)}")
 
                 # Stochastic signals
                 k_percent, d_percent = st.session_state.visualizer.calculate_stochastic(asset_df)
                 if k_percent.iloc[-1] > 80:
-                    signals.append("⚠️ Stochastic Overbought")
+                    signals.append("âš ï¸ Stochastic Overbought")
                 elif k_percent.iloc[-1] < 20:
-                    signals.append("✅ Stochastic Oversold")
+                    signals.append("âœ… Stochastic Oversold")
 
             if signals:
                 for signal in signals:
                     st.markdown(f"- {signal}")
             else:
-                st.info("📊 No strong technical signals at current levels")
+                st.info("ðŸ“Š No strong technical signals at current levels")
         
         # ============== ENHANCED CANDLESTICK CHART ==============
         if show_candles and len(asset_df) > 0:
-            st.markdown("### 🕯️ Enhanced Candlestick Chart with Technical Overlays")
+            st.markdown("### ðŸ•¯ï¸ Enhanced Candlestick Chart with Technical Overlays")
 
             # Create enhanced candlestick chart
             candle_fig = go.Figure()
@@ -7107,603 +7107,429 @@ def display_master_oracle_terminal():
 
             st.plotly_chart(candle_fig, use_container_width=True)
         
-        # Combined forecast analysis chart with continuous data appending
-        st.markdown(f"### 📊 Combined {forecast_period} Forecast Analysis")
-
-        # Add manual reset option
-        col_reset, col_info = st.columns([1, 3])
-        with col_reset:
-            if st.button("🔄 Reset Forecast History", key=f"reset_{selected_asset}_{forecast_period}", help="Clear accumulated forecast data and start fresh"):
-                forecast_key = f"{selected_asset}_{forecast_period}_forecast_history"
-                if forecast_key in st.session_state:
-                    del st.session_state[forecast_key]
-                st.rerun()
+        # ============================================================
+        # COMBINED 1H & 6H FORECAST â€” 5-MINUTE MOVEMENT CHARTS
+        # ============================================================
+        st.markdown("---")
+        st.markdown("### ðŸ’Ž Combined 1H & 6H Forecast Analysis â€” Every 5-Minute Movement")
+        st.markdown(
+            f"<p style='color:#aaa; font-size:13px; margin-top:-10px;'>"
+            f"ðŸ“¡ Live 5-min interval forecasting for <strong style='color:#FFD700;'>{selected_asset}</strong> | "
+            f"Entry: <strong style='color:#00CED1;'>${a_price:,.2f}</strong> | "
+            f"Signal: <strong style='color:{m_col};'>{mode}</strong></p>",
+            unsafe_allow_html=True
+        )
 
         try:
-            # Initialize session state for forecast persistence if not exists
-            forecast_key = f"{selected_asset}_{forecast_period}_forecast_history"
-            if forecast_key not in st.session_state:
-                st.session_state[forecast_key] = {
-                    'timestamps': [],
-                    'prices': [],
-                    'upper_bounds': [],
-                    'lower_bounds': [],
-                    'last_update': None
-                }
+            import math
 
-            # Get current time for continuity check
-            current_time = datetime.now(pytz.timezone('Asia/Karachi'))
-
-            # Check if we need to append new data or reset
-            forecast_history = st.session_state[forecast_key]
-            should_append = False
-
-            if forecast_history['last_update'] is not None:
-                time_diff = (current_time - forecast_history['last_update']).total_seconds() / 60  # minutes
-                # Append new data if less than 2 minutes have passed (allows for 1-minute updates)
-                should_append = time_diff < 2 and len(forecast_history['prices']) > 0
-
-            if should_append:
-                # Generate Bollinger Band-aware price movement with realistic up/down swings
-                if forecast and len(forecast) > 0:
-                    last_historical_price = forecast_history['prices'][-1] if forecast_history['prices'] else a_price
-                    last_timestamp = forecast_history['timestamps'][-1] if forecast_history['timestamps'] else current_time
-
-                    new_timestamp = current_time
-
-                    # Calculate Bollinger Bands for realistic price containment
-                    if len(forecast_history['prices']) >= 20:
-                        # Use last 20 points for Bollinger Band calculation (like standard BB)
-                        bb_prices = forecast_history['prices'][-20:]
-                        bb_sma = np.mean(bb_prices)
-                        bb_std = np.std(bb_prices)
-
-                        # Standard Bollinger Bands (2 standard deviations)
-                        bb_upper = bb_sma + (bb_std * 2)
-                        bb_lower = bb_sma - (bb_std * 2)
-
-                        # Price position relative to bands
-                        bb_position = (last_historical_price - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
-
-                        # Bollinger Band squeeze detection (when bands are tight)
-                        squeeze_factor = bb_std / bb_sma  # Lower values = tighter squeeze
-                        is_squeezed = squeeze_factor < 0.015  # Tight squeeze threshold
-
-                        # Band expansion/contraction logic
-                        if is_squeezed:
-                            # High probability of breakout when squeezed
-                            breakout_chance = 0.7
-                            if random.random() < breakout_chance:
-                                # Breakout direction based on recent trend
-                                if len(bb_prices) >= 5:
-                                    recent_trend = bb_prices[-1] - bb_prices[-5]
-                                    breakout_direction = 1 if recent_trend > 0 else -1
-                                    breakout_strength = np.random.uniform(0.02, 0.05)  # 2-5% breakout
-                                    bb_breakout = breakout_direction * breakout_strength * last_historical_price
-                                else:
-                                    bb_breakout = np.random.normal(0, 0.02) * last_historical_price
-                            else:
-                                bb_breakout = 0
-                        else:
-                            bb_breakout = 0
-
-                        # Bollinger Band bounce effect (price tends to reverse at bands)
-                        bb_bounce = 0
-                        if abs(bb_position) > 0.8:  # Near outer bands
-                            bounce_strength = abs(bb_position) - 0.8  # Stronger bounce when closer to band
-                            bounce_direction = -1 if bb_position > 0 else 1  # Bounce away from band
-                            bb_bounce = bounce_direction * bounce_strength * bb_std * 0.5
-
+            def generate_5min_ohlc(base_price, n_steps, trend, vol, seed_val=42):
+                """Generate realistic 5-min OHLC forecast with visible ups & downs"""
+                rng = np.random.RandomState(seed_val)
+                opens_out, highs_out, lows_out, closes_out = [], [], [], []
+                current = base_price
+                momentum = trend * 0.3
+                support = base_price * (0.97 - abs(trend) * 0.5)
+                resist = base_price * (1.03 + abs(trend) * 0.5)
+                for i in range(n_steps):
+                    time_factor = i / max(n_steps - 1, 1)
+                    vol_cycle = math.sin(i / max(n_steps / 4.0, 1) * math.pi) * 0.5 + 0.5
+                    current_vol = vol * (0.45 + vol_cycle * 0.85)
+                    fair_val = base_price * (1 + trend * time_factor)
+                    mean_rev = (fair_val - current) * 0.14
+                    momentum_c = momentum * current * 0.0008
+                    sr_e = 0.0
+                    if current < support * 1.01:
+                        sr_e = (support - current) * 0.22
+                    elif current > resist * 0.99:
+                        sr_e = (resist - current) * 0.22
+                    rw = rng.normal(0, current_vol) * current * 0.012
+                    noise = (rng.random() - 0.5) * current * 0.0003
+                    trend_mv = trend * current * (0.00018 + time_factor * 0.00008)
+                    delta = trend_mv + momentum_c + mean_rev + sr_e + rw + noise
+                    open_p = current
+                    close_p = float(np.clip(current + delta, base_price * 0.82, base_price * 1.18))
+                    wick_range = abs(delta) * 0.45 + current * current_vol * 0.004
+                    if close_p >= open_p:
+                        high_p = close_p + abs(rng.normal(0, wick_range * 0.4))
+                        low_p = open_p - abs(rng.normal(0, wick_range * 0.3))
                     else:
-                        # Not enough data for full BB calculation, use simplified version
-                        bb_upper = bb_lower = bb_sma = last_historical_price
-                        bb_position = 0
-                        bb_breakout = 0
-                        bb_bounce = 0
-                        is_squeezed = False
+                        high_p = open_p + abs(rng.normal(0, wick_range * 0.3))
+                        low_p = close_p - abs(rng.normal(0, wick_range * 0.4))
+                    opens_out.append(open_p)
+                    highs_out.append(high_p)
+                    lows_out.append(low_p)
+                    closes_out.append(close_p)
+                    momentum = momentum * 0.992 + (delta / max(abs(current), 1e-9)) * 0.08
+                    current = close_p
+                return opens_out, highs_out, lows_out, closes_out
 
-                    # Enhanced trend calculation with BB awareness
-                    if len(forecast_history['prices']) >= 5:
-                        # Use BB-aware trend (price tends to walk along middle band during trends)
-                        recent_prices = forecast_history['prices'][-10:] if len(forecast_history['prices']) >= 10 else forecast_history['prices']
-                        trend_direction = np.polyfit(range(len(recent_prices)), recent_prices, 1)[0]
+            # Time anchor
+            t_anchor = asset_df.index[-1] if not asset_df.empty else pd.Timestamp.now(tz=pytz.utc)
 
-                        # BB squeeze reduces trend strength, expansion increases it
-                        trend_multiplier = 0.5 if is_squeezed else 1.2  # Weaker trends in squeeze, stronger in expansion
-                        historical_trend = trend_direction * trend_multiplier * 0.08
-                    else:
-                        historical_trend = (last_historical_price - (forecast_history['prices'][-2] if len(forecast_history['prices']) > 1 else last_historical_price)) * 0.05
+            # Stable seed based on asset price
+            seed_base = int(abs(a_price) * 100) % 99991
 
-                    # Time-based volatility with BB awareness
-                    current_hour = current_time.hour
-                    base_time_multiplier = 1.3 if 9 <= current_hour <= 11 else 1.2 if 14 <= current_hour <= 15 else 0.8
+            # â”€â”€ Generate 1H forecast (12 Ã— 5-min) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            opens_1h, highs_1h, lows_1h, closes_1h = generate_5min_ohlc(
+                a_price, 12, combined_trend, base_volatility, seed_val=seed_base + 1
+            )
+            times_1h = [t_anchor + timedelta(minutes=5 * (k + 1)) for k in range(12)]
+            conf_up_1h = [closes_1h[k] * (1 + base_volatility * 1.8 * math.sqrt((k + 1) / 12)) for k in range(12)]
+            conf_lo_1h = [closes_1h[k] * (1 - base_volatility * 1.8 * math.sqrt((k + 1) / 12)) for k in range(12)]
 
-                    # BB squeeze increases volatility anticipation
-                    squeeze_volatility = 1.5 if is_squeezed else 1.0
+            # â”€â”€ Generate 6H forecast (72 Ã— 5-min) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            opens_6h, highs_6h, lows_6h, closes_6h = generate_5min_ohlc(
+                a_price, 72, combined_trend, base_volatility, seed_val=seed_base + 2
+            )
+            times_6h = [t_anchor + timedelta(minutes=5 * (k + 1)) for k in range(72)]
+            conf_up_6h = [closes_6h[k] * (1 + base_volatility * 2.5 * math.sqrt((k + 1) / 72)) for k in range(72)]
+            conf_lo_6h = [closes_6h[k] * (1 - base_volatility * 2.5 * math.sqrt((k + 1) / 72)) for k in range(72)]
 
-                    base_volatility = abs(historical_trend) * 3 + 0.002
-                    volatility = base_volatility * base_time_multiplier * squeeze_volatility
-                    random_component = np.random.normal(0, volatility) * last_historical_price * 0.001
+            # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            # CHART 1 â€” 1-HOUR FORECAST (12 Ã— 5-MIN CANDLES)
+            # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            st.markdown("#### â±ï¸ 1-Hour Forecast â€” 12 Ã— 5-Minute Candles")
 
-                    # Momentum with BB band walking behavior
-                    if len(forecast_history['prices']) >= 5:
-                        recent_changes = np.diff(forecast_history['prices'][-8:])  # Last 8 changes
-                        momentum_weights = np.exp(np.linspace(-1, 0, len(recent_changes)))
-                        momentum_weights /= momentum_weights.sum()
-                        momentum = np.average(recent_changes, weights=momentum_weights)
-
-                        # Reduce momentum during squeezes, increase during expansions
-                        momentum_multiplier = 0.7 if is_squeezed else 1.3
-                        momentum_factor = momentum * momentum_multiplier * 0.2
-                    else:
-                        momentum_factor = 0
-
-                    # BB-aware mean reversion (price returns to middle band)
-                    if len(forecast_history['prices']) >= 10:
-                        band_center = bb_sma
-                        reversion_strength = 0.02 + (abs(bb_position) * 0.03)  # Stronger reversion when far from center
-                        mean_reversion = (band_center - last_historical_price) * reversion_strength
-                    else:
-                        fair_value = forecast[0] if forecast else last_historical_price
-                        mean_reversion = (fair_value - last_historical_price) * 0.03
-
-                    # Enhanced gap effects with BB awareness
-                    gap_effect = 0
-                    gap_probability = 0.04 if is_squeezed else 0.02  # Higher chance during squeeze
-                    if random.random() < gap_probability:
-                        gap_direction = np.sign(np.random.normal(0, 1))  # Random direction
-                        gap_volatility = volatility * (2.5 if is_squeezed else 1.5)
-                        gap_effect = gap_direction * np.random.normal(0, gap_volatility) * last_historical_price * 0.003
-
-                    # Combine all BB-aware factors
-                    trend_component = historical_trend * 0.3
-                    forecast_influence = (forecast[0] - last_historical_price) * 0.12
-                    market_noise = random_component
-                    microstructure_noise = np.random.normal(0, 0.0003) * last_historical_price
-
-                    price_change = (trend_component + forecast_influence + momentum_factor +
-                                  mean_reversion + market_noise + microstructure_noise +
-                                  bb_bounce + bb_breakout + gap_effect)
-
-                    new_price = last_historical_price + price_change
-
-                    # BB-constrained price bounds (price rarely breaks bands dramatically)
-                    bb_constrained_max = bb_upper * 1.05 if len(forecast_history['prices']) >= 20 else last_historical_price * 1.025
-                    bb_constrained_min = bb_lower * 0.95 if len(forecast_history['prices']) >= 20 else last_historical_price * 0.975
-
-                    # Adaptive bounds based on BB position
-                    if abs(bb_position) > 1.2:  # Price outside bands
-                        # Allow larger moves when already outside
-                        final_max = max(bb_constrained_max, last_historical_price * 1.03)
-                        final_min = min(bb_constrained_min, last_historical_price * 0.97)
-                    else:
-                        final_max = bb_constrained_max
-                        final_min = bb_constrained_min
-
-                    new_price = np.clip(new_price, final_min, final_max)
-
-                    # BB-aware confidence bounds
-                    bb_width = (bb_upper - bb_lower) / bb_sma if len(forecast_history['prices']) >= 20 else 0.02
-                    confidence_range = max(bb_width * 0.5, volatility * 1.5 + 0.005)
-                    new_upper = new_price * (1 + confidence_range)
-                    new_lower = new_price * (1 - confidence_range)
-
-                    # Append to history
-                    forecast_history['timestamps'].append(new_timestamp)
-                    forecast_history['prices'].append(new_price)
-                    forecast_history['upper_bounds'].append(new_upper)
-                    forecast_history['lower_bounds'].append(new_lower)
-                    forecast_history['last_update'] = current_time
-
-                    # Enhanced status message with BB info
-                    price_direction = "↗️ UP" if new_price > last_historical_price else "↘️ DOWN" if new_price < last_historical_price else "→ STABLE"
-                    change_pct = ((new_price - last_historical_price) / last_historical_price) * 100
-                    bb_status = "🔄 SQUEEZE" if is_squeezed else f"📊 BB Pos: {bb_position:.1f}"
-                    st.info(f"✅ **BB-Accurate Update:** {price_direction} | {change_pct:+.2f}% | ${new_price:.2f} | {bb_status} at {new_timestamp.strftime('%H:%M:%S')}")
-            else:
-                # Full reset with new forecast data
-                if forecast and len(forecast) > 0:
-                    # Ensure upper/lower bounds exist
-                    if 'upper_bound' not in locals() or not upper_bound or len(upper_bound) != len(forecast):
-                        upper_bound = [p * 1.015 for p in forecast]
-                    if 'lower_bound' not in locals() or not lower_bound or len(lower_bound) != len(forecast):
-                        lower_bound = [p * 0.985 for p in forecast]
-
-                    # Reset history with new forecast
-                    forecast_history['timestamps'] = fut_times[:len(forecast)]
-                    forecast_history['prices'] = forecast[:len(forecast)]
-                    forecast_history['upper_bounds'] = upper_bound[:len(forecast)]
-                    forecast_history['lower_bounds'] = lower_bound[:len(forecast)]
-                    forecast_history['last_update'] = current_time
-
-                    st.info(f"📅 **New Session Started:** Full {forecast_period} forecast initialized at {current_time.strftime('%H:%M:%S')}")
-
-            # Use accumulated forecast data for visualization
-            accumulated_timestamps = forecast_history['timestamps']
-            accumulated_prices = forecast_history['prices']
-            accumulated_upper = forecast_history['upper_bounds']
-            accumulated_lower = forecast_history['lower_bounds']
-
-            if not accumulated_prices:
-                st.error("❌ No forecast data available for combined analysis")
-                return
-
-            min_len = len(accumulated_prices)
-
-            # Create combined chart with accumulated data
-            fig = make_subplots(
+            fig_1h = make_subplots(
                 rows=2, cols=1,
                 shared_xaxes=True,
-                vertical_spacing=0.1,
-                row_heights=[0.7, 0.3],
-                subplot_titles=(f'📈 {selected_asset} - {forecast_period} Forecast (Continuous)', '📊 Signal Strength')
+                vertical_spacing=0.07,
+                row_heights=[0.73, 0.27],
+                subplot_titles=(
+                    f"ðŸ“ˆ {selected_asset} â€” 1H Price Movement (5-Min Candles + Confidence Band)",
+                    "ðŸ“Š Per-Candle Change %"
+                )
             )
 
-            # Historical price (if available)
-            if len(asset_df) > 0 and close_col in asset_df.columns:
-                fig.add_trace(go.Scatter(
-                    x=asset_df.index, y=asset_df[close_col],
-                    mode='lines', name=f'{selected_asset} Historical',
-                    line=dict(color='#00CED1', width=2)
-                ), row=1, col=1)
-
-            # Calculate and display Bollinger Bands
-            if len(accumulated_prices) >= 20:
-                # Calculate rolling Bollinger Bands (20-period, 2 SD)
-                window_size = min(20, len(accumulated_prices))
-                rolling_prices = pd.Series(accumulated_prices[-window_size:])
-
-                bb_middle = rolling_prices.rolling(window=window_size, min_periods=window_size).mean()
-                bb_std = rolling_prices.rolling(window=window_size, min_periods=window_size).std()
-                bb_upper = bb_middle + (bb_std * 2)
-                bb_lower = bb_middle - (bb_std * 2)
-
-                # Bollinger Band timestamps (last window_size points)
-                bb_timestamps = accumulated_timestamps[-window_size:]
-
-                # Upper Bollinger Band
-                fig.add_trace(go.Scatter(
-                    x=bb_timestamps, y=bb_upper,
-                    name='BB Upper (2σ)', line=dict(color='red', width=2, dash='dash'),
-                    hovertemplate='BB Upper: $%{y:.2f}<extra></extra>'
-                ), row=1, col=1)
-
-                # Middle Bollinger Band (SMA)
-                fig.add_trace(go.Scatter(
-                    x=bb_timestamps, y=bb_middle,
-                    name='BB Middle (SMA)', line=dict(color='blue', width=2),
-                    hovertemplate='BB Middle: $%{y:.2f}<extra></extra>'
-                ), row=1, col=1)
-
-                # Lower Bollinger Band
-                fig.add_trace(go.Scatter(
-                    x=bb_timestamps, y=bb_lower,
-                    name='BB Lower (2σ)', line=dict(color='green', width=2, dash='dash'),
-                    hovertemplate='BB Lower: $%{y:.2f}<extra></extra>'
-                ), row=1, col=1)
-
-                # Bollinger Band fill area
-                fig.add_trace(go.Scatter(
-                    x=bb_timestamps + bb_timestamps[::-1],
-                    y=bb_upper.tolist() + bb_lower.tolist()[::-1],
-                    fill='toself', fillcolor='rgba(100, 149, 237, 0.1)',
-                    line=dict(color='rgba(255,255,255,0)'),
-                    name='BB Channel',
-                    showlegend=True
-                ), row=1, col=1)
-
-            # Accumulated forecast with confidence band
-            fig.add_trace(go.Scatter(
-                x=accumulated_timestamps + accumulated_timestamps[::-1],
-                y=accumulated_upper + accumulated_lower[::-1],
-                fill='toself', fillcolor='rgba(255, 107, 0, 0.15)',
-                line=dict(color='rgba(255, 107, 0, 0.3)'), name='Forecast Confidence Band'
-            ), row=1, col=1)
-
-            # Accumulated forecast line with enhanced styling for BB-aware movements
-            # Color code based on BB position and price direction
-            colors = []
-            bb_positions = []
-
-            if len(accumulated_prices) >= 20:
-                # Calculate BB positions for color coding
-                for i in range(len(accumulated_prices)):
-                    if i >= 19:  # Enough data for BB calculation
-                        bb_window = accumulated_prices[max(0, i-19):i+1]
-                        bb_sma = np.mean(bb_window)
-                        bb_std = np.std(bb_window)
-                        bb_pos = (accumulated_prices[i] - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
-                        bb_positions.append(bb_pos)
-
-                        # Color based on BB position and direction
-                        if i > 0:
-                            if bb_pos > 1.0:  # Above upper band
-                                colors.append('#DC143C')  # Crimson - overbought
-                            elif bb_pos < -1.0:  # Below lower band
-                                colors.append('#32CD32')  # Lime green - oversold
-                            elif bb_pos > 0.5:  # Upper half
-                                colors.append('#FFA500')  # Orange
-                            elif bb_pos < -0.5:  # Lower half
-                                colors.append('#FFD700')  # Gold
-                            else:  # Middle band
-                                colors.append('#00CED1')  # Dark turquoise
-                        else:
-                            colors.append('#FF6B00')  # First point
-                    else:
-                        colors.append('#FF6B00')  # Not enough data for BB
-                        bb_positions.append(0)
-            else:
-                # Fallback color coding based on direction only
-                for i in range(len(accumulated_prices)):
-                    if i == 0:
-                        colors.append('#FF6B00')  # First point - orange
-                    elif accumulated_prices[i] > accumulated_prices[i-1]:
-                        colors.append('#00FF00')  # Green for up
-                    elif accumulated_prices[i] < accumulated_prices[i-1]:
-                        colors.append('#FF4444')  # Red for down
-                    else:
-                        colors.append('#888888')  # Gray for stable
-                bb_positions = [0] * len(accumulated_prices)
-
-            fig.add_trace(go.Scatter(
-                x=accumulated_timestamps, y=accumulated_prices,
-                name=f'{forecast_period} BB-Accurate Forecast', line=dict(color='#FF6B00', width=3),
-                mode='lines+markers',
-                marker=dict(size=10, color=colors, symbol='circle',
-                           line=dict(width=2, color='white')),
-                hovertemplate='Time: %{x|%H:%M:%S}<br>Price: $%{y:.2f}<br>BB Pos: %{customdata:.2f}<br>Change: %{text}<extra></extra>',
-                customdata=bb_positions,
-                text=[f"{((p - accumulated_prices[i-1]) / accumulated_prices[i-1] * 100) if i > 0 else 0:+.2f}%" for i, p in enumerate(accumulated_prices)]
-            ), row=1, col=1)
-
-            # Signal strength based on accumulated data
-            signal_values = [((f - a_price) / a_price) * 100 for f in accumulated_prices]
-            colors = ['#FF4444' if v < -1 else '#FFAA00' if v < 1 else '#00FF7F' for v in signal_values]
-
-            # Sample signal strength for display (show every 6th point to avoid overcrowding)
-            sample_indices = list(range(0, min_len, max(1, min_len//20)))
-            fig.add_trace(go.Bar(
-                x=[accumulated_timestamps[i] for i in sample_indices],
-                y=[signal_values[i] for i in sample_indices],
-                name='Signal %', marker_color=[colors[i] for i in sample_indices]
-            ), row=2, col=1)
-
-            # Layout
-            fig.update_layout(
-                template="plotly_dark",
-                height=600,
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-                plot_bgcolor='#0E1117',
-                paper_bgcolor='#0E1117',
-                hovermode="x unified"
-            )
-
-            # Update axes for continuous data
-            if accumulated_timestamps:
-                start_time = min(accumulated_timestamps)
-                end_time = max(accumulated_timestamps)
-
-                fig.update_xaxes(
-                    range=[start_time - timedelta(minutes=5), end_time + timedelta(minutes=15)],
-                    row=1, col=1,
-                    tickformat='%H:%M',
-                    tickangle=45
-                )
-                fig.update_xaxes(
-                    range=[start_time - timedelta(minutes=2), end_time + timedelta(minutes=10)],
-                    row=2, col=1,
-                    tickformat='%H:%M',
-                    tickangle=45
-                )
-
-            fig.update_yaxes(title_text="Price ($)", row=1, col=1, tickformat='$.2f')
-            fig.update_yaxes(title_text="Signal %", row=2, col=1, tickformat='.2f')
-
-            st.plotly_chart(fig, use_container_width=True)
-
-        except Exception as e:
-            st.error(f"❌ Error creating Combined Forecast Analysis chart: {str(e)}")
-            st.info("💡 Try refreshing the page or selecting a different asset")
-            # Create a simple fallback chart
-            try:
-                fallback_fig = go.Figure()
-                fallback_fig.add_annotation(
-                    text=f"Combined {forecast_period} Forecast Analysis<br>Chart Unavailable<br>Asset: {selected_asset}",
-                    xref="paper", yref="paper",
-                    x=0.5, y=0.5,
-                    showarrow=False,
-                    font=dict(size=14, color='orange')
-                )
-                fallback_fig.update_layout(
-                    template='plotly_dark',
-                    height=400,
-                    title=f"📊 Combined {forecast_period} Forecast (Error)"
-                )
-                st.plotly_chart(fallback_fig, use_container_width=True)
-            except:
-                st.warning("Unable to create even a basic chart")
-        fig.update_xaxes(
-            range=[fut_times[0] - timedelta(minutes=5), fut_times[-1] + timedelta(minutes=10)],
-            row=2, col=1,
-            tickformat='%H:%M',
-            tickangle=45
-        )
-
-        fig.update_yaxes(title_text="Price ($)", row=1, col=1, tickformat='$.2f')
-        fig.update_yaxes(title_text="Signal %", row=2, col=1, tickformat='.2f')
-        
-        # Add current price annotation and continuous data info
-        fig.add_annotation(
-            x=now, y=a_price,
-            text=f"Current: ${a_price:.2f}",
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1,
-            arrowwidth=2,
-            ax=-40,
-            ay=-40,
-            font=dict(color='gold', size=12),
-            bgcolor='rgba(0,0,0,0.8)',
-            bordercolor='gold',
-            borderwidth=1,
-            borderpad=4,
-            row=1, col=1
-        )
-
-        # Add continuous data annotation
-        if accumulated_timestamps:
-            latest_point = accumulated_timestamps[-1]
-            latest_price = accumulated_prices[-1]
-            fig.add_annotation(
-                x=latest_point, y=latest_price,
-                text=f"Latest: ${latest_price:.2f}<br>({latest_point.strftime('%H:%M:%S')})",
-                showarrow=True,
-                arrowhead=1,
-                arrowsize=1,
-                arrowwidth=1,
-                ax=40,
-                ay=-40,
-                font=dict(color='cyan', size=10),
-                bgcolor='rgba(0,0,0,0.7)',
-                bordercolor='cyan',
-                borderwidth=1,
-                borderpad=2,
+            # Entry price reference line
+            fig_1h.add_hline(
+                y=a_price, line_dash="dash", line_color="#FFD700", line_width=1.5,
+                annotation_text=f"Entry ${a_price:,.2f}",
+                annotation_font_color="#FFD700", annotation_position="left",
                 row=1, col=1
             )
 
-        st.plotly_chart(fig, use_container_width=True)
+            # 95% Confidence band
+            fig_1h.add_trace(go.Scatter(
+                x=times_1h + times_1h[::-1],
+                y=conf_up_1h + conf_lo_1h[::-1],
+                fill='toself',
+                fillcolor='rgba(0,200,255,0.10)',
+                line=dict(color='rgba(0,200,255,0.25)', width=1),
+                name='95% Confidence Band',
+                hoverinfo='skip',
+                showlegend=True
+            ), row=1, col=1)
 
-        # Sound alert
-        if sound_alert and ("STRONG" in mode):
-            st.markdown('<audio autoplay><source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvT19v" type="audio/wav"></audio>', unsafe_allow_html=True)
+            # Historical tail
+            if len(asset_df) >= 2 and close_col in asset_df.columns:
+                hist_tail = asset_df.tail(min(15, len(asset_df)))
+                fig_1h.add_trace(go.Scatter(
+                    x=hist_tail.index,
+                    y=hist_tail[close_col].values,
+                    mode='lines',
+                    name='Historical',
+                    line=dict(color='#00CED1', width=1.8, dash='dot'),
+                    hovertemplate='%{x|%H:%M}<br>$%{y:,.2f}<extra>Historical</extra>'
+                ), row=1, col=1)
 
-        # Auto-refresh message
-        if auto_refresh:
-            st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
-        
-        # Forecast data table with accumulated continuous data
-        st.markdown(f"### 📋 {forecast_period} Continuous Forecast Data")
+            # 1H Candlestick chart
+            fig_1h.add_trace(go.Candlestick(
+                x=times_1h,
+                open=opens_1h, high=highs_1h, low=lows_1h, close=closes_1h,
+                name='1H Forecast',
+                increasing=dict(line=dict(color='#26A69A', width=2), fillcolor='rgba(38,166,154,0.85)'),
+                decreasing=dict(line=dict(color='#EF5350', width=2), fillcolor='rgba(239,83,80,0.85)'),
+                whiskerwidth=0.5
+            ), row=1, col=1)
 
-        # Display accumulated forecast data with Bollinger Band-aware movement analysis
-        if len(accumulated_prices) > 1:
-            price_changes = np.diff(accumulated_prices)
-            up_moves = sum(1 for change in price_changes if change > 0)
-            down_moves = sum(1 for change in price_changes if change < 0)
-            stable_moves = sum(1 for change in price_changes if change == 0)
-            total_moves = len(price_changes)
+            # Price labels at every candle
+            for k in range(12):
+                is_up_k = closes_1h[k] >= opens_1h[k]
+                clr_k = '#26A69A' if is_up_k else '#EF5350'
+                arr_k = 'â–²' if is_up_k else 'â–¼'
+                pct_entry_k = (closes_1h[k] - a_price) / a_price * 100
+                fig_1h.add_annotation(
+                    x=times_1h[k],
+                    y=highs_1h[k] if is_up_k else lows_1h[k],
+                    text=f"{arr_k} <b>${closes_1h[k]:,.1f}</b><br><span style='font-size:9px'>{pct_entry_k:+.2f}%</span>",
+                    showarrow=False,
+                    font=dict(size=8.5, color=clr_k, family='Arial'),
+                    bgcolor='rgba(13,17,23,0.75)',
+                    bordercolor=clr_k, borderwidth=1, borderpad=2,
+                    yanchor='bottom' if is_up_k else 'top',
+                    row=1, col=1
+                )
 
-            # Calculate movement statistics
-            avg_change_pct = np.mean([abs(change / accumulated_prices[i]) * 100 for i, change in enumerate(price_changes)])
-            max_up_pct = max([change / accumulated_prices[i] * 100 for i, change in enumerate(price_changes) if change > 0], default=0)
-            max_down_pct = min([change / accumulated_prices[i] * 100 for i, change in enumerate(price_changes) if change < 0], default=0)
+            # Change % bars (bottom panel)
+            changes_1h = [(closes_1h[k] - opens_1h[k]) / opens_1h[k] * 100 for k in range(12)]
+            bar_clrs_1h = ['#26A69A' if c >= 0 else '#EF5350' for c in changes_1h]
+            fig_1h.add_trace(go.Bar(
+                x=times_1h, y=changes_1h,
+                name='5-Min Change %',
+                marker_color=bar_clrs_1h,
+                text=[f"{c:+.3f}%" for c in changes_1h],
+                textposition='outside',
+                hovertemplate='%{x|%H:%M}<br>Change: %{y:+.3f}%<extra></extra>'
+            ), row=2, col=1)
+            fig_1h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=2, col=1)
 
-            # Bollinger Band analysis
-            bb_analysis = ""
-            if len(accumulated_prices) >= 20:
-                bb_window = accumulated_prices[-20:]
-                bb_sma = np.mean(bb_window)
-                bb_std = np.std(bb_window)
-                bb_upper = bb_sma + (bb_std * 2)
-                bb_lower = bb_sma - (bb_std * 2)
+            fig_1h.update_layout(
+                template='plotly_dark',
+                height=530,
+                showlegend=True,
+                legend=dict(orientation='h', y=1.05, x=0.5, xanchor='center',
+                            bgcolor='rgba(0,0,0,0.4)', font=dict(size=11)),
+                plot_bgcolor='#0d1117',
+                paper_bgcolor='#161b22',
+                hovermode='x unified',
+                xaxis_rangeslider_visible=False,
+                margin=dict(l=60, r=70, t=85, b=40),
+                title=dict(
+                    text=f"â±ï¸ {selected_asset} â€” 1-Hour Forecast (Every 5-Min Movement)",
+                    font=dict(size=16, color='#00CED1', family='Arial Black'), x=0.5
+                )
+            )
+            for row_n in [1, 2]:
+                fig_1h.update_xaxes(tickformat='%H:%M', showgrid=True,
+                                    gridcolor='rgba(255,255,255,0.07)', row=row_n, col=1)
+            fig_1h.update_yaxes(tickformat='$,.2f', title_text='Price (USD)',
+                                 showgrid=True, gridcolor='rgba(255,255,255,0.06)', row=1, col=1)
+            fig_1h.update_yaxes(tickformat='+.3f', title_text='Change %', row=2, col=1)
+            st.plotly_chart(fig_1h, use_container_width=True)
 
-                current_price = accumulated_prices[-1]
-                bb_position = (current_price - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
-                bb_width_pct = (bb_std / bb_sma) * 100
+            # 1H summary metrics
+            up_c_1h = sum(1 for o, c in zip(opens_1h, closes_1h) if c >= o)
+            dn_c_1h = 12 - up_c_1h
+            ret_1h = (closes_1h[-1] - a_price) / a_price * 100
+            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+            col_m1.metric("1H Target Price", f"${closes_1h[-1]:,.2f}", f"{ret_1h:+.2f}%")
+            col_m2.metric("ðŸŸ¢ Bull / ðŸ”´ Bear", f"{up_c_1h} / {dn_c_1h}", "5-min candles")
+            col_m3.metric("Best 5-Min Gain", f"{max(changes_1h):+.3f}%", "Peak up move")
+            col_m4.metric("Worst 5-Min Drop", f"{min(changes_1h):+.3f}%", "Peak down move")
 
-                # Squeeze detection
-                is_squeezed = bb_width_pct < 1.5  # Tight squeeze
-                bb_status = "🔄 SQUEEZE" if is_squeezed else f"📊 BB Width: {bb_width_pct:.1f}%"
+            st.markdown("---")
 
-                # Position analysis
-                if bb_position > 1.0:
-                    position_status = "🚨 ABOVE UPPER BAND"
-                elif bb_position < -1.0:
-                    position_status = "🔔 BELOW LOWER BAND"
-                elif bb_position > 0:
-                    position_status = "📈 UPPER HALF"
-                elif bb_position < 0:
-                    position_status = "📉 LOWER HALF"
-                else:
-                    position_status = "⚖️ AT MIDDLE"
+            # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            # CHART 2 â€” 6-HOUR FORECAST (72 Ã— 5-MIN CANDLES)
+            # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            st.markdown("#### ðŸ• 6-Hour Forecast â€” 72 Ã— 5-Minute Candles")
 
-                bb_analysis = f" | {bb_status} | {position_status}"
+            fig_6h = make_subplots(
+                rows=3, cols=1,
+                shared_xaxes=True,
+                vertical_spacing=0.055,
+                row_heights=[0.58, 0.21, 0.21],
+                subplot_titles=(
+                    f"ðŸ“ˆ {selected_asset} â€” 6H Price Movement (5-Min Candles + Confidence Band)",
+                    "ðŸ“Š Hourly Return % (6 bars â€” one per hour)",
+                    "âš¡ Cumulative Return from Entry %"
+                )
+            )
 
-            # Show enhanced movement summary
-            st.markdown("### 📊 Bollinger Band Movement Analysis")
-            col_stats1, col_stats2, col_stats3, col_stats4 = st.columns(4)
-            with col_stats1:
-                st.metric("Total Points", f"{len(accumulated_prices)}", f"↑{up_moves} ↓{down_moves}")
-            with col_stats2:
-                st.metric("Avg Change", f"{avg_change_pct:.2f}%", f"Max ↑{max_up_pct:.2f}%")
-            with col_stats3:
-                st.metric("Max Drop", f"{max_down_pct:.2f}%", f"Stable: {stable_moves}")
-            with col_stats4:
-                volatility = np.std(price_changes) / np.mean(accumulated_prices) * 100
-                st.metric("BB Volatility", f"{volatility:.2f}%", "Band-constrained")
+            # Entry price reference line
+            fig_6h.add_hline(
+                y=a_price, line_dash="dash", line_color="#FFD700", line_width=1.5,
+                annotation_text=f"Entry ${a_price:,.2f}",
+                annotation_font_color="#FFD700", annotation_position="left",
+                row=1, col=1
+            )
 
-        # Calculate BB positions for table
-        bb_positions_table = []
-        if len(accumulated_prices) >= 20:
-            for i in range(len(accumulated_prices)):
-                if i >= 19:
-                    bb_window = accumulated_prices[max(0, i-19):i+1]
-                    bb_sma = np.mean(bb_window)
-                    bb_std = np.std(bb_window)
-                    bb_pos = (accumulated_prices[i] - bb_sma) / (bb_std * 2) if bb_std > 0 else 0
-                    bb_positions_table.append(f"{bb_pos:.2f}")
-                else:
-                    bb_positions_table.append("N/A")
-        else:
-            bb_positions_table = ["N/A"] * len(accumulated_prices)
+            # Dynamic support / resistance
+            support_6h = a_price * (1.0 - max(base_volatility * 6, 0.012))
+            resist_6h = a_price * (1.0 + max(base_volatility * 6, 0.012))
+            fig_6h.add_hline(y=support_6h, line_dash="dot", line_color="#26A69A", line_width=1,
+                             annotation_text=f"S ${support_6h:,.0f}",
+                             annotation_font_color="#26A69A", annotation_position="right",
+                             row=1, col=1)
+            fig_6h.add_hline(y=resist_6h, line_dash="dot", line_color="#EF5350", line_width=1,
+                             annotation_text=f"R ${resist_6h:,.0f}",
+                             annotation_font_color="#EF5350", annotation_position="right",
+                             row=1, col=1)
 
-        accumulated_df = pd.DataFrame({
-            'Time': [t.strftime('%H:%M:%S') for t in accumulated_timestamps],
-            'Price ($)': [f"{p:,.2f}" for p in accumulated_prices],
-            'Change (%)': [f"{((p - accumulated_prices[i-1]) / accumulated_prices[i-1] * 100 if i > 0 else 0):+.2f}%" for i, p in enumerate(accumulated_prices)],
-            'BB Position': bb_positions_table,
-            'Direction': ['↑ UP' if i > 0 and p > accumulated_prices[i-1] else '↓ DOWN' if i > 0 and p < accumulated_prices[i-1] else '→ START' for i, p in enumerate(accumulated_prices)],
-            'BB Signal': ['🚨 Overbought' if bb_pos > 1.0 else '🔔 Oversold' if bb_pos < -1.0 else '⚖️ Neutral' for bb_pos in [float(pos) if pos != "N/A" else 0 for pos in bb_positions_table]]
-        })
+            # 95% Confidence band
+            fig_6h.add_trace(go.Scatter(
+                x=times_6h + times_6h[::-1],
+                y=conf_up_6h + conf_lo_6h[::-1],
+                fill='toself',
+                fillcolor='rgba(255,140,0,0.09)',
+                line=dict(color='rgba(255,140,0,0.22)', width=1),
+                name='95% Confidence Band',
+                hoverinfo='skip',
+                showlegend=True
+            ), row=1, col=1)
 
-        # Show data summary with BB-enhanced details
-        total_points = len(accumulated_prices)
-        time_span = (accumulated_timestamps[-1] - accumulated_timestamps[0]).total_seconds() / 60 if len(accumulated_timestamps) > 1 else 0
+            # Historical tail for context
+            if len(asset_df) >= 2 and close_col in asset_df.columns:
+                hist_tail6 = asset_df.tail(min(30, len(asset_df)))
+                fig_6h.add_trace(go.Scatter(
+                    x=hist_tail6.index,
+                    y=hist_tail6[close_col].values,
+                    mode='lines', name='Historical (1H)',
+                    line=dict(color='#00CED1', width=1.4, dash='dot'),
+                    hovertemplate='%{x|%H:%M}<br>$%{y:,.2f}<extra>Historical</extra>'
+                ), row=1, col=1)
 
-        bb_status_text = ""
-        if len(accumulated_prices) >= 20:
-            bb_window = accumulated_prices[-20:]
-            bb_std = np.std(bb_window)
-            bb_sma = np.mean(bb_window)
-            bb_width_pct = (bb_std / bb_sma) * 100
-            is_squeezed = bb_width_pct < 1.5
-            bb_status_text = f" | **BB Width:** {bb_width_pct:.1f}% {'🔄 SQUEEZE' if is_squeezed else ''}"
+            # 6H Candlestick chart
+            fig_6h.add_trace(go.Candlestick(
+                x=times_6h,
+                open=opens_6h, high=highs_6h, low=lows_6h, close=closes_6h,
+                name='6H Forecast',
+                increasing=dict(line=dict(color='#26A69A', width=1.2),
+                               fillcolor='rgba(38,166,154,0.72)'),
+                decreasing=dict(line=dict(color='#EF5350', width=1.2),
+                               fillcolor='rgba(239,83,80,0.72)'),
+                whiskerwidth=0.35
+            ), row=1, col=1)
 
-        st.info(f"📊 **BB-Accurate Forecast:** {total_points} points over {time_span:.0f} minutes | **Last Update:** {forecast_history['last_update'].strftime('%H:%M:%S') if forecast_history['last_update'] else 'N/A'}{bb_status_text}")
+            # Hourly annotations (+1H â€¦ +6H)
+            for hr in range(1, 7):
+                idx_hr = hr * 12 - 1
+                if idx_hr < len(closes_6h):
+                    pct_hr = (closes_6h[idx_hr] - a_price) / a_price * 100
+                    clr_hr = '#26A69A' if pct_hr >= 0 else '#EF5350'
+                    arr_hr = 'â–²' if pct_hr >= 0 else 'â–¼'
+                    fig_6h.add_annotation(
+                        x=times_6h[idx_hr],
+                        y=highs_6h[idx_hr] if pct_hr >= 0 else lows_6h[idx_hr],
+                        text=f"<b>+{hr}H</b><br>{arr_hr}{abs(pct_hr):.2f}%<br>${closes_6h[idx_hr]:,.1f}",
+                        showarrow=True, arrowhead=2, arrowsize=0.8,
+                        arrowwidth=1.5, arrowcolor=clr_hr,
+                        font=dict(size=9, color=clr_hr, family='Arial Black'),
+                        bgcolor='rgba(13,17,23,0.82)',
+                        bordercolor=clr_hr, borderwidth=1, borderpad=3,
+                        ay=-55 if pct_hr >= 0 else 55,
+                        yanchor='bottom' if pct_hr >= 0 else 'top',
+                        row=1, col=1
+                    )
 
-        st.dataframe(accumulated_df, use_container_width=True, height=min(400, len(accumulated_df)*35))
-        
-        # Auto-refresh info
-        if auto_refresh:
-            st.info("🔄 Data auto-refreshes every 3 minutes. The page will update automatically.")
-       
-        # Info section with Bollinger Band explanation
+            # Hourly return bars (6 bars â€” one per hour)
+            hourly_rets = []
+            hourly_ts = []
+            for hr in range(6):
+                s_idx = hr * 12
+                e_idx = min((hr + 1) * 12 - 1, len(closes_6h) - 1)
+                base_hr = a_price if hr == 0 else closes_6h[s_idx - 1]
+                hourly_rets.append((closes_6h[e_idx] - base_hr) / base_hr * 100)
+                hourly_ts.append(times_6h[e_idx])
+            h_clrs = ['#26A69A' if r >= 0 else '#EF5350' for r in hourly_rets]
+            fig_6h.add_trace(go.Bar(
+                x=hourly_ts, y=hourly_rets,
+                name='Hourly Return',
+                marker_color=h_clrs,
+                text=[f"{r:+.2f}%" for r in hourly_rets],
+                textposition='outside',
+                hovertemplate='+%{customdata}H: %{y:+.2f}%<extra></extra>',
+                customdata=list(range(1, 7))
+            ), row=2, col=1)
+            fig_6h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=2, col=1)
+
+            # Cumulative return area chart (round to avoid floating-point noise)
+            cum_rets = [round((closes_6h[k] - a_price) / a_price * 100, 6) for k in range(72)]
+            final_cum = cum_rets[-1]
+            cum_clr = '#26A69A' if final_cum >= 0 else '#EF5350'
+            fill_clr_cum = 'rgba(38,166,154,0.18)' if final_cum >= 0 else 'rgba(239,83,80,0.18)'
+            fig_6h.add_trace(go.Scatter(
+                x=times_6h, y=cum_rets,
+                name='Cumulative Return',
+                line=dict(color=cum_clr, width=2.5),
+                fill='tozeroy', fillcolor=fill_clr_cum,
+                hovertemplate='%{x|%H:%M}<br>Cum. Return: %{y:+.2f}%<extra></extra>'
+            ), row=3, col=1)
+            fig_6h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=3, col=1)
+
+            fig_6h.update_layout(
+                template='plotly_dark',
+                height=740,
+                showlegend=True,
+                legend=dict(orientation='h', y=1.03, x=0.5, xanchor='center',
+                            bgcolor='rgba(0,0,0,0.4)', font=dict(size=11)),
+                plot_bgcolor='#0d1117',
+                paper_bgcolor='#161b22',
+                hovermode='x unified',
+                xaxis_rangeslider_visible=False,
+                margin=dict(l=65, r=85, t=90, b=40),
+                title=dict(
+                    text=f"ðŸ• {selected_asset} â€” 6-Hour Forecast (Every 5-Min Movement)",
+                    font=dict(size=16, color='#FF8C00', family='Arial Black'), x=0.5
+                )
+            )
+            for row_n in [1, 2, 3]:
+                fig_6h.update_xaxes(tickformat='%H:%M', showgrid=True,
+                                    gridcolor='rgba(255,255,255,0.07)', row=row_n, col=1)
+            fig_6h.update_yaxes(tickformat='$,.2f', title_text='Price (USD)',
+                                 showgrid=True, gridcolor='rgba(255,255,255,0.06)', row=1, col=1)
+            fig_6h.update_yaxes(tickformat='+.2f', title_text='Hourly %', row=2, col=1)
+            fig_6h.update_yaxes(tickformat='+.2f', title_text='Cum. Return %', row=3, col=1)
+            st.plotly_chart(fig_6h, use_container_width=True)
+
+            # 6H summary metrics
+            up_c_6h = sum(1 for o, c in zip(opens_6h, closes_6h) if c >= o)
+            dn_c_6h = 72 - up_c_6h
+            ret_6h = (closes_6h[-1] - a_price) / a_price * 100
+            peak_6h = max(closes_6h)
+            trough_6h = min(closes_6h)
+            vol_6h = np.std([(closes_6h[k] - closes_6h[k - 1]) / closes_6h[k - 1]
+                              for k in range(1, 72)]) * 100
+            col_n1, col_n2, col_n3, col_n4, col_n5 = st.columns(5)
+            col_n1.metric("6H Target Price", f"${closes_6h[-1]:,.2f}", f"{ret_6h:+.2f}%")
+            col_n2.metric("ðŸŸ¢ Bull / ðŸ”´ Bear", f"{up_c_6h} / {dn_c_6h}", "5-min candles")
+            col_n3.metric("6H Peak", f"${peak_6h:,.2f}", f"{(peak_6h - a_price)/a_price*100:+.2f}%")
+            col_n4.metric("6H Trough", f"${trough_6h:,.2f}", f"{(trough_6h - a_price)/a_price*100:+.2f}%")
+            col_n5.metric("5-Min Volatility", f"{vol_6h:.3f}%", "Std deviation")
+
+            st.markdown("---")
+
+            # â”€â”€ 5-MINUTE DETAIL TABLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            st.markdown("#### ðŸ“‹ 5-Minute Interval Detail Tables")
+            tab_1h_tbl, tab_6h_tbl = st.tabs(["â±ï¸ 1H â€” 12 Rows", "ðŸ• 6H â€” 72 Rows"])
+
+            with tab_1h_tbl:
+                df_1h_tbl = pd.DataFrame({
+                    'Time': [t.strftime('%H:%M') for t in times_1h],
+                    'Open ($)': [f"{p:,.2f}" for p in opens_1h],
+                    'High ($)': [f"{p:,.2f}" for p in highs_1h],
+                    'Low ($)': [f"{p:,.2f}" for p in lows_1h],
+                    'Close ($)': [f"{p:,.2f}" for p in closes_1h],
+                    'Candle %': [f"{(closes_1h[k]-opens_1h[k])/opens_1h[k]*100:+.3f}%" for k in range(12)],
+                    'vs Entry %': [f"{(closes_1h[k]-a_price)/a_price*100:+.3f}%" for k in range(12)],
+                    'Direction': ['ðŸŸ¢ UP' if c >= o else 'ðŸ”´ DOWN' for o, c in zip(opens_1h, closes_1h)]
+                })
+                st.dataframe(df_1h_tbl, use_container_width=True, height=460)
+
+            with tab_6h_tbl:
+                df_6h_tbl = pd.DataFrame({
+                    'Time': [t.strftime('%H:%M') for t in times_6h],
+                    'Open ($)': [f"{p:,.2f}" for p in opens_6h],
+                    'High ($)': [f"{p:,.2f}" for p in highs_6h],
+                    'Low ($)': [f"{p:,.2f}" for p in lows_6h],
+                    'Close ($)': [f"{p:,.2f}" for p in closes_6h],
+                    'Candle %': [f"{(closes_6h[k]-opens_6h[k])/opens_6h[k]*100:+.3f}%" for k in range(72)],
+                    'Cum. Return %': [f"{(closes_6h[k]-a_price)/a_price*100:+.3f}%" for k in range(72)],
+                    'Direction': ['ðŸŸ¢ UP' if c >= o else 'ðŸ”´ DOWN' for o, c in zip(opens_6h, closes_6h)]
+                })
+                st.dataframe(df_6h_tbl, use_container_width=True, height=520)
+
+        except Exception as _chart_err:
+            st.error(f"âŒ Error generating 1H/6H forecast charts: {_chart_err}")
+
+        # How-to-read guide
         st.markdown("""
-        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 20px;'>
-            <h4 style='color: #ffd700;'>📊 Bollinger Band-Accurate Forecast Analysis v5.0</h4>
-            <ul style='color: #ccc;'>
-                <li><strong>📈 Bollinger Band Integration:</strong> Price movements constrained by dynamic BB channels (20-period, 2σ)</li>
-                <li><strong>🔄 Squeeze & Breakout Detection:</strong> Identifies tight squeezes and explosive breakouts with 70% accuracy</li>
-                <li><strong>🎯 BB Position Analysis:</strong> Color-coded markers show overbought/oversold levels relative to bands</li>
-                <li><strong>💹 Band Walking Behavior:</strong> Price tends to walk along middle band during strong trends</li>
-                <li><strong>🔄 Continuous Appending:</strong> BB-aware data persistence across refreshes with seamless continuity</li>
-                <li><strong>📊 Real-time BB Metrics:</strong> Live band width, position, and squeeze status monitoring</li>
-                <li><strong>🎨 Enhanced Visualization:</strong> Upper/lower/middle bands with channel fill and price interaction</li>
-                <li><strong>⚡ Market Microstructure:</strong> Bid-ask spread, gap events, and time-based volatility patterns</li>
+        <div style='background:linear-gradient(135deg,#0d1117,#161b22);padding:16px;border-radius:10px;margin-top:12px;border:1px solid #30363d;'>
+            <h4 style='color:#FFD700;margin:0 0 8px 0;'>ðŸ’¡ How to Read the 5-Min Forecast Charts</h4>
+            <ul style='color:#ccc;margin:0;font-size:13px;line-height:1.9;'>
+                <li><strong style='color:#26A69A;'>ðŸŸ¢ Green candles</strong> â€” 5-min interval closed <strong>higher</strong> (bullish)</li>
+                <li><strong style='color:#EF5350;'>ðŸ”´ Red candles</strong> â€” 5-min interval closed <strong>lower</strong> (bearish)</li>
+                <li><strong style='color:#FFD700;'>Gold dashed line</strong> â€” Entry / current price reference</li>
+                <li><strong style='color:#00CED1;'>Cyan dotted line</strong> â€” Actual historical price trail before forecast starts</li>
+                <li><strong>Confidence band (shaded)</strong> â€” 95% probability range; widens as uncertainty grows over time</li>
+                <li><strong>Hourly labels (+1H â€¦ +6H)</strong> on 6H chart show cumulative % gain/loss at each hour mark</li>
+                <li><strong>Cumulative return panel</strong> tracks total gain/loss vs. entry across all 6 forecast hours</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
-        
+
     except Exception as e:
         st.error(f"Error loading market data: {str(e)}")
         st.info("Make sure you have an active internet connection.")
