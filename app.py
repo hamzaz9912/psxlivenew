@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -214,13 +214,13 @@ def main():
     
     st.session_state.process_stock_data_sector = process_stock_data_sector
 
-    st.title("ðŸ“ˆ PSX KSE-100 Forecasting Dashboard")
+    st.markdown("# &#128200; PSX KSE-100 Forecasting Dashboard")
     st.markdown("---")
 
     # Check market status
     if not is_market_open():
-        st.warning("âš ï¸ **Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
-        st.info("ðŸ’¡ You can still use file upload analysis, historical data, and forecasting features.")
+        st.warning("&#9888;&#65039; **Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
+        st.info("&#128161; You can still use file upload analysis, historical data, and forecasting features.")
 
     # Auto-refresh every 5 minutes (300 seconds)
     # count = st_autorefresh(interval=300000, limit=None, key="data_refresh")
@@ -231,7 +231,7 @@ def main():
         # Attractive header with gradient
         st.markdown("""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;'>
-            <h2 style='color: white; margin: 0; font-size: 24px;'>ðŸ“Š Dashboard Controls</h2>
+            <h2 style='color: white; margin: 0; font-size: 24px;'>&#128202; Dashboard Controls</h2>
             <p style='color: #e8eaf6; margin: 5px 0 0 0; font-size: 14px;'>PSX Forecasting Hub</p>
         </div>
         """, unsafe_allow_html=True)
@@ -257,13 +257,13 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-        if st.button("ðŸ”„ Refresh Data Now", key="refresh_data_btn", type="primary"):
+        if st.button("&#128260; Refresh Data Now", key="refresh_data_btn", type="primary"):
             st.session_state.last_update = None
             st.rerun()
 
         # Auto-refresh timer display in sidebar
         st.markdown("---")
-        st.markdown("**â±ï¸ 5-Minute Auto-Refresh Timer**")
+        st.markdown("**&#9201;&#65039; 5-Minute Auto-Refresh Timer**")
         
         # Check if we're in the 15-minute live predictions section
         # This will be shown based on session state
@@ -289,7 +289,7 @@ def main():
             # Timer display
             st.markdown(f"""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; text-align: center;'>
-                <h3 style='margin: 0; color: #1565c0;'>â±ï¸ {minutes_left:02d}:{seconds_left:02d}</h3>
+                <h3 style='margin: 0; color: #1565c0;'>&#9201;&#65039; {minutes_left:02d}:{seconds_left:02d}</h3>
                 <small style='color: #1976d2;'>Next refresh</small>
             </div>
             <div style='margin-top: 5px; font-size: 12px; color: #666;'>
@@ -303,14 +303,14 @@ def main():
         if st.session_state.last_update:
             st.markdown(f"""
             <div style='background-color: #e8f5e8; padding: 8px; border-radius: 5px; border-left: 3px solid #4caf50; margin: 10px 0;'>
-                <small style='color: #2e7d32; font-weight: bold;'>ðŸ•’ Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
+                <small style='color: #2e7d32; font-weight: bold;'>&#128338; Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
             </div>
             """, unsafe_allow_html=True)
 
         # Live Price Display with enhanced styling
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;'>
-            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>ðŸ”´ Live PSX Price</h4>
+            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>&#128308; Live PSX Price</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -337,11 +337,11 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                st.info("ðŸ“Š Live price data not available at the moment.")
+                st.info("&#128202; Live price data not available at the moment.")
         else:
             st.markdown("""
             <div style='background-color: #ffebee; padding: 8px; border-radius: 4px; border-left: 3px solid #f44336; margin-bottom: 10px;'>
-                <small style='color: #c62828; font-weight: bold;'>ðŸ¢ Market Closed - No live data available</small>
+                <small style='color: #c62828; font-weight: bold;'>&#127969; Market Closed - No live data available</small>
             </div>
             """, unsafe_allow_html=True)
         
@@ -353,7 +353,7 @@ def main():
         # Analysis type selection with styled container
         st.markdown("""
         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #2196f3;'>
-            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>ðŸŽ¯ Analysis Type</h4>
+            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>&#127919; Analysis Type</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -366,7 +366,7 @@ def main():
         # Forecast Settings with enhanced styling
         st.markdown("""
         <div style='background-color: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;'>
-            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>âš™ï¸ Forecast Settings</h4>
+            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>&#9889;&#65039; Forecast Settings</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -382,7 +382,7 @@ def main():
         if forecast_type == "Custom Date Range":
             st.markdown("""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>ðŸ“… Select Target Date</label>
+                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>&#128197; Select Target Date</label>
             </div>
             """, unsafe_allow_html=True)
             custom_date = st.date_input(
@@ -404,7 +404,7 @@ def main():
         if analysis_type == "Individual Companies":
             st.markdown("""
             <div style='background-color: #f3e5f5; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>ðŸ¢ Select Company</label>
+                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>&#127969; Select Company</label>
             </div>
             """, unsafe_allow_html=True)
             companies = st.session_state.data_fetcher.get_kse100_companies()
@@ -418,10 +418,10 @@ def main():
         if analysis_type == "ðŸ“ Universal File Upload":
             st.markdown("""
             <div style='background-color: #fff8e1; padding: 10px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;'>
-                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>ðŸ§ª File Upload Debug</h5>
+                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>&#129514; File Upload Debug</h5>
             </div>
             """, unsafe_allow_html=True)
-            with st.expander("ðŸ” Quick File Upload Test", expanded=False):
+            with st.expander("&#128269; Quick File Upload Test", expanded=False):
                 st.markdown("### Test Your File Upload Here")
                 debug_file = st.file_uploader("Upload test file (for debugging)", type=['csv', 'xlsx', 'xls'], key="debug_uploader")
                 
@@ -440,7 +440,7 @@ def main():
                         # Test 2: Try to decode
                         try:
                             text_content = raw_content.decode('utf-8')
-                            st.success("âœ“ UTF-8 decode successful")
+                            st.success("&#10003; UTF-8 decode successful")
                             
                             lines = text_content.split('\n')
                             st.write(f"**Number of lines:** {len(lines)}")
@@ -454,7 +454,7 @@ def main():
                             debug_file.seek(0)
                             try:
                                 test_df = pd.read_csv(debug_file)
-                                st.success("âœ“ Pandas read successful")
+                                st.success("&#10003; Pandas read successful")
                                 st.write(f"**Dataframe shape:** {test_df.shape}")
                                 st.write(f"**Columns:** {list(test_df.columns)}")
                                 st.dataframe(test_df.head(3))
@@ -462,7 +462,7 @@ def main():
                                 st.success("Your file is perfectly readable! The issue is likely in the universal predictor logic.")
                                 
                             except Exception as pandas_error:
-                                st.error(f"âœ— Pandas read failed: {str(pandas_error)}")
+                                st.error(f"&#10005; Pandas read failed: {str(pandas_error)}")
                                 
                                 # Try alternative methods
                                 st.write("**Trying alternative methods:**")
@@ -470,11 +470,11 @@ def main():
                                     try:
                                         debug_file.seek(0)
                                         alt_df = pd.read_csv(debug_file, delimiter=delimiter)
-                                        st.success(f"âœ“ Alternative method with '{delimiter}' delimiter: {alt_df.shape}")
+                                        st.success(f"&#10003; Alternative method with '{delimiter}' delimiter: {alt_df.shape}")
                                         st.dataframe(alt_df.head(3))
                                         break
                                     except Exception as alt_error:
-                                        st.write(f"âœ— Delimiter '{delimiter}': {str(alt_error)}")
+                                        st.write(f"&#10005; Delimiter '{delimiter}': {str(alt_error)}")
                             
                         except Exception as decode_error:
                             st.error(f"âœ— UTF-8 decode failed: {str(decode_error)}")
@@ -484,10 +484,10 @@ def main():
                             for encoding in ['latin-1', 'cp1252', 'iso-8859-1']:
                                 try:
                                     alt_content = raw_content.decode(encoding)
-                                    st.success(f"âœ“ {encoding} decode successful")
+                                    st.success(f"&#10003; {encoding} decode successful")
                                     break
                                 except Exception as enc_error:
-                                    st.write(f"âœ— {encoding}: {str(enc_error)}")
+                                    st.write(f"&#10005; {encoding}: {str(enc_error)}")
                                     
                     except Exception as e:
                         st.error(f"**Error processing file:** {str(e)}")
@@ -561,15 +561,15 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
     col0, col1, col2 = st.columns([1, 2, 1])
     
     with col0:
-        if st.button("ðŸ“ˆ Comprehensive Intraday", use_container_width=True, key="kse100_intraday_btn"):
+        if st.button("&#128200; Comprehensive Intraday", use_container_width=True, key="kse100_intraday_btn"):
             st.session_state['analysis_type'] = "Comprehensive Intraday Forecasts"
             st.rerun()
     
     with col1:
-        st.subheader("ðŸ“Š KSE-100 Index Analysis")
+        st.markdown("## &#128202; KSE-100 Index Analysis")
     
     with col2:
-        if st.button("ðŸ’¾ Export Data", use_container_width=True):
+        if st.button("&#128190; Export Data", use_container_width=True):
             if st.session_state.kse_data is not None:
                 csv = export_to_csv(st.session_state.kse_data, "KSE-100")
                 st.download_button(
@@ -647,13 +647,13 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                     st.metric("High", format_currency(kse_data['high'].iloc[-1]))
                 
                 with metric_col3:
-                    st.metric("Low", format_currency(kse_data['low'].iloc[-1]))
-                
-                # Historical chart
-                st.subheader("ðŸ“ˆ Live Price Movement")
-                historical_chart = st.session_state.visualizer.create_price_chart(
-                    kse_data, "KSE-100 Index - Live Data"
-                )
+                 st.metric("Low", format_currency(kse_data['low'].iloc[-1]))
+
+                 # Historical chart
+                 st.markdown("### &#128200; Live Price Movement")
+                 historical_chart = st.session_state.visualizer.create_price_chart(
+                     kse_data, "KSE-100 Index - Live Data"
+                 )
                 st.plotly_chart(historical_chart, use_container_width=True)
                 
                 # Forecasting
@@ -1091,7 +1091,7 @@ def display_company_analysis(selected_company, forecast_type, days_ahead, custom
         st.subheader(f"ðŸ“Š {selected_company} Analysis")
     
     with col2:
-        if st.button("ðŸ’¾ Export Data", use_container_width=True):
+        if st.button("&#128190; Export Data", use_container_width=True):
             if selected_company in st.session_state.companies_data:
                 csv = export_to_csv(st.session_state.companies_data[selected_company], selected_company)
                 st.download_button(
@@ -7164,27 +7164,197 @@ def display_master_oracle_terminal():
                     current = close_p
                 return opens_out, highs_out, lows_out, closes_out
 
-            # Time anchor
-            t_anchor = asset_df.index[-1] if not asset_df.empty else pd.Timestamp.now(tz=pytz.utc)
+            # ── SLIDING WINDOW SETUP ──────────────────────────────────────────
+            # Session-state keys for persistent forecast windows
+            _SW1H   = 'sw_oracle_1h'
+            _SW6H   = 'sw_oracle_6h'
+            _SWMETA = 'sw_oracle_meta'
 
-            # Stable seed based on asset price
-            seed_base = int(abs(a_price) * 100) % 99991
+            now_utc = pd.Timestamp.now(tz=pytz.utc)
 
-            # â”€â”€ Generate 1H forecast (12 Ã— 5-min) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-            opens_1h, highs_1h, lows_1h, closes_1h = generate_5min_ohlc(
-                a_price, 12, combined_trend, base_volatility, seed_val=seed_base + 1
-            )
-            times_1h = [t_anchor + timedelta(minutes=5 * (k + 1)) for k in range(12)]
+            # ── FETCH LIVE PRICE (real-time anchor for forecast) ──────────────
+            # Try to obtain the most current market price from Yahoo Finance.
+            # Falls back gracefully to the last 5-min close already in asset_df.
+            _live_anchor = a_price       # default: last 5m close from asset_df
+            _live_src    = 'Last 5m Close'
+            try:
+                _tkr_live = yf.Ticker(ASSETS[selected_asset])
+                # fast_info.last_price  →  real-time quote (free tier: ~15 min delay)
+                _fi_live  = _tkr_live.fast_info
+                _lp_live  = float(getattr(_fi_live, 'last_price', 0) or 0)
+                if _lp_live > 0 and abs(_lp_live - a_price) / max(a_price, 1e-9) < 0.20:
+                    _live_anchor = _lp_live
+                    _live_src    = 'Yahoo Finance (live quote)'
+                else:
+                    # Fallback: latest completed 1-min bar
+                    _h1m = _tkr_live.history(period='1d', interval='1m')
+                    if not _h1m.empty:
+                        _lp_1m = float(_h1m['Close'].iloc[-1])
+                        if _lp_1m > 0 and abs(_lp_1m - a_price) / max(a_price, 1e-9) < 0.20:
+                            _live_anchor = _lp_1m
+                            _live_src    = 'Yahoo Finance (1m bar)'
+            except Exception:
+                pass  # silently keep _live_anchor = a_price
+
+            seed_base = int(abs(_live_anchor) * 100) % 99991
+
+            # Decide whether to reset the window (first run / asset change / large price drift)
+            _meta         = st.session_state.get(_SWMETA, {})
+            _is_fresh     = _SW1H not in st.session_state
+            _asset_chg    = _meta.get('asset') != selected_asset
+            _price_drift  = abs(_meta.get('base_price', _live_anchor) - _live_anchor) / max(_live_anchor, 1e-9) > 0.008
+            _should_reset = _is_fresh or _asset_chg or _price_drift
+
+            if _should_reset:
+                # ── First run or reset: generate full windows from scratch ────
+                _o1, _h1, _l1, _c1 = generate_5min_ohlc(
+                    _live_anchor, 12, combined_trend, base_volatility, seed_val=seed_base + 1
+                )
+                _t1 = [now_utc + timedelta(minutes=5 * (k + 1)) for k in range(12)]
+                st.session_state[_SW1H] = {
+                    'opens': list(_o1), 'highs': list(_h1),
+                    'lows':  list(_l1), 'closes': list(_c1), 'times': _t1
+                }
+                _o6, _h6, _l6, _c6 = generate_5min_ohlc(
+                    _live_anchor, 72, combined_trend, base_volatility, seed_val=seed_base + 2
+                )
+                _t6 = [now_utc + timedelta(minutes=5 * (k + 1)) for k in range(72)]
+                st.session_state[_SW6H] = {
+                    'opens': list(_o6), 'highs': list(_h6),
+                    'lows':  list(_l6), 'closes': list(_c6), 'times': _t6
+                }
+                st.session_state[_SWMETA] = {
+                    'last_render': now_utc, 'asset': selected_asset,
+                    'base_price': _live_anchor, 'seed_ctr': seed_base + 200,
+                    'n_slid': 0, 'live_src': _live_src,
+                    'reset_reason': 'init' if _is_fresh else ('asset' if _asset_chg else 'price')
+                }
+            else:
+                # ── Subsequent run: slide forward by elapsed 5-min candles ───
+                _elapsed_secs = (now_utc - _meta['last_render']).total_seconds()
+                _n_slide      = int(_elapsed_secs // 300)   # 300 s = 5 min per candle
+
+                if _n_slide > 0:
+                    _seed_c = _meta.get('seed_ctr', seed_base + 200)
+
+                    # --- Slide 1H window (fixed 12 candles) ---
+                    _sw1 = st.session_state[_SW1H]
+                    _n1  = min(_n_slide, 12)
+                    _no, _nh, _nl, _nc = generate_5min_ohlc(
+                        _sw1['closes'][-1], _n1, combined_trend,
+                        base_volatility, seed_val=_seed_c + 1
+                    )
+                    _nt1 = [_sw1['times'][-1] + timedelta(minutes=5 * (k + 1)) for k in range(_n1)]
+                    st.session_state[_SW1H] = {
+                        'opens':  _sw1['opens'][_n1:]  + list(_no),
+                        'highs':  _sw1['highs'][_n1:]  + list(_nh),
+                        'lows':   _sw1['lows'][_n1:]   + list(_nl),
+                        'closes': _sw1['closes'][_n1:] + list(_nc),
+                        'times':  _sw1['times'][_n1:]  + _nt1
+                    }
+
+                    # --- Slide 6H window (fixed 72 candles) ---
+                    _sw6 = st.session_state[_SW6H]
+                    _n6  = min(_n_slide, 72)
+                    _no6, _nh6, _nl6, _nc6 = generate_5min_ohlc(
+                        _sw6['closes'][-1], _n6, combined_trend,
+                        base_volatility, seed_val=_seed_c + 2
+                    )
+                    _nt6 = [_sw6['times'][-1] + timedelta(minutes=5 * (k + 1)) for k in range(_n6)]
+                    st.session_state[_SW6H] = {
+                        'opens':  _sw6['opens'][_n6:]  + list(_no6),
+                        'highs':  _sw6['highs'][_n6:]  + list(_nh6),
+                        'lows':   _sw6['lows'][_n6:]   + list(_nl6),
+                        'closes': _sw6['closes'][_n6:] + list(_nc6),
+                        'times':  _sw6['times'][_n6:]  + _nt6
+                    }
+
+                    st.session_state[_SWMETA] = {
+                        'last_render': now_utc, 'asset': selected_asset,
+                        'base_price': _live_anchor, 'seed_ctr': _seed_c + _n_slide,
+                        'n_slid': _meta.get('n_slid', 0) + _n_slide,
+                        'live_src': _live_src, 'reset_reason': 'slide'
+                    }
+
+            # ── Pull current window into local variables ───────────────────────
+            _sw1 = st.session_state[_SW1H]
+            _sw6 = st.session_state[_SW6H]
+            _meta = st.session_state[_SWMETA]
+
+            opens_1h  = _sw1['opens'];  highs_1h  = _sw1['highs']
+            lows_1h   = _sw1['lows'];   closes_1h = _sw1['closes']
+            times_1h  = _sw1['times']
+
+            opens_6h  = _sw6['opens'];  highs_6h  = _sw6['highs']
+            lows_6h   = _sw6['lows'];   closes_6h = _sw6['closes']
+            times_6h  = _sw6['times']
+
+            # Confidence intervals (relative to current window position)
             conf_up_1h = [closes_1h[k] * (1 + base_volatility * 1.8 * math.sqrt((k + 1) / 12)) for k in range(12)]
             conf_lo_1h = [closes_1h[k] * (1 - base_volatility * 1.8 * math.sqrt((k + 1) / 12)) for k in range(12)]
-
-            # â”€â”€ Generate 6H forecast (72 Ã— 5-min) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-            opens_6h, highs_6h, lows_6h, closes_6h = generate_5min_ohlc(
-                a_price, 72, combined_trend, base_volatility, seed_val=seed_base + 2
-            )
-            times_6h = [t_anchor + timedelta(minutes=5 * (k + 1)) for k in range(72)]
             conf_up_6h = [closes_6h[k] * (1 + base_volatility * 2.5 * math.sqrt((k + 1) / 72)) for k in range(72)]
             conf_lo_6h = [closes_6h[k] * (1 - base_volatility * 2.5 * math.sqrt((k + 1) / 72)) for k in range(72)]
+
+            # ── Live price info card (NOW UTC / live price / window ranges) ──
+            _now_str  = now_utc.strftime('%H:%M:%S')
+            _1h_end   = (now_utc + timedelta(hours=1)).strftime('%H:%M')
+            _6h_end   = (now_utc + timedelta(hours=6)).strftime('%H:%M')
+            _lv_delta = (_live_anchor - a_price) / max(a_price, 1e-9) * 100
+            _lv_col   = '#26A69A' if _lv_delta >= 0 else '#EF5350'
+            _lv_arr   = '▲' if _lv_delta >= 0 else '▼'
+            _lv_delta_str = f"{_lv_arr}{abs(_lv_delta):.3f}%" if abs(_lv_delta) > 1e-4 else "—"
+            st.markdown(f"""
+            <div style='background:linear-gradient(135deg,#0d1117 0%,#1a1f2e 100%);
+                border:1px solid #21262d;border-radius:12px;padding:14px 20px;
+                margin-bottom:8px;display:flex;align-items:flex-start;
+                gap:28px;flex-wrap:wrap;'>
+              <div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'>🕐 CURRENT UTC</div>
+                <div style='color:#FFD700;font-size:1.25em;font-weight:700;font-family:monospace;
+                    margin-top:2px;'>{_now_str} UTC</div>
+              </div>
+              <div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'>💰 LIVE PRICE</div>
+                <div style='color:#00CED1;font-size:1.25em;font-weight:700;margin-top:2px;'>
+                    ${_live_anchor:,.2f}
+                    <span style='color:{_lv_col};font-size:11px;margin-left:6px;'>{_lv_delta_str} vs last close</span>
+                </div>
+                <div style='color:#555;font-size:10px;margin-top:1px;'>Source: {_live_src}</div>
+              </div>
+              <div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'>📈 1H WINDOW (NOW → +60 MIN)</div>
+                <div style='color:#26A69A;font-weight:700;margin-top:2px;'>
+                    {now_utc.strftime('%H:%M')} UTC → {_1h_end} UTC</div>
+                <div style='color:#555;font-size:10px;margin-top:1px;'>12 × 5-min forecast candles</div>
+              </div>
+              <div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'>🕐 6H WINDOW (NOW → +6 HRS)</div>
+                <div style='color:#FF8C00;font-weight:700;margin-top:2px;'>
+                    {now_utc.strftime('%H:%M')} UTC → {_6h_end} UTC</div>
+                <div style='color:#555;font-size:10px;margin-top:1px;'>72 × 5-min forecast candles</div>
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+            # ── Sliding-window status strip ────────────────────────────────────
+            _n_slid = _meta.get('n_slid', 0)
+            if _n_slid > 0:
+                _sw_msg = (
+                    f"🔄 <strong style='color:#FFD700;'>Sliding Window Active</strong> — "
+                    f"<strong style='color:#26A69A;'>{_n_slid} × 5-min candle(s) advanced</strong> "
+                    f"({_n_slid * 5} min renewed since first load)"
+                )
+            else:
+                _sw_msg = (
+                    f"🆕 <strong style='color:#FFD700;'>Fresh Forecast Window</strong> — "
+                    f"slides forward automatically every 5 min on refresh "
+                    f"(1 candle dropped &amp; 1 new candle appended per interval)"
+                )
+            st.markdown(
+                f"<div style='background:rgba(22,27,34,0.85);border:1px solid #30363d;"
+                f"border-radius:8px;padding:7px 14px;margin-bottom:10px;"
+                f"font-size:12px;color:#ccc;'>{_sw_msg}</div>",
+                unsafe_allow_html=True
+            )
 
             # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             # CHART 1 â€” 1-HOUR FORECAST (12 Ã— 5-MIN CANDLES)
@@ -7202,10 +7372,10 @@ def display_master_oracle_terminal():
                 )
             )
 
-            # Entry price reference line
+            # Live price / entry reference line
             fig_1h.add_hline(
-                y=a_price, line_dash="dash", line_color="#FFD700", line_width=1.5,
-                annotation_text=f"Entry ${a_price:,.2f}",
+                y=_live_anchor, line_dash="dash", line_color="#FFD700", line_width=1.5,
+                annotation_text=f"Live ${_live_anchor:,.2f}",
                 annotation_font_color="#FFD700", annotation_position="left",
                 row=1, col=1
             )
@@ -7222,7 +7392,7 @@ def display_master_oracle_terminal():
                 showlegend=True
             ), row=1, col=1)
 
-            # Historical tail
+            # Historical tail (last ~75 min of real data before NOW)
             if len(asset_df) >= 2 and close_col in asset_df.columns:
                 hist_tail = asset_df.tail(min(15, len(asset_df)))
                 fig_1h.add_trace(go.Scatter(
@@ -7233,6 +7403,17 @@ def display_master_oracle_terminal():
                     line=dict(color='#00CED1', width=1.8, dash='dot'),
                     hovertemplate='%{x|%H:%M}<br>$%{y:,.2f}<extra>Historical</extra>'
                 ), row=1, col=1)
+
+            # "NOW" vertical line — separates history from forecast
+            fig_1h.add_vline(
+                x=now_utc,
+                line_dash='solid',
+                line_color='rgba(255,215,0,0.75)',
+                line_width=2,
+                annotation_text=f' ⬤ NOW {now_utc.strftime("%H:%M")} UTC',
+                annotation_font=dict(color='#FFD700', size=10, family='Arial Black'),
+                annotation_position='top right',
+            )
 
             # 1H Candlestick chart
             fig_1h.add_trace(go.Candlestick(
