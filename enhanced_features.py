@@ -2,8 +2,21 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import holidays
-import yfinance as yf
+
+# Optional imports for enhanced features
+try:
+    import holidays
+    HAS_HOLIDAYS = True
+except ImportError:
+    HAS_HOLIDAYS = False
+    holidays = None
+
+try:
+    import yfinance as yf
+    HAS_YFINANCE = True
+except ImportError:
+    HAS_YFINANCE = False
+    yf = None
 # from selenium import webdriver
 # from selenium.webdriver.common.by import By
 # from selenium.webdriver.chrome.options import Options
@@ -30,7 +43,7 @@ class EnhancedPSXFeatures:
         return datetime.now(pakistan_tz)
 
     def __init__(self):
-        self.pakistan_holidays = holidays.Pakistan()
+        self.pakistan_holidays = holidays.Pakistan() if HAS_HOLIDAYS else None
         self.market_hours = {'open': '09:30', 'close': '15:00'}
         self.selenium_driver = None
         
@@ -43,8 +56,8 @@ class EnhancedPSXFeatures:
         if now.weekday() >= 5:  # Saturday=5, Sunday=6
             return False, "Market closed - Weekend"
 
-        # Check if it's a Pakistan holiday
-        if now.date() in self.pakistan_holidays:
+        # Check if it's a Pakistan holiday (if holidays package is available)
+        if HAS_HOLIDAYS and self.pakistan_holidays and now.date() in self.pakistan_holidays:
             holiday_name = self.pakistan_holidays.get(now.date())
             return False, f"Market closed - {holiday_name}"
 

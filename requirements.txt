@@ -8,4 +8,6 @@ requests>=2.31.0
 yfinance>=0.2.0
 pytz>=2023.0
 river>=0.21.0
+holidays>=0.40
+beautifulsoup4>=4.11.0
  
