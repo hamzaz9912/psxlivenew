@@ -647,70 +647,70 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                     st.metric("High", format_currency(kse_data['high'].iloc[-1]))
                 
                 with metric_col3:
-                 st.metric("Low", format_currency(kse_data['low'].iloc[-1]))
+                    st.metric("Low", format_currency(kse_data['low'].iloc[-1]))
 
-                 # Historical chart
-                 st.markdown("### &#128200; Live Price Movement")
-                 historical_chart = st.session_state.visualizer.create_price_chart(
-                     kse_data, "KSE-100 Index - Live Data"
-                 )
-                st.plotly_chart(historical_chart, use_container_width=True)
-                
-                # Forecasting
-                st.subheader("ðŸ”® Price Forecast")
-                
-                with st.spinner("Generating forecast..."):
-                    try:
-                        forecast_data = st.session_state.forecaster.forecast_stock(
-                            kse_data, days_ahead=days_ahead
-                        )
-                        
-                        if forecast_data is not None:
-                            # Display forecast metrics
-                            forecast_price = forecast_data['yhat'].iloc[-1]
-                            forecast_change = forecast_price - current_price
-                            forecast_change_pct = (forecast_change / current_price) * 100
-                            
-                            forecast_col1, forecast_col2 = st.columns(2)
-                            
-                            with forecast_col1:
-                                period_text = {
-                                    0: "End of Day",
-                                    1: "Tomorrow",
-                                    days_ahead: f"{days_ahead} Days Ahead" if days_ahead > 1 else "Tomorrow"
-                                }.get(days_ahead, f"{days_ahead} Days Ahead")
-                                
-                                st.metric(
-                                    f"Forecasted Price ({period_text})",
-                                    format_currency(forecast_price),
-                                    delta=f"{forecast_change:+.2f} ({forecast_change_pct:+.2f}%)"
-                                )
-                            
-                            with forecast_col2:
-                                confidence_lower = forecast_data['yhat_lower'].iloc[-1]
-                                confidence_upper = forecast_data['yhat_upper'].iloc[-1]
-                                st.metric(
-                                    "Confidence Range",
-                                    f"{format_currency(confidence_lower)} - {format_currency(confidence_upper)}"
-                                )
-                            
-                            # Forecast chart
-                            forecast_chart = st.session_state.visualizer.create_forecast_chart(
-                                kse_data, forecast_data, "KSE-100 Index Forecast"
+                    # Historical chart
+                    st.markdown("### &#128200; Live Price Movement")
+                    historical_chart = st.session_state.visualizer.create_price_chart(
+                        kse_data, "KSE-100 Index - Live Data"
+                    )
+                    st.plotly_chart(historical_chart, use_container_width=True)
+
+                    # Forecasting
+                    st.markdown("### &#128270; Price Forecast")
+
+                    with st.spinner("Generating forecast..."):
+                        try:
+                            forecast_data = st.session_state.forecaster.forecast_stock(
+                                kse_data, days_ahead=days_ahead
                             )
-                            st.plotly_chart(forecast_chart, use_container_width=True)
-                            
-                        else:
-                            st.error("Unable to generate forecast. Insufficient data.")
-                            
-                    except Exception as e:
-                        st.error(f"Forecasting error: {str(e)}")
+
+                            if forecast_data is not None:
+                                # Display forecast metrics
+                                forecast_price = forecast_data['yhat'].iloc[-1]
+                                forecast_change = forecast_price - current_price
+                                forecast_change_pct = (forecast_change / current_price) * 100
+                                
+                                forecast_col1, forecast_col2 = st.columns(2)
+                                
+                                with forecast_col1:
+                                    period_text = {
+                                        0: "End of Day",
+                                        1: "Tomorrow",
+                                        days_ahead: f"{days_ahead} Days Ahead" if days_ahead > 1 else "Tomorrow"
+                                    }.get(days_ahead, f"{days_ahead} Days Ahead")
+                                    
+                                    st.metric(
+                                        f"Forecasted Price ({period_text})",
+                                        format_currency(forecast_price),
+                                        delta=f"{forecast_change:+.2f} ({forecast_change_pct:+.2f}%)"
+                                    )
+                                
+                                with forecast_col2:
+                                    confidence_lower = forecast_data['yhat_lower'].iloc[-1]
+                                    confidence_upper = forecast_data['yhat_upper'].iloc[-1]
+                                    st.metric(
+                                        "Confidence Range",
+                                        f"{format_currency(confidence_lower)} - {format_currency(confidence_upper)}"
+                                    )
+                                
+                                # Forecast chart
+                                forecast_chart = st.session_state.visualizer.create_forecast_chart(
+                                    kse_data, forecast_data, "KSE-100 Index Forecast"
+                                )
+                                st.plotly_chart(forecast_chart, use_container_width=True)
+                                
+                            else:
+                                st.error("Unable to generate forecast. Insufficient data.")
+                                
+                        except Exception as e:
+                            st.error(f"Forecasting error: {str(e)}")
                 
-                # ==========================================
-                # COMPREHENSIVE INTRADAY FORECAST SECTION
-                # ==========================================
-                st.markdown("---")
-                st.subheader("ðŸ“ˆ Comprehensive Intraday Forecast")
+                    # ==========================================
+                    # COMPREHENSIVE INTRADAY FORECAST SECTION
+                    # ==========================================
+                    st.markdown("---")
+                    st.markdown("## &#128200; Comprehensive Intraday Forecast")
                 
                 # Import and display comprehensive intraday forecast
                 from comprehensive_intraday import ComprehensiveIntradayForecaster, is_trading_day, get_next_trading_day
@@ -783,7 +783,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 col_graph_sel, col_graph_main = st.columns([1, 4])
                 
                 with col_graph_sel:
-                    st.markdown("### ðŸ“Š Select Session")
+                    st.markdown("### &#128202; Select Session")
                     
                     # Use radio buttons for session selection
                     selected_session = st.radio(
@@ -797,7 +797,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 import plotly.graph_objects as go
                 
                 if "Full Day" in selected_session and full_day is not None and not full_day.empty:
-                    st.info("ðŸ’¡ **Full Day Forecast:** Complete trading day from 9:30 AM to 3:30 PM")
+                    st.info("&#128161; **Full Day Forecast:** Complete trading day from 9:30 AM to 3:30 PM")
                     
                     fig = go.Figure()
                     
@@ -848,7 +848,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Morning" in selected_session and morning_session is not None and not morning_session.empty:
-                    st.info("ðŸ’¡ **Morning Session Forecast:** 9:45 AM to 12:00 PM")
+                    st.info("&#128161; **Morning Session Forecast:** 9:45 AM to 12:00 PM")
                     
                     fig = go.Figure()
                     
@@ -908,7 +908,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Afternoon" in selected_session and afternoon_session is not None and not afternoon_session.empty:
-                    st.info("ðŸ’¡ **Afternoon Session Forecast:** 12:00 PM to 3:30 PM")
+                    st.info("&#128161; **Afternoon Session Forecast:** 12:00 PM to 3:30 PM")
                     
                     fig = go.Figure()
                     
@@ -968,7 +968,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Main Session" in selected_session and main_session is not None and not main_session.empty:
-                    st.info("ðŸ’¡ **Main Session Forecast:** 9:36 AM to 3:30 PM (New Workflow)")
+                    st.info("&#128161; **Main Session Forecast:** 9:36 AM to 3:30 PM (New Workflow)")
                     
                     fig = go.Figure()
                     
@@ -7213,7 +7213,7 @@ def display_master_oracle_terminal():
                 _t1 = [now_utc + timedelta(minutes=5 * (k + 1)) for k in range(12)]
                 st.session_state[_SW1H] = {
                     'opens': list(_o1), 'highs': list(_h1),
-                    'lows':  list(_l1), 'closes': list(_c1), 'times': _t1
+                    'lows':  list(_l1), 'closes': list(_c1), 'times': [t.strftime('%Y-%m-%d %H:%M:%S') for t in _t1]
                 }
                 _o6, _h6, _l6, _c6 = generate_5min_ohlc(
                     _live_anchor, 72, combined_trend, base_volatility, seed_val=seed_base + 2
@@ -7221,7 +7221,7 @@ def display_master_oracle_terminal():
                 _t6 = [now_utc + timedelta(minutes=5 * (k + 1)) for k in range(72)]
                 st.session_state[_SW6H] = {
                     'opens': list(_o6), 'highs': list(_h6),
-                    'lows':  list(_l6), 'closes': list(_c6), 'times': _t6
+                    'lows':  list(_l6), 'closes': list(_c6), 'times': [t.strftime('%Y-%m-%d %H:%M:%S') for t in _t6]
                 }
                 st.session_state[_SWMETA] = {
                     'last_render': now_utc, 'asset': selected_asset,
@@ -7244,13 +7244,13 @@ def display_master_oracle_terminal():
                         _sw1['closes'][-1], _n1, combined_trend,
                         base_volatility, seed_val=_seed_c + 1
                     )
-                    _nt1 = [_sw1['times'][-1] + timedelta(minutes=5 * (k + 1)) for k in range(_n1)]
+                    _nt1 = [pd.to_datetime(_sw1['times'][-1]) + timedelta(minutes=5 * (k + 1)) for k in range(_n1)]
                     st.session_state[_SW1H] = {
                         'opens':  _sw1['opens'][_n1:]  + list(_no),
                         'highs':  _sw1['highs'][_n1:]  + list(_nh),
                         'lows':   _sw1['lows'][_n1:]   + list(_nl),
                         'closes': _sw1['closes'][_n1:] + list(_nc),
-                        'times':  _sw1['times'][_n1:]  + _nt1
+                        'times':  _sw1['times'][_n1:]  + [t.strftime('%Y-%m-%d %H:%M:%S') for t in _nt1]
                     }
 
                     # --- Slide 6H window (fixed 72 candles) ---
@@ -7260,13 +7260,13 @@ def display_master_oracle_terminal():
                         _sw6['closes'][-1], _n6, combined_trend,
                         base_volatility, seed_val=_seed_c + 2
                     )
-                    _nt6 = [_sw6['times'][-1] + timedelta(minutes=5 * (k + 1)) for k in range(_n6)]
+                    _nt6 = [pd.to_datetime(_sw6['times'][-1]) + timedelta(minutes=5 * (k + 1)) for k in range(_n6)]
                     st.session_state[_SW6H] = {
                         'opens':  _sw6['opens'][_n6:]  + list(_no6),
                         'highs':  _sw6['highs'][_n6:]  + list(_nh6),
                         'lows':   _sw6['lows'][_n6:]   + list(_nl6),
                         'closes': _sw6['closes'][_n6:] + list(_nc6),
-                        'times':  _sw6['times'][_n6:]  + _nt6
+                        'times':  _sw6['times'][_n6:]  + [t.strftime('%Y-%m-%d %H:%M:%S') for t in _nt6]
                     }
 
                     st.session_state[_SWMETA] = {
@@ -7281,13 +7281,15 @@ def display_master_oracle_terminal():
             _sw6 = st.session_state[_SW6H]
             _meta = st.session_state[_SWMETA]
 
-            opens_1h  = _sw1['opens'];  highs_1h  = _sw1['highs']
-            lows_1h   = _sw1['lows'];   closes_1h = _sw1['closes']
-            times_1h  = _sw1['times']
+            opens_1h  = [float(x) for x in _sw1['opens']];  highs_1h  = [float(x) for x in _sw1['highs']]
+            lows_1h   = [float(x) for x in _sw1['lows']];   closes_1h = [float(x) for x in _sw1['closes']]
+            times_1h  = [pd.to_datetime(t) for t in _sw1['times']]
 
-            opens_6h  = _sw6['opens'];  highs_6h  = _sw6['highs']
-            lows_6h   = _sw6['lows'];   closes_6h = _sw6['closes']
-            times_6h  = _sw6['times']
+            opens_6h  = [float(x) for x in _sw6['opens']];  highs_6h  = [float(x) for x in _sw6['highs']]
+            lows_6h   = [float(x) for x in _sw6['lows']];   closes_6h = [float(x) for x in _sw6['closes']]
+            times_6h  = [pd.to_datetime(t) for t in _sw6['times']]
+
+
 
             # Confidence intervals (relative to current window position)
             conf_up_1h = [closes_1h[k] * (1 + base_volatility * 1.8 * math.sqrt((k + 1) / 12)) for k in range(12)]
@@ -7382,7 +7384,7 @@ def display_master_oracle_terminal():
 
             # 95% Confidence band
             fig_1h.add_trace(go.Scatter(
-                x=times_1h + times_1h[::-1],
+                x=[t.timestamp() for t in times_1h] + [t.timestamp() for t in times_1h[::-1]],
                 y=conf_up_1h + conf_lo_1h[::-1],
                 fill='toself',
                 fillcolor='rgba(0,200,255,0.10)',
@@ -7396,17 +7398,18 @@ def display_master_oracle_terminal():
             if len(asset_df) >= 2 and close_col in asset_df.columns:
                 hist_tail = asset_df.tail(min(15, len(asset_df)))
                 fig_1h.add_trace(go.Scatter(
-                    x=hist_tail.index,
+                    x=[t.timestamp() for t in hist_tail.index],
                     y=hist_tail[close_col].values,
                     mode='lines',
                     name='Historical',
                     line=dict(color='#00CED1', width=1.8, dash='dot'),
-                    hovertemplate='%{x|%H:%M}<br>$%{y:,.2f}<extra>Historical</extra>'
+                    hovertemplate='%{customdata}<br>$%{y:,.2f}<extra>Historical</extra>',
+                    customdata=[t.strftime('%H:%M') for t in hist_tail.index]
                 ), row=1, col=1)
 
             # "NOW" vertical line — separates history from forecast
             fig_1h.add_vline(
-                x=now_utc,
+                x=now_utc.timestamp(),
                 line_dash='solid',
                 line_color='rgba(255,215,0,0.75)',
                 line_width=2,
@@ -7417,7 +7420,7 @@ def display_master_oracle_terminal():
 
             # 1H Candlestick chart
             fig_1h.add_trace(go.Candlestick(
-                x=times_1h,
+                x=[t.timestamp() for t in times_1h],
                 open=opens_1h, high=highs_1h, low=lows_1h, close=closes_1h,
                 name='1H Forecast',
                 increasing=dict(line=dict(color='#26A69A', width=2), fillcolor='rgba(38,166,154,0.85)'),
@@ -7429,10 +7432,10 @@ def display_master_oracle_terminal():
             for k in range(12):
                 is_up_k = closes_1h[k] >= opens_1h[k]
                 clr_k = '#26A69A' if is_up_k else '#EF5350'
-                arr_k = 'â–²' if is_up_k else 'â–¼'
+                arr_k = '&#9650;' if is_up_k else '&#9660;'
                 pct_entry_k = (closes_1h[k] - a_price) / a_price * 100
                 fig_1h.add_annotation(
-                    x=times_1h[k],
+                    x=times_1h[k].timestamp(),
                     y=highs_1h[k] if is_up_k else lows_1h[k],
                     text=f"{arr_k} <b>${closes_1h[k]:,.1f}</b><br><span style='font-size:9px'>{pct_entry_k:+.2f}%</span>",
                     showarrow=False,
@@ -7447,12 +7450,13 @@ def display_master_oracle_terminal():
             changes_1h = [(closes_1h[k] - opens_1h[k]) / opens_1h[k] * 100 for k in range(12)]
             bar_clrs_1h = ['#26A69A' if c >= 0 else '#EF5350' for c in changes_1h]
             fig_1h.add_trace(go.Bar(
-                x=times_1h, y=changes_1h,
+                x=[t.timestamp() for t in times_1h], y=changes_1h,
                 name='5-Min Change %',
                 marker_color=bar_clrs_1h,
                 text=[f"{c:+.3f}%" for c in changes_1h],
                 textposition='outside',
-                hovertemplate='%{x|%H:%M}<br>Change: %{y:+.3f}%<extra></extra>'
+                hovertemplate='%{customdata}<br>Change: %{y:+.3f}%<extra></extra>',
+                customdata=[t.strftime('%H:%M') for t in times_1h]
             ), row=2, col=1)
             fig_1h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=2, col=1)
 
@@ -7486,7 +7490,7 @@ def display_master_oracle_terminal():
             ret_1h = (closes_1h[-1] - a_price) / a_price * 100
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
             col_m1.metric("1H Target Price", f"${closes_1h[-1]:,.2f}", f"{ret_1h:+.2f}%")
-            col_m2.metric("ðŸŸ¢ Bull / ðŸ”´ Bear", f"{up_c_1h} / {dn_c_1h}", "5-min candles")
+            col_m2.metric("&#128994; Bull / &#128308; Bear", f"{up_c_1h} / {dn_c_1h}", "5-min candles")
             col_m3.metric("Best 5-Min Gain", f"{max(changes_1h):+.3f}%", "Peak up move")
             col_m4.metric("Worst 5-Min Drop", f"{min(changes_1h):+.3f}%", "Peak down move")
 
@@ -7531,7 +7535,7 @@ def display_master_oracle_terminal():
 
             # 95% Confidence band
             fig_6h.add_trace(go.Scatter(
-                x=times_6h + times_6h[::-1],
+                x=[t.timestamp() for t in times_6h] + [t.timestamp() for t in times_6h[::-1]],
                 y=conf_up_6h + conf_lo_6h[::-1],
                 fill='toself',
                 fillcolor='rgba(255,140,0,0.09)',
@@ -7545,16 +7549,17 @@ def display_master_oracle_terminal():
             if len(asset_df) >= 2 and close_col in asset_df.columns:
                 hist_tail6 = asset_df.tail(min(30, len(asset_df)))
                 fig_6h.add_trace(go.Scatter(
-                    x=hist_tail6.index,
+                    x=[t.timestamp() for t in hist_tail6.index],
                     y=hist_tail6[close_col].values,
                     mode='lines', name='Historical (1H)',
                     line=dict(color='#00CED1', width=1.4, dash='dot'),
-                    hovertemplate='%{x|%H:%M}<br>$%{y:,.2f}<extra>Historical</extra>'
+                    hovertemplate='%{customdata}<br>$%{y:,.2f}<extra>Historical</extra>',
+                    customdata=[t.strftime('%H:%M') for t in hist_tail6.index]
                 ), row=1, col=1)
 
             # 6H Candlestick chart
             fig_6h.add_trace(go.Candlestick(
-                x=times_6h,
+                x=[t.timestamp() for t in times_6h],
                 open=opens_6h, high=highs_6h, low=lows_6h, close=closes_6h,
                 name='6H Forecast',
                 increasing=dict(line=dict(color='#26A69A', width=1.2),
@@ -7570,9 +7575,9 @@ def display_master_oracle_terminal():
                 if idx_hr < len(closes_6h):
                     pct_hr = (closes_6h[idx_hr] - a_price) / a_price * 100
                     clr_hr = '#26A69A' if pct_hr >= 0 else '#EF5350'
-                    arr_hr = 'â–²' if pct_hr >= 0 else 'â–¼'
+                    arr_hr = '&#9650;' if pct_hr >= 0 else '&#9660;'
                     fig_6h.add_annotation(
-                        x=times_6h[idx_hr],
+                        x=times_6h[idx_hr].timestamp(),
                         y=highs_6h[idx_hr] if pct_hr >= 0 else lows_6h[idx_hr],
                         text=f"<b>+{hr}H</b><br>{arr_hr}{abs(pct_hr):.2f}%<br>${closes_6h[idx_hr]:,.1f}",
                         showarrow=True, arrowhead=2, arrowsize=0.8,
@@ -7596,7 +7601,7 @@ def display_master_oracle_terminal():
                 hourly_ts.append(times_6h[e_idx])
             h_clrs = ['#26A69A' if r >= 0 else '#EF5350' for r in hourly_rets]
             fig_6h.add_trace(go.Bar(
-                x=hourly_ts, y=hourly_rets,
+                x=[t.timestamp() for t in hourly_ts], y=hourly_rets,
                 name='Hourly Return',
                 marker_color=h_clrs,
                 text=[f"{r:+.2f}%" for r in hourly_rets],
@@ -7612,11 +7617,12 @@ def display_master_oracle_terminal():
             cum_clr = '#26A69A' if final_cum >= 0 else '#EF5350'
             fill_clr_cum = 'rgba(38,166,154,0.18)' if final_cum >= 0 else 'rgba(239,83,80,0.18)'
             fig_6h.add_trace(go.Scatter(
-                x=times_6h, y=cum_rets,
+                x=[t.timestamp() for t in times_6h], y=cum_rets,
                 name='Cumulative Return',
                 line=dict(color=cum_clr, width=2.5),
                 fill='tozeroy', fillcolor=fill_clr_cum,
-                hovertemplate='%{x|%H:%M}<br>Cum. Return: %{y:+.2f}%<extra></extra>'
+                hovertemplate='%{customdata}<br>Cum. Return: %{y:+.2f}%<extra></extra>',
+                customdata=[t.strftime('%H:%M') for t in times_6h]
             ), row=3, col=1)
             fig_6h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=3, col=1)
 
@@ -7655,7 +7661,7 @@ def display_master_oracle_terminal():
                               for k in range(1, 72)]) * 100
             col_n1, col_n2, col_n3, col_n4, col_n5 = st.columns(5)
             col_n1.metric("6H Target Price", f"${closes_6h[-1]:,.2f}", f"{ret_6h:+.2f}%")
-            col_n2.metric("ðŸŸ¢ Bull / ðŸ”´ Bear", f"{up_c_6h} / {dn_c_6h}", "5-min candles")
+            col_n2.metric("&#128994; Bull / &#128308; Bear", f"{up_c_6h} / {dn_c_6h}", "5-min candles")
             col_n3.metric("6H Peak", f"${peak_6h:,.2f}", f"{(peak_6h - a_price)/a_price*100:+.2f}%")
             col_n4.metric("6H Trough", f"${trough_6h:,.2f}", f"{(trough_6h - a_price)/a_price*100:+.2f}%")
             col_n5.metric("5-Min Volatility", f"{vol_6h:.3f}%", "Std deviation")
@@ -7664,7 +7670,7 @@ def display_master_oracle_terminal():
 
             # â”€â”€ 5-MINUTE DETAIL TABLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             st.markdown("#### ðŸ“‹ 5-Minute Interval Detail Tables")
-            tab_1h_tbl, tab_6h_tbl = st.tabs(["â±ï¸ 1H â€” 12 Rows", "ðŸ• 6H â€” 72 Rows"])
+            tab_1h_tbl, tab_6h_tbl = st.tabs(["&#9201;&#65039; 1H â€” 12 Rows", "&#128336; 6H â€” 72 Rows"])
 
             with tab_1h_tbl:
                 df_1h_tbl = pd.DataFrame({
@@ -7675,7 +7681,7 @@ def display_master_oracle_terminal():
                     'Close ($)': [f"{p:,.2f}" for p in closes_1h],
                     'Candle %': [f"{(closes_1h[k]-opens_1h[k])/opens_1h[k]*100:+.3f}%" for k in range(12)],
                     'vs Entry %': [f"{(closes_1h[k]-a_price)/a_price*100:+.3f}%" for k in range(12)],
-                    'Direction': ['ðŸŸ¢ UP' if c >= o else 'ðŸ”´ DOWN' for o, c in zip(opens_1h, closes_1h)]
+                    'Direction': ['&#128994; UP' if c >= o else '&#128308; DOWN' for o, c in zip(opens_1h, closes_1h)]
                 })
                 st.dataframe(df_1h_tbl, use_container_width=True, height=460)
 
@@ -7688,12 +7694,12 @@ def display_master_oracle_terminal():
                     'Close ($)': [f"{p:,.2f}" for p in closes_6h],
                     'Candle %': [f"{(closes_6h[k]-opens_6h[k])/opens_6h[k]*100:+.3f}%" for k in range(72)],
                     'Cum. Return %': [f"{(closes_6h[k]-a_price)/a_price*100:+.3f}%" for k in range(72)],
-                    'Direction': ['ðŸŸ¢ UP' if c >= o else 'ðŸ”´ DOWN' for o, c in zip(opens_6h, closes_6h)]
+                    'Direction': ['&#128994; UP' if c >= o else '&#128308; DOWN' for o, c in zip(opens_6h, closes_6h)]
                 })
                 st.dataframe(df_6h_tbl, use_container_width=True, height=520)
 
         except Exception as _chart_err:
-            st.error(f"âŒ Error generating 1H/6H forecast charts: {_chart_err}")
+            st.error(f"&#10060; Error generating 1H/6H forecast charts: {_chart_err}")
 
         # How-to-read guide
         st.markdown("""
