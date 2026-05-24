@@ -1,0 +1,21 @@
+{
+  "symbol": "HBL",
+  "trained_at": "2026-05-24T01:46:46.532095",
+  "n_samples": 5980,
+  "features": [
+    "Close",
+    "RSI",
+    "MA_10",
+    "MA_20",
+    "Volatility",
+    "MACD",
+    "Signal",
+    "Return"
+  ],
+  "epochs": 12,
+  "final_loss": 861.7725253544465,
+  "xgb_file": "HBL_xgb.pkl",
+  "mlp_file": "HBL_mlp.pkl",
+  "scaler_file": "HBL_scaler.pkl",
+  "checkpoint": "checkpoint_mlp.pkl"
+}

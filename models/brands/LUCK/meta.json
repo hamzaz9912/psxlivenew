@@ -1,0 +1,21 @@
+{
+  "symbol": "LUCK",
+  "trained_at": "2026-05-24T01:46:39.096643",
+  "n_samples": 5980,
+  "features": [
+    "Close",
+    "RSI",
+    "MA_10",
+    "MA_20",
+    "Volatility",
+    "MACD",
+    "Signal",
+    "Return"
+  ],
+  "epochs": 12,
+  "final_loss": 335.53993702021467,
+  "xgb_file": "LUCK_xgb.pkl",
+  "mlp_file": "LUCK_mlp.pkl",
+  "scaler_file": "LUCK_scaler.pkl",
+  "checkpoint": "checkpoint_mlp.pkl"
+}

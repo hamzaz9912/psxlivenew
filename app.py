@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -52,7 +52,6 @@ from enhanced_live_dashboard import get_enhanced_live_dashboard
 # Page configuration
 st.set_page_config(
     page_title="PSX KSE-100 Forecasting Dashboard",
-    page_icon="ðŸ“ˆ",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -214,13 +213,13 @@ def main():
     
     st.session_state.process_stock_data_sector = process_stock_data_sector
 
-    st.markdown("# &#128200; PSX KSE-100 Forecasting Dashboard")
+    st.markdown("# PSX KSE-100 Forecasting Dashboard")
     st.markdown("---")
 
     # Check market status
     if not is_market_open():
-        st.warning("&#9888;&#65039; **Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
-        st.info("&#128161; You can still use file upload analysis, historical data, and forecasting features.")
+        st.warning("**Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
+        st.info("You can still use file upload analysis, historical data, and forecasting features.")
 
     # Auto-refresh every 5 minutes (300 seconds)
     # count = st_autorefresh(interval=300000, limit=None, key="data_refresh")
@@ -231,7 +230,7 @@ def main():
         # Attractive header with gradient
         st.markdown("""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;'>
-            <h2 style='color: white; margin: 0; font-size: 24px;'>&#128202; Dashboard Controls</h2>
+            <h2 style='color: white; margin: 0; font-size: 24px;'>Dashboard Controls</h2>
             <p style='color: #e8eaf6; margin: 5px 0 0 0; font-size: 14px;'>PSX Forecasting Hub</p>
         </div>
         """, unsafe_allow_html=True)
@@ -257,13 +256,13 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-        if st.button("&#128260; Refresh Data Now", key="refresh_data_btn", type="primary"):
+        if st.button("Refresh Data Now", key="refresh_data_btn", type="primary"):
             st.session_state.last_update = None
             st.rerun()
 
         # Auto-refresh timer display in sidebar
         st.markdown("---")
-        st.markdown("**&#9201;&#65039; 5-Minute Auto-Refresh Timer**")
+        st.markdown("**5-Minute Auto-Refresh Timer**")
         
         # Check if we're in the 15-minute live predictions section
         # This will be shown based on session state
@@ -289,7 +288,7 @@ def main():
             # Timer display
             st.markdown(f"""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; text-align: center;'>
-                <h3 style='margin: 0; color: #1565c0;'>&#9201;&#65039; {minutes_left:02d}:{seconds_left:02d}</h3>
+                <h3 style='margin: 0; color: #1565c0;'>{minutes_left:02d}:{seconds_left:02d}</h3>
                 <small style='color: #1976d2;'>Next refresh</small>
             </div>
             <div style='margin-top: 5px; font-size: 12px; color: #666;'>
@@ -303,14 +302,14 @@ def main():
         if st.session_state.last_update:
             st.markdown(f"""
             <div style='background-color: #e8f5e8; padding: 8px; border-radius: 5px; border-left: 3px solid #4caf50; margin: 10px 0;'>
-                <small style='color: #2e7d32; font-weight: bold;'>&#128338; Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
+                <small style='color: #2e7d32; font-weight: bold;'>Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
             </div>
             """, unsafe_allow_html=True)
 
         # Live Price Display with enhanced styling
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;'>
-            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>&#128308; Live PSX Price</h4>
+            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>Live PSX Price</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -337,11 +336,11 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                st.info("&#128202; Live price data not available at the moment.")
+                st.info("Live price data not available at the moment.")
         else:
             st.markdown("""
             <div style='background-color: #ffebee; padding: 8px; border-radius: 4px; border-left: 3px solid #f44336; margin-bottom: 10px;'>
-                <small style='color: #c62828; font-weight: bold;'>&#127969; Market Closed - No live data available</small>
+                <small style='color: #c62828; font-weight: bold;'>Market Closed - No live data available</small>
             </div>
             """, unsafe_allow_html=True)
         
@@ -353,20 +352,20 @@ def main():
         # Analysis type selection with styled container
         st.markdown("""
         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #2196f3;'>
-            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>&#127919; Analysis Type</h4>
+            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>Analysis Type</h4>
         </div>
         """, unsafe_allow_html=True)
 
         analysis_type = st.selectbox(
             "",
-            ["ðŸ“Š Enhanced Live Dashboard (Top 80 KSE-100)", "ðŸ” Comprehensive Brand Predictions", "ðŸ”´ Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "âš¡ 15-Minute Live Predictions", "ðŸ›ï¸ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "ðŸ“ Universal File Upload", "ðŸ“° News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "ðŸ“ˆ Technical Analysis Indicators", "Database Overview", "ðŸ’Ž Master Oracle Terminal (Crypto + Commodities)"],
+            ["Enhanced Live Dashboard (Top 80 KSE-100)", "Comprehensive Brand Predictions", "Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "15-Minute Live Predictions", "All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "Universal File Upload", "News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Technical Analysis Indicators", "Database Overview", "Master Oracle Terminal (Crypto + Commodities)"],
             key="analysis_type"
         )
 
         # Forecast Settings with enhanced styling
         st.markdown("""
         <div style='background-color: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;'>
-            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>&#9889;&#65039; Forecast Settings</h4>
+            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>Forecast Settings</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -382,7 +381,7 @@ def main():
         if forecast_type == "Custom Date Range":
             st.markdown("""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>&#128197; Select Target Date</label>
+                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>Select Target Date</label>
             </div>
             """, unsafe_allow_html=True)
             custom_date = st.date_input(
@@ -404,7 +403,7 @@ def main():
         if analysis_type == "Individual Companies":
             st.markdown("""
             <div style='background-color: #f3e5f5; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>&#127969; Select Company</label>
+                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>Select Company</label>
             </div>
             """, unsafe_allow_html=True)
             companies = st.session_state.data_fetcher.get_kse100_companies()
@@ -415,13 +414,13 @@ def main():
             )
         
         # Debug section for file upload issues
-        if analysis_type == "ðŸ“ Universal File Upload":
+        if analysis_type == "Universal File Upload":
             st.markdown("""
             <div style='background-color: #fff8e1; padding: 10px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;'>
-                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>&#129514; File Upload Debug</h5>
+                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>File Upload Debug</h5>
             </div>
             """, unsafe_allow_html=True)
-            with st.expander("&#128269; Quick File Upload Test", expanded=False):
+            with st.expander("Quick File Upload Test", expanded=False):
                 st.markdown("### Test Your File Upload Here")
                 debug_file = st.file_uploader("Upload test file (for debugging)", type=['csv', 'xlsx', 'xls'], key="debug_uploader")
                 
@@ -493,17 +492,17 @@ def main():
                         st.error(f"**Error processing file:** {str(e)}")
     
     # Main content area
-    if analysis_type == "ðŸ“Š Enhanced Live Dashboard (Top 80 KSE-100)":
+    if analysis_type == "Enhanced Live Dashboard (Top 80 KSE-100)":
         # Enhanced Live Dashboard with top 80 companies
         st.session_state.enhanced_live_dashboard.display_live_dashboard()
         
-    elif analysis_type == "ðŸ”´ Live KSE-40 (5-Min Updates)":
+    elif analysis_type == "Live KSE-40 (5-Min Updates)":
         st.session_state.live_kse40_dashboard.display_live_dashboard()
     elif analysis_type == "Live Market Dashboard":
         display_live_market_dashboard()
-    elif analysis_type == "âš¡ 15-Minute Live Predictions":
+    elif analysis_type == "15-Minute Live Predictions":
         display_five_minute_live_predictions()
-    elif analysis_type == "ðŸ” Comprehensive Brand Predictions":
+    elif analysis_type == "Comprehensive Brand Predictions":
         st.session_state.brand_predictor.display_comprehensive_brand_predictions()
     elif analysis_type == "KSE-100 Index":
         display_kse100_analysis(forecast_type, days_ahead, custom_date)
@@ -512,13 +511,13 @@ def main():
     elif analysis_type == "Advanced Forecasting Hub":
         from advanced_forecasting import display_advanced_forecasting_dashboard
         display_advanced_forecasting_dashboard()
-    elif analysis_type == "ðŸ“ Universal File Upload":
+    elif analysis_type == "Universal File Upload":
         display_universal_file_upload()
-    elif analysis_type == "ðŸ“° News-Based Predictions":
+    elif analysis_type == "News-Based Predictions":
         display_news_based_predictions()
     elif analysis_type == "Enhanced File Upload":
         display_enhanced_file_upload()
-    elif analysis_type == "ðŸ›ï¸ All KSE-100 Companies (Live Prices)":
+    elif analysis_type == "All KSE-100 Companies (Live Prices)":
         display_all_kse100_live_prices()
     elif analysis_type == "All Companies Live Prices":
         display_all_companies_live_prices()
@@ -527,9 +526,9 @@ def main():
     elif analysis_type == "Comprehensive Intraday Forecasts":
         from comprehensive_intraday import display_comprehensive_intraday_forecasts
         display_comprehensive_intraday_forecasts()
-    elif analysis_type == "ðŸ“ˆ Technical Analysis Indicators":
+    elif analysis_type == "Technical Analysis Indicators":
         display_technical_analysis()
-    elif analysis_type == "ðŸ’Ž Master Oracle Terminal (Crypto + Commodities)":
+    elif analysis_type == "Master Oracle Terminal (Crypto + Commodities)":
         display_master_oracle_terminal()
     else:
         display_cache_overview()
@@ -6110,9 +6109,9 @@ def display_master_oracle_terminal():
     
     # Enhanced Asset configuration with multiple data sources
     ASSETS = {
-        "Gold (XAU/USD)": "GC=F",
-        "Silver (XAG/USD)": "SI=F",
-        "Platinum (XPT/USD)": "PL=F",
+        "Gold (XAU/USD)": "GOLD",
+        "Silver (XAG/USD)": "SLV",
+        "Platinum (XPT/USD)": "PPLT",
         "Bitcoin (BTC/USD)": "BTC-USD",
         "Ethereum (ETH/USD)": "ETH-USD",
         "Solana (SOL/USD)": "SOL-USD",
@@ -6120,11 +6119,11 @@ def display_master_oracle_terminal():
         "Polkadot (DOT/USD)": "DOT-USD",
         "Chainlink (LINK/USD)": "LINK-USD",
         "Uniswap (UNI/USD)": "UNI-USD",
-        "Crude Oil (WTI)": "CL=F",
-        "Natural Gas": "NG=F",
-        "Copper": "HG=F"
+        "Crude Oil (WTI)": "USO",
+        "Natural Gas": "UNG",
+        "Copper": "CPER"
     }
-    DXY_SYMBOL = "DX-Y.NYB"
+    DXY_SYMBOL = "DX"
 
     # Initialize real-time scraper
     scraper = RealTimeDataScraper()
@@ -7123,48 +7122,35 @@ def display_master_oracle_terminal():
         try:
             import math
 
-            def generate_5min_ohlc(base_price, n_steps, trend, vol, seed_val=42):
-                """Generate realistic 5-min OHLC forecast with visible ups & downs"""
+            def generate_5min_forecast(base_price, n_steps, trend, vol, seed_val=42):
+                """Generate realistic 5-min price forecast with smooth progression"""
                 rng = np.random.RandomState(seed_val)
-                opens_out, highs_out, lows_out, closes_out = [], [], [], []
+                prices_out = [base_price]
                 current = base_price
-                momentum = trend * 0.3
-                support = base_price * (0.97 - abs(trend) * 0.5)
-                resist = base_price * (1.03 + abs(trend) * 0.5)
-                for i in range(n_steps):
-                    time_factor = i / max(n_steps - 1, 1)
-                    vol_cycle = math.sin(i / max(n_steps / 4.0, 1) * math.pi) * 0.5 + 0.5
-                    current_vol = vol * (0.45 + vol_cycle * 0.85)
-                    fair_val = base_price * (1 + trend * time_factor)
-                    mean_rev = (fair_val - current) * 0.14
-                    momentum_c = momentum * current * 0.0008
-                    sr_e = 0.0
-                    if current < support * 1.01:
-                        sr_e = (support - current) * 0.22
-                    elif current > resist * 0.99:
-                        sr_e = (resist - current) * 0.22
-                    rw = rng.normal(0, current_vol) * current * 0.012
-                    noise = (rng.random() - 0.5) * current * 0.0003
-                    trend_mv = trend * current * (0.00018 + time_factor * 0.00008)
-                    delta = trend_mv + momentum_c + mean_rev + sr_e + rw + noise
-                    open_p = current
-                    close_p = float(np.clip(current + delta, base_price * 0.82, base_price * 1.18))
-                    wick_range = abs(delta) * 0.45 + current * current_vol * 0.004
-                    if close_p >= open_p:
-                        high_p = close_p + abs(rng.normal(0, wick_range * 0.4))
-                        low_p = open_p - abs(rng.normal(0, wick_range * 0.3))
-                    else:
-                        high_p = open_p + abs(rng.normal(0, wick_range * 0.3))
-                        low_p = close_p - abs(rng.normal(0, wick_range * 0.4))
-                    opens_out.append(open_p)
-                    highs_out.append(high_p)
-                    lows_out.append(low_p)
-                    closes_out.append(close_p)
-                    momentum = momentum * 0.992 + (delta / max(abs(current), 1e-9)) * 0.08
-                    current = close_p
-                return opens_out, highs_out, lows_out, closes_out
 
-            # ── SLIDING WINDOW SETUP ──────────────────────────────────────────
+                # Generate smooth trend path using geometric Brownian motion with drift
+                dt = 1.0 / (24 * 12)  # 5-min intervals in days (assuming 24h trading)
+                drift = trend * 0.02  # Annualized drift
+                volatility = vol * 0.15  # Annualized volatility
+
+                for i in range(1, n_steps):
+                    # Geometric Brownian motion: dS = μS dt + σS dW
+                    random_shock = rng.normal(0, 1)
+                    price_change = drift * current * dt + volatility * current * math.sqrt(dt) * random_shock
+
+                    # Add some mean reversion to prevent runaway prices
+                    mean_reversion = (base_price - current) * 0.001
+
+                    # Add cyclical component (market hours effect)
+                    cycle_factor = math.sin(2 * math.pi * i / (12 * 6)) * 0.0005 * current  # 6-hour cycle
+
+                    total_change = price_change + mean_reversion + cycle_factor
+                    current = max(current + total_change, base_price * 0.85)  # Floor at 85% of base
+                    prices_out.append(current)
+
+                return prices_out
+
+            #  SLIDING WINDOW SETUP 
             # Session-state keys for persistent forecast windows
             _SW1H   = 'sw_oracle_1h'
             _SW6H   = 'sw_oracle_6h'
@@ -7172,7 +7158,7 @@ def display_master_oracle_terminal():
 
             now_utc = pd.Timestamp.now(tz=pytz.utc)
 
-            # ── FETCH LIVE PRICE (real-time anchor for forecast) ──────────────
+            #  FETCH LIVE PRICE (real-time anchor for forecast) 
             # Try to obtain the most current market price from Yahoo Finance.
             # Falls back gracefully to the last 5-min close already in asset_df.
             _live_anchor = a_price       # default: last 5m close from asset_df
@@ -7196,114 +7182,148 @@ def display_master_oracle_terminal():
             except Exception:
                 pass  # silently keep _live_anchor = a_price
 
-            seed_base = int(abs(_live_anchor) * 100) % 99991
+            # Use stable seed based on asset, not fluctuating price
+            seed_base = hash(selected_asset) % 99991
 
             # Decide whether to reset the window (first run / asset change / large price drift)
             _meta         = st.session_state.get(_SWMETA, {})
             _is_fresh     = _SW1H not in st.session_state
             _asset_chg    = _meta.get('asset') != selected_asset
-            _price_drift  = abs(_meta.get('base_price', _live_anchor) - _live_anchor) / max(_live_anchor, 1e-9) > 0.008
+            # Only reset on significant price changes (more than 2%)
+            _price_drift  = abs(_meta.get('base_price', _live_anchor) - _live_anchor) / max(_live_anchor, 1e-9) > 0.05
             _should_reset = _is_fresh or _asset_chg or _price_drift
 
             if _should_reset:
-                # ── First run or reset: generate full windows from scratch ────
-                _o1, _h1, _l1, _c1 = generate_5min_ohlc(
-                    _live_anchor, 12, combined_trend, base_volatility, seed_val=seed_base + 1
+                reset_msg = f" Forecast reset: {_meta.get('reset_reason', 'unknown')}"
+                if _price_drift:
+                    reset_msg += f" (price drift: {abs(_meta.get('base_price', _live_anchor) - _live_anchor) / max(_live_anchor, 1e-9):.3f})"
+                st.info(reset_msg)
+                #  First run or reset: generate full windows from scratch 
+                _c1 = generate_5min_forecast(
+                    _live_anchor, 13, combined_trend, base_volatility, seed_val=seed_base + 1
                 )
-                _t1 = [now_utc + timedelta(minutes=5 * (k + 1)) for k in range(12)]
+                _t1 = [5 * k for k in range(13)]  # Include t=0
                 st.session_state[_SW1H] = {
-                    'opens': list(_o1), 'highs': list(_h1),
-                    'lows':  list(_l1), 'closes': list(_c1), 'times': [t.strftime('%Y-%m-%d %H:%M:%S') for t in _t1]
+                    'closes': _c1, 'times': _t1
                 }
-                _o6, _h6, _l6, _c6 = generate_5min_ohlc(
-                    _live_anchor, 72, combined_trend, base_volatility, seed_val=seed_base + 2
+                _c6 = generate_5min_forecast(
+                    _live_anchor, 73, combined_trend, base_volatility, seed_val=seed_base + 2
                 )
-                _t6 = [now_utc + timedelta(minutes=5 * (k + 1)) for k in range(72)]
+                _t6 = [5 * k for k in range(73)]  # Include t=0
                 st.session_state[_SW6H] = {
-                    'opens': list(_o6), 'highs': list(_h6),
-                    'lows':  list(_l6), 'closes': list(_c6), 'times': [t.strftime('%Y-%m-%d %H:%M:%S') for t in _t6]
+                    'closes': _c6, 'times': _t6
                 }
                 st.session_state[_SWMETA] = {
                     'last_render': now_utc, 'asset': selected_asset,
                     'base_price': _live_anchor, 'seed_ctr': seed_base + 200,
                     'n_slid': 0, 'live_src': _live_src,
+                    'combined_trend': combined_trend, 'base_volatility': base_volatility,
                     'reset_reason': 'init' if _is_fresh else ('asset' if _asset_chg else 'price')
                 }
             else:
-                # ── Subsequent run: slide forward by elapsed 5-min candles ───
+                #  Subsequent run: slide forward by elapsed 5-min candles 
+                # Use stored trend parameters for consistency
+                combined_trend = _meta.get('combined_trend', combined_trend)
+                base_volatility = _meta.get('base_volatility', base_volatility)
+
                 _elapsed_secs = (now_utc - _meta['last_render']).total_seconds()
                 _n_slide      = int(_elapsed_secs // 300)   # 300 s = 5 min per candle
 
                 if _n_slide > 0:
+                    # Ensure perfect data persistence - existing points remain unchanged
                     _seed_c = _meta.get('seed_ctr', seed_base + 200)
 
-                    # --- Slide 1H window (fixed 12 candles) ---
+                    # --- Slide 1H window (maintain exact historical data) ---
                     _sw1 = st.session_state[_SW1H]
-                    _n1  = min(_n_slide, 12)
-                    _no, _nh, _nl, _nc = generate_5min_ohlc(
-                        _sw1['closes'][-1], _n1, combined_trend,
-                        base_volatility, seed_val=_seed_c + 1
-                    )
-                    _nt1 = [pd.to_datetime(_sw1['times'][-1]) + timedelta(minutes=5 * (k + 1)) for k in range(_n1)]
-                    st.session_state[_SW1H] = {
-                        'opens':  _sw1['opens'][_n1:]  + list(_no),
-                        'highs':  _sw1['highs'][_n1:]  + list(_nh),
-                        'lows':   _sw1['lows'][_n1:]   + list(_nl),
-                        'closes': _sw1['closes'][_n1:] + list(_nc),
-                        'times':  _sw1['times'][_n1:]  + [t.strftime('%Y-%m-%d %H:%M:%S') for t in _nt1]
-                    }
+                    _n1 = min(_n_slide, len(_sw1['closes']) - 1)  # Keep at least 1 point
+                    if _n1 > 0:
+                        # Preserve the most recent (len - _n1) points exactly, remove oldest _n1
+                        _preserved_closes = _sw1['closes'][- (len(_sw1['closes']) - _n1):]
+                        _preserved_times = _sw1['times'][- (len(_sw1['times']) - _n1):]
 
-                    # --- Slide 6H window (fixed 72 candles) ---
+                        # Generate exactly _n1 new points starting from the last preserved point
+                        _last_price = _preserved_closes[-1]
+                        _new_forecast = generate_5min_forecast(
+                            _last_price, _n1 + 1, combined_trend,
+                            base_volatility, seed_val=_seed_c + 1
+                        )[1:]  # Skip the first point to avoid duplication
+
+                        _new_times = [_preserved_times[-1] + 5 * (k + 1) for k in range(_n1)]
+
+                        # Combine and ensure exact window size (13 points for 1H)
+                        combined_closes = _preserved_closes + _new_forecast
+                        combined_times = _preserved_times + _new_times
+                        st.session_state[_SW1H] = {
+                            'closes': combined_closes,
+                            'times': combined_times
+                        }
+
+                    # --- Slide 6H window (maintain exact historical data) ---
                     _sw6 = st.session_state[_SW6H]
-                    _n6  = min(_n_slide, 72)
-                    _no6, _nh6, _nl6, _nc6 = generate_5min_ohlc(
-                        _sw6['closes'][-1], _n6, combined_trend,
-                        base_volatility, seed_val=_seed_c + 2
-                    )
-                    _nt6 = [pd.to_datetime(_sw6['times'][-1]) + timedelta(minutes=5 * (k + 1)) for k in range(_n6)]
-                    st.session_state[_SW6H] = {
-                        'opens':  _sw6['opens'][_n6:]  + list(_no6),
-                        'highs':  _sw6['highs'][_n6:]  + list(_nh6),
-                        'lows':   _sw6['lows'][_n6:]   + list(_nl6),
-                        'closes': _sw6['closes'][_n6:] + list(_nc6),
-                        'times':  _sw6['times'][_n6:]  + [t.strftime('%Y-%m-%d %H:%M:%S') for t in _nt6]
-                    }
+                    _n6 = min(_n_slide, len(_sw6['closes']) - 1)  # Keep at least 1 point
+                    if _n6 > 0:
+                        # Preserve the most recent (len - _n6) points exactly, remove oldest _n6
+                        _preserved_closes6 = _sw6['closes'][- (len(_sw6['closes']) - _n6):]
+                        _preserved_times6 = _sw6['times'][- (len(_sw6['times']) - _n6):]
 
+                        # Generate exactly _n6 new points starting from the last preserved point
+                        _last_price6 = _preserved_closes6[-1]
+                        _new_forecast6 = generate_5min_forecast(
+                            _last_price6, _n6 + 1, combined_trend,
+                            base_volatility, seed_val=_seed_c + 2
+                        )[1:]  # Skip the first point to avoid duplication
+
+                        _new_times6 = [_preserved_times6[-1] + 5 * (k + 1) for k in range(_n6)]
+
+                        # Combine and ensure exact window size (73 points for 6H)
+                        combined_closes6 = _preserved_closes6 + _new_forecast6
+                        combined_times6 = _preserved_times6 + _new_times6
+                        st.session_state[_SW6H] = {
+                            'closes': combined_closes6,
+                            'times': combined_times6
+                        }
+
+                    total_slid = max(_n1, _n6)
                     st.session_state[_SWMETA] = {
                         'last_render': now_utc, 'asset': selected_asset,
-                        'base_price': _live_anchor, 'seed_ctr': _seed_c + _n_slide,
-                        'n_slid': _meta.get('n_slid', 0) + _n_slide,
-                        'live_src': _live_src, 'reset_reason': 'slide'
+                        'base_price': _live_anchor, 'seed_ctr': _seed_c + total_slid,
+                        'n_slid': _meta.get('n_slid', 0) + total_slid,
+                        'live_src': _live_src, 'combined_trend': combined_trend,
+                        'base_volatility': base_volatility, 'reset_reason': 'slide'
                     }
+                    if total_slid > 0:
+                        st.success(f"Rolled forecast window forward by {total_slid * 5} minutes (preserved historical data)")
+                    st.success(f"Slid forecast window forward by {_n_slide * 5} minutes")
 
-            # ── Pull current window into local variables ───────────────────────
+            #  Pull current window into local variables 
             _sw1 = st.session_state[_SW1H]
             _sw6 = st.session_state[_SW6H]
             _meta = st.session_state[_SWMETA]
 
-            opens_1h  = [float(x) for x in _sw1['opens']];  highs_1h  = [float(x) for x in _sw1['highs']]
-            lows_1h   = [float(x) for x in _sw1['lows']];   closes_1h = [float(x) for x in _sw1['closes']]
-            times_1h  = [pd.to_datetime(t) for t in _sw1['times']]
+            closes_1h = [float(x) for x in _sw1['closes']]
+            times_1h  = [now_utc + timedelta(minutes=t) for t in _sw1['times']]
 
-            opens_6h  = [float(x) for x in _sw6['opens']];  highs_6h  = [float(x) for x in _sw6['highs']]
-            lows_6h   = [float(x) for x in _sw6['lows']];   closes_6h = [float(x) for x in _sw6['closes']]
-            times_6h  = [pd.to_datetime(t) for t in _sw6['times']]
+            closes_6h = [float(x) for x in _sw6['closes']]
+            times_6h  = [now_utc + timedelta(minutes=t) for t in _sw6['times']]
 
 
 
-            # Confidence intervals (relative to current window position)
-            conf_up_1h = [closes_1h[k] * (1 + base_volatility * 1.8 * math.sqrt((k + 1) / 12)) for k in range(12)]
-            conf_lo_1h = [closes_1h[k] * (1 - base_volatility * 1.8 * math.sqrt((k + 1) / 12)) for k in range(12)]
-            conf_up_6h = [closes_6h[k] * (1 + base_volatility * 2.5 * math.sqrt((k + 1) / 72)) for k in range(72)]
-            conf_lo_6h = [closes_6h[k] * (1 - base_volatility * 2.5 * math.sqrt((k + 1) / 72)) for k in range(72)]
+            # Confidence intervals (widen over time using GBM uncertainty)
+            conf_width_1h = [base_volatility * math.sqrt(t / 60) * 2 for t in _sw1['times']]  # 60 min = 1 hour
+            conf_up_1h = [closes_1h[k] * (1 + conf_width_1h[k]) for k in range(len(closes_1h))]
+            conf_lo_1h = [closes_1h[k] * (1 - conf_width_1h[k]) for k in range(len(closes_1h))]
 
-            # ── Live price info card (NOW UTC / live price / window ranges) ──
+            conf_width_6h = [base_volatility * math.sqrt(t / 360) * 2.5 for t in _sw6['times']]  # 360 min = 6 hours
+            conf_up_6h = [closes_6h[k] * (1 + conf_width_6h[k]) for k in range(len(closes_6h))]
+            conf_lo_6h = [closes_6h[k] * (1 - conf_width_6h[k]) for k in range(len(closes_6h))]
+
+            #  Live price info card (NOW UTC / live price / window ranges) 
             _now_str  = now_utc.strftime('%H:%M:%S')
             _1h_end   = (now_utc + timedelta(hours=1)).strftime('%H:%M')
             _6h_end   = (now_utc + timedelta(hours=6)).strftime('%H:%M')
             _lv_delta = (_live_anchor - a_price) / max(a_price, 1e-9) * 100
             _lv_col   = '#26A69A' if _lv_delta >= 0 else '#EF5350'
-            _lv_arr   = '▲' if _lv_delta >= 0 else '▼'
+            _lv_arr   = '' if _lv_delta >= 0 else ''
             _lv_delta_str = f"{_lv_arr}{abs(_lv_delta):.3f}%" if abs(_lv_delta) > 1e-4 else "—"
             st.markdown(f"""
             <div style='background:linear-gradient(135deg,#0d1117 0%,#1a1f2e 100%);
@@ -7311,12 +7331,12 @@ def display_master_oracle_terminal():
                 margin-bottom:8px;display:flex;align-items:flex-start;
                 gap:28px;flex-wrap:wrap;'>
               <div>
-                <div style='color:#888;font-size:10px;letter-spacing:1px;'>🕐 CURRENT UTC</div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'> CURRENT UTC</div>
                 <div style='color:#FFD700;font-size:1.25em;font-weight:700;font-family:monospace;
                     margin-top:2px;'>{_now_str} UTC</div>
               </div>
               <div>
-                <div style='color:#888;font-size:10px;letter-spacing:1px;'>💰 LIVE PRICE</div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'> LIVE PRICE</div>
                 <div style='color:#00CED1;font-size:1.25em;font-weight:700;margin-top:2px;'>
                     ${_live_anchor:,.2f}
                     <span style='color:{_lv_col};font-size:11px;margin-left:6px;'>{_lv_delta_str} vs last close</span>
@@ -7324,30 +7344,30 @@ def display_master_oracle_terminal():
                 <div style='color:#555;font-size:10px;margin-top:1px;'>Source: {_live_src}</div>
               </div>
               <div>
-                <div style='color:#888;font-size:10px;letter-spacing:1px;'>📈 1H WINDOW (NOW → +60 MIN)</div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'>1H WINDOW (NOW → +60 MIN)</div>
                 <div style='color:#26A69A;font-weight:700;margin-top:2px;'>
                     {now_utc.strftime('%H:%M')} UTC → {_1h_end} UTC</div>
                 <div style='color:#555;font-size:10px;margin-top:1px;'>12 × 5-min forecast candles</div>
               </div>
               <div>
-                <div style='color:#888;font-size:10px;letter-spacing:1px;'>🕐 6H WINDOW (NOW → +6 HRS)</div>
+                <div style='color:#888;font-size:10px;letter-spacing:1px;'> 6H WINDOW (NOW → +6 HRS)</div>
                 <div style='color:#FF8C00;font-weight:700;margin-top:2px;'>
                     {now_utc.strftime('%H:%M')} UTC → {_6h_end} UTC</div>
                 <div style='color:#555;font-size:10px;margin-top:1px;'>72 × 5-min forecast candles</div>
               </div>
             </div>""", unsafe_allow_html=True)
 
-            # ── Sliding-window status strip ────────────────────────────────────
+            #  Sliding-window status strip 
             _n_slid = _meta.get('n_slid', 0)
             if _n_slid > 0:
                 _sw_msg = (
-                    f"🔄 <strong style='color:#FFD700;'>Sliding Window Active</strong> — "
+                    f"<strong style='color:#FFD700;'>Sliding Window Active</strong> — "
                     f"<strong style='color:#26A69A;'>{_n_slid} × 5-min candle(s) advanced</strong> "
                     f"({_n_slid * 5} min renewed since first load)"
                 )
             else:
                 _sw_msg = (
-                    f"🆕 <strong style='color:#FFD700;'>Fresh Forecast Window</strong> — "
+                    f" <strong style='color:#FFD700;'>Fresh Forecast Window</strong> — "
                     f"slides forward automatically every 5 min on refresh "
                     f"(1 candle dropped &amp; 1 new candle appended per interval)"
                 )
@@ -7358,139 +7378,218 @@ def display_master_oracle_terminal():
                 unsafe_allow_html=True
             )
 
-            # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            # CHART 1 â€” 1-HOUR FORECAST (12 Ã— 5-MIN CANDLES)
-            # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            st.markdown("#### â±ï¸ 1-Hour Forecast â€” 12 Ã— 5-Minute Candles")
+            # 
+            # CHART 1 — 1-HOUR FORECAST: ENHANCED CANDLESTICK + TECHNICALS
+            # 
+            st.markdown("#### 1-Hour Forecast — 12 × 5-Minute Candles")
+            st.markdown(
+                "<p style='color:#888;font-size:13px;margin:-6px 0 10px 0;'>"
+                + " <b>Enhanced Candlestick Chart</b> with Technical Overlays "
+                + "— SMA-3 · SMA-5 · Bollinger Bands · RSI(5) · 95% Confidence Band</p>",
+                unsafe_allow_html=True
+            )
+
+            #  Synthesise OHLC candles from sliding-window closes 
+            _n1h = len(closes_1h)
+            _seed_ohlc1 = (hash(selected_asset) + int(now_utc.timestamp() // 86400)) % (2 ** 31)
+            _rng_ohlc1 = np.random.RandomState(abs(_seed_ohlc1))
+
+            _opens_1h = [closes_1h[0]]
+            for _k1 in range(1, _n1h):
+                _opens_1h.append(closes_1h[_k1 - 1])
+
+            _shd_sc = max(base_volatility * 0.35, 0.0006)
+            _shd_1h = [abs(_rng_ohlc1.normal(_shd_sc, _shd_sc * 0.4)) for _ in range(_n1h)]
+            _highs_1h = [max(_opens_1h[_k1], closes_1h[_k1]) * (1.0 + _shd_1h[_k1]) for _k1 in range(_n1h)]
+            _lows_1h  = [min(_opens_1h[_k1], closes_1h[_k1]) * (1.0 - _shd_1h[_k1]) for _k1 in range(_n1h)]
+
+            #  Technical indicators (pure numpy — no talib required) 
+            _cl1 = np.array(closes_1h, dtype=float)
+
+            # SMA-3 and SMA-5
+            _sma3_1h = np.array([float(np.mean(_cl1[max(0, _i - 2):_i + 1])) for _i in range(_n1h)])
+            _sma5_1h = np.array([float(np.mean(_cl1[max(0, _i - 4):_i + 1])) for _i in range(_n1h)])
+
+            # Bollinger Bands (period=5, ±2σ)
+            _bb_std_1h = np.array([
+                float(np.std(_cl1[max(0, _i - 4):_i + 1])) if _i >= 4 else 0.0
+                for _i in range(_n1h)
+            ])
+            _bb_up_1h = _sma5_1h + 2.0 * _bb_std_1h
+            _bb_lo_1h = _sma5_1h - 2.0 * _bb_std_1h
+
+            # RSI (period=5, simple avg-gain / avg-loss method)
+            _rsi_1h_vals = np.full(_n1h, np.nan)
+            _rsi_p1 = min(5, _n1h - 1)
+            if _rsi_p1 >= 2:
+                for _ri in range(_rsi_p1, _n1h):
+                    _d  = np.diff(_cl1[_ri - _rsi_p1: _ri + 1])
+                    _g  = np.where(_d > 0, _d, 0.0).mean()
+                    _ls = np.where(_d < 0, -_d, 0.0).mean()
+                    _rsi_1h_vals[_ri] = 100.0 if _ls == 0 else 100.0 - 100.0 / (1.0 + _g / max(_ls, 1e-12))
+
+            #  datetime x-axis (proper time scale for candlestick chart) 
+            _xt_1h = times_1h
 
             fig_1h = make_subplots(
-                rows=2, cols=1,
+                rows=3, cols=1,
                 shared_xaxes=True,
-                vertical_spacing=0.07,
-                row_heights=[0.73, 0.27],
+                vertical_spacing=0.04,
+                row_heights=[0.55, 0.23, 0.22],
                 subplot_titles=(
-                    f"ðŸ“ˆ {selected_asset} â€” 1H Price Movement (5-Min Candles + Confidence Band)",
-                    "ðŸ“Š Per-Candle Change %"
+                    f"{selected_asset} — 1H Candlestick + Technical Overlays (5-Min Intervals)",
+                    "RSI (5-Period)  ·  Overbought ≥70  ·  Oversold ≤30",
+                    "5-Min Change vs Entry Price %"
                 )
             )
 
-            # Live price / entry reference line
-            fig_1h.add_hline(
-                y=_live_anchor, line_dash="dash", line_color="#FFD700", line_width=1.5,
-                annotation_text=f"Live ${_live_anchor:,.2f}",
-                annotation_font_color="#FFD700", annotation_position="left",
-                row=1, col=1
-            )
-
-            # 95% Confidence band
+            # Row 1: Confidence band (rendered first — behind candles)
             fig_1h.add_trace(go.Scatter(
-                x=[t.timestamp() for t in times_1h] + [t.timestamp() for t in times_1h[::-1]],
+                x=_xt_1h + _xt_1h[::-1],
                 y=conf_up_1h + conf_lo_1h[::-1],
                 fill='toself',
-                fillcolor='rgba(0,200,255,0.10)',
-                line=dict(color='rgba(0,200,255,0.25)', width=1),
-                name='95% Confidence Band',
+                fillcolor='rgba(44,93,131,0.10)',
+                line=dict(color='rgba(44,93,131,0.20)', width=1),
+                name='95% Conf. Band',
                 hoverinfo='skip',
                 showlegend=True
             ), row=1, col=1)
 
-            # Historical tail (last ~75 min of real data before NOW)
+            # Row 1: Historical tail (cyan dotted — before NOW)
             if len(asset_df) >= 2 and close_col in asset_df.columns:
-                hist_tail = asset_df.tail(min(15, len(asset_df)))
+                _hist1 = asset_df.tail(min(15, len(asset_df)))
                 fig_1h.add_trace(go.Scatter(
-                    x=[t.timestamp() for t in hist_tail.index],
-                    y=hist_tail[close_col].values,
+                    x=list(_hist1.index),
+                    y=_hist1[close_col].values.tolist(),
                     mode='lines',
                     name='Historical',
                     line=dict(color='#00CED1', width=1.8, dash='dot'),
                     hovertemplate='%{customdata}<br>$%{y:,.2f}<extra>Historical</extra>',
-                    customdata=[t.strftime('%H:%M') for t in hist_tail.index]
+                    customdata=[_t.strftime('%H:%M') for _t in _hist1.index]
                 ), row=1, col=1)
 
-            # "NOW" vertical line — separates history from forecast
-            fig_1h.add_vline(
-                x=now_utc.timestamp(),
-                line_dash='solid',
-                line_color='rgba(255,215,0,0.75)',
-                line_width=2,
-                annotation_text=f' ⬤ NOW {now_utc.strftime("%H:%M")} UTC',
-                annotation_font=dict(color='#FFD700', size=10, family='Arial Black'),
-                annotation_position='top right',
-            )
-
-            # 1H Candlestick chart
-            fig_1h.add_trace(go.Candlestick(
-                x=[t.timestamp() for t in times_1h],
-                open=opens_1h, high=highs_1h, low=lows_1h, close=closes_1h,
-                name='1H Forecast',
-                increasing=dict(line=dict(color='#26A69A', width=2), fillcolor='rgba(38,166,154,0.85)'),
-                decreasing=dict(line=dict(color='#EF5350', width=2), fillcolor='rgba(239,83,80,0.85)'),
-                whiskerwidth=0.5
+            # Row 1: Bollinger Bands fill (drawn before candles so candles are on top)
+            fig_1h.add_trace(go.Scatter(
+                x=_xt_1h, y=_bb_up_1h.tolist(),
+                mode='lines', name='BB Upper',
+                line=dict(color='rgba(148,103,189,0.65)', width=1, dash='dash'),
+                showlegend=True, hoverinfo='skip'
+            ), row=1, col=1)
+            fig_1h.add_trace(go.Scatter(
+                x=_xt_1h, y=_bb_lo_1h.tolist(),
+                mode='lines', name='BB Lower',
+                line=dict(color='rgba(148,103,189,0.65)', width=1, dash='dash'),
+                fill='tonexty', fillcolor='rgba(148,103,189,0.07)',
+                showlegend=False, hoverinfo='skip'
             ), row=1, col=1)
 
-            # Price labels at every candle
-            for k in range(12):
-                is_up_k = closes_1h[k] >= opens_1h[k]
-                clr_k = '#26A69A' if is_up_k else '#EF5350'
-                arr_k = '&#9650;' if is_up_k else '&#9660;'
-                pct_entry_k = (closes_1h[k] - a_price) / a_price * 100
-                fig_1h.add_annotation(
-                    x=times_1h[k].timestamp(),
-                    y=highs_1h[k] if is_up_k else lows_1h[k],
-                    text=f"{arr_k} <b>${closes_1h[k]:,.1f}</b><br><span style='font-size:9px'>{pct_entry_k:+.2f}%</span>",
-                    showarrow=False,
-                    font=dict(size=8.5, color=clr_k, family='Arial'),
-                    bgcolor='rgba(13,17,23,0.75)',
-                    bordercolor=clr_k, borderwidth=1, borderpad=2,
-                    yanchor='bottom' if is_up_k else 'top',
-                    row=1, col=1
-                )
+            # Row 1: Candlestick (main forecast body)
+            fig_1h.add_trace(go.Candlestick(
+                x=_xt_1h,
+                open=_opens_1h,
+                high=_highs_1h,
+                low=_lows_1h,
+                close=closes_1h,
+                name='Forecast Candles',
+                increasing_line_color='#26A69A',
+                decreasing_line_color='#EF5350',
+            ), row=1, col=1)
 
-            # Change % bars (bottom panel)
-            changes_1h = [(closes_1h[k] - opens_1h[k]) / opens_1h[k] * 100 for k in range(12)]
-            bar_clrs_1h = ['#26A69A' if c >= 0 else '#EF5350' for c in changes_1h]
-            fig_1h.add_trace(go.Bar(
-                x=[t.timestamp() for t in times_1h], y=changes_1h,
-                name='5-Min Change %',
-                marker_color=bar_clrs_1h,
-                text=[f"{c:+.3f}%" for c in changes_1h],
-                textposition='outside',
-                hovertemplate='%{customdata}<br>Change: %{y:+.3f}%<extra></extra>',
-                customdata=[t.strftime('%H:%M') for t in times_1h]
+            # Row 1: SMA overlays
+            fig_1h.add_trace(go.Scatter(
+                x=_xt_1h, y=_sma3_1h.tolist(),
+                mode='lines', name='SMA 3',
+                line=dict(color='#FFD700', width=1.5, dash='dot'),
+            ), row=1, col=1)
+            fig_1h.add_trace(go.Scatter(
+                x=_xt_1h, y=_sma5_1h.tolist(),
+                mode='lines', name='SMA 5',
+                line=dict(color='#FF8C00', width=1.8),
+            ), row=1, col=1)
+
+            # Row 1: Live price reference line
+            fig_1h.add_hline(
+                y=_live_anchor, line_dash='dash', line_color='#FFD700', line_width=1.5,
+                annotation_text=f"Live ${_live_anchor:,.2f}",
+                annotation_font_color='#FFD700', annotation_position='left',
+                row=1, col=1
+            )
+
+            # Row 2: RSI panel
+            _rsi_plot = [float(v) if not np.isnan(v) else None for v in _rsi_1h_vals]
+            fig_1h.add_trace(go.Scatter(
+                x=_xt_1h, y=_rsi_plot,
+                mode='lines+markers', name='RSI (5)',
+                line=dict(color='#A855F7', width=2),
+                marker=dict(size=4, color='#A855F7'),
+                connectgaps=True,
+                hovertemplate='RSI: %{y:.1f}<extra></extra>'
             ), row=2, col=1)
-            fig_1h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=2, col=1)
+            fig_1h.add_hrect(y0=70, y1=100, fillcolor='rgba(239,83,80,0.07)',  line_width=0, row=2, col=1)
+            fig_1h.add_hrect(y0=0,  y1=30,  fillcolor='rgba(38,166,154,0.07)', line_width=0, row=2, col=1)
+            fig_1h.add_hline(y=70, line_dash='dash', line_color='rgba(239,83,80,0.55)', line_width=1,
+                             annotation_text='OB 70', annotation_font_color='rgba(239,83,80,0.9)',
+                             annotation_position='right', row=2, col=1)
+            fig_1h.add_hline(y=50, line_dash='dot',  line_color='rgba(150,150,150,0.35)', line_width=1, row=2, col=1)
+            fig_1h.add_hline(y=30, line_dash='dash', line_color='rgba(38,166,154,0.55)', line_width=1,
+                             annotation_text='OS 30', annotation_font_color='rgba(38,166,154,0.9)',
+                             annotation_position='right', row=2, col=1)
+
+            # Row 3: vs-Entry % bars
+            changes_1h = [(closes_1h[_k] - a_price) / a_price * 100 for _k in range(len(closes_1h))]
+            _bclr_1h = ['#26A69A' if _c >= 0 else '#EF5350' for _c in changes_1h]
+            fig_1h.add_trace(go.Bar(
+                x=_xt_1h, y=changes_1h,
+                name='vs Entry %',
+                marker_color=_bclr_1h,
+                text=[f"{_c:+.3f}%" for _c in changes_1h],
+                textposition='outside',
+                hovertemplate='%{customdata}<br>vs Entry: %{y:+.3f}%<extra></extra>',
+                customdata=[f"+{int(_t)}min" for _t in _sw1['times']]
+            ), row=3, col=1)
+            fig_1h.add_hline(y=0, line_color='rgba(0,0,0,0.15)', line_width=1, row=3, col=1)
 
             fig_1h.update_layout(
-                template='plotly_dark',
-                height=530,
+                template=None,
+                height=690,
                 showlegend=True,
-                legend=dict(orientation='h', y=1.05, x=0.5, xanchor='center',
-                            bgcolor='rgba(0,0,0,0.4)', font=dict(size=11)),
-                plot_bgcolor='#0d1117',
-                paper_bgcolor='#161b22',
+                legend=dict(orientation='h', y=1.04, x=0.5, xanchor='center',
+                            bgcolor='rgba(255,255,255,0.85)', font=dict(size=10, color='#2c5d83')),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
                 hovermode='x unified',
                 xaxis_rangeslider_visible=False,
-                margin=dict(l=60, r=70, t=85, b=40),
+                margin=dict(l=20, r=20, t=75, b=40),
                 title=dict(
-                    text=f"â±ï¸ {selected_asset} â€” 1-Hour Forecast (Every 5-Min Movement)",
-                    font=dict(size=16, color='#00CED1', family='Arial Black'), x=0.5
+                    text=f"{selected_asset} — 1-Hour Enhanced Candlestick Forecast (12 × 5-Min Candles)",
+                    font=dict(size=16, color='#2c5d83', family='Arial'), x=0.5
                 )
             )
-            for row_n in [1, 2]:
-                fig_1h.update_xaxes(tickformat='%H:%M', showgrid=True,
-                                    gridcolor='rgba(255,255,255,0.07)', row=row_n, col=1)
+            for _row_n in [1, 2, 3]:
+                fig_1h.update_xaxes(
+                    showgrid=True, gridcolor='rgba(0,0,0,0.09)', gridwidth=0.5,
+                    zeroline=False, showline=False,
+                    row=_row_n, col=1
+                )
             fig_1h.update_yaxes(tickformat='$,.2f', title_text='Price (USD)',
-                                 showgrid=True, gridcolor='rgba(255,255,255,0.06)', row=1, col=1)
-            fig_1h.update_yaxes(tickformat='+.3f', title_text='Change %', row=2, col=1)
+                                  showgrid=True, gridcolor='rgba(0,0,0,0.09)', gridwidth=0.5,
+                                  zeroline=False, showline=False, row=1, col=1)
+            fig_1h.update_yaxes(title_text='RSI', range=[0, 100],
+                                  showgrid=True, gridcolor='rgba(0,0,0,0.09)', gridwidth=0.5,
+                                  zeroline=False, row=2, col=1)
+            fig_1h.update_yaxes(tickformat='+.3f', title_text='vs Entry %',
+                                  showgrid=True, gridcolor='rgba(0,0,0,0.09)', gridwidth=0.5,
+                                  zeroline=False, showline=False, row=3, col=1)
+
             st.plotly_chart(fig_1h, use_container_width=True)
 
             # 1H summary metrics
-            up_c_1h = sum(1 for o, c in zip(opens_1h, closes_1h) if c >= o)
-            dn_c_1h = 12 - up_c_1h
+            up_c_1h = sum(1 for c in closes_1h if c >= a_price)
+            dn_c_1h = len(closes_1h) - up_c_1h
             ret_1h = (closes_1h[-1] - a_price) / a_price * 100
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
             col_m1.metric("1H Target Price", f"${closes_1h[-1]:,.2f}", f"{ret_1h:+.2f}%")
-            col_m2.metric("&#128994; Bull / &#128308; Bear", f"{up_c_1h} / {dn_c_1h}", "5-min candles")
+            col_m2.metric("&#128994; Bull / &#128308; Bear", f"{up_c_1h} / {dn_c_1h}", "5-min points")
             col_m3.metric("Best 5-Min Gain", f"{max(changes_1h):+.3f}%", "Peak up move")
             col_m4.metric("Worst 5-Min Drop", f"{min(changes_1h):+.3f}%", "Peak down move")
 
@@ -7524,22 +7623,22 @@ def display_master_oracle_terminal():
             # Dynamic support / resistance
             support_6h = a_price * (1.0 - max(base_volatility * 6, 0.012))
             resist_6h = a_price * (1.0 + max(base_volatility * 6, 0.012))
-            fig_6h.add_hline(y=support_6h, line_dash="dot", line_color="#26A69A", line_width=1,
+            fig_6h.add_hline(y=support_6h, line_dash="dot", line_color="#58d68d", line_width=1,
                              annotation_text=f"S ${support_6h:,.0f}",
-                             annotation_font_color="#26A69A", annotation_position="right",
+                             annotation_font_color="#58d68d", annotation_position="right",
                              row=1, col=1)
-            fig_6h.add_hline(y=resist_6h, line_dash="dot", line_color="#EF5350", line_width=1,
+            fig_6h.add_hline(y=resist_6h, line_dash="dot", line_color="#2c5d83", line_width=1,
                              annotation_text=f"R ${resist_6h:,.0f}",
-                             annotation_font_color="#EF5350", annotation_position="right",
+                             annotation_font_color="#2c5d83", annotation_position="right",
                              row=1, col=1)
 
             # 95% Confidence band
             fig_6h.add_trace(go.Scatter(
-                x=[t.timestamp() for t in times_6h] + [t.timestamp() for t in times_6h[::-1]],
+                x=_sw6['times'] + _sw6['times'][::-1],
                 y=conf_up_6h + conf_lo_6h[::-1],
                 fill='toself',
-                fillcolor='rgba(255,140,0,0.09)',
-                line=dict(color='rgba(255,140,0,0.22)', width=1),
+                fillcolor='rgba(44,93,131,0.15)',
+                line=dict(color='rgba(44,93,131,0.3)', width=1),
                 name='95% Confidence Band',
                 hoverinfo='skip',
                 showlegend=True
@@ -7557,36 +7656,33 @@ def display_master_oracle_terminal():
                     customdata=[t.strftime('%H:%M') for t in hist_tail6.index]
                 ), row=1, col=1)
 
-            # 6H Candlestick chart
-            fig_6h.add_trace(go.Candlestick(
-                x=[t.timestamp() for t in times_6h],
-                open=opens_6h, high=highs_6h, low=lows_6h, close=closes_6h,
+            # 6H Linear Price Chart
+            fig_6h.add_trace(go.Scatter(
+                x=_sw6['times'],
+                y=closes_6h,
+                mode='lines',
                 name='6H Forecast',
-                increasing=dict(line=dict(color='#26A69A', width=1.2),
-                               fillcolor='rgba(38,166,154,0.72)'),
-                decreasing=dict(line=dict(color='#EF5350', width=1.2),
-                               fillcolor='rgba(239,83,80,0.72)'),
-                whiskerwidth=0.35
+                line=dict(color='#2c5d83', width=2),
+                hovertemplate='%{customdata}<br>$%{y:,.2f}<extra></extra>',
+                customdata=[f'+{int(t)}min' for t in _sw6['times']]
             ), row=1, col=1)
 
             # Hourly annotations (+1H â€¦ +6H)
             for hr in range(1, 7):
-                idx_hr = hr * 12 - 1
+                idx_hr = hr * 12  # Now we have 73 points (0 to 72), so hour markers at indices 12, 24, 36, 48, 60, 72
                 if idx_hr < len(closes_6h):
                     pct_hr = (closes_6h[idx_hr] - a_price) / a_price * 100
-                    clr_hr = '#26A69A' if pct_hr >= 0 else '#EF5350'
-                    arr_hr = '&#9650;' if pct_hr >= 0 else '&#9660;'
+                    clr_hr = '#2c5d83' if pct_hr >= 0 else '#58d68d'
                     fig_6h.add_annotation(
-                        x=times_6h[idx_hr].timestamp(),
-                        y=highs_6h[idx_hr] if pct_hr >= 0 else lows_6h[idx_hr],
-                        text=f"<b>+{hr}H</b><br>{arr_hr}{abs(pct_hr):.2f}%<br>${closes_6h[idx_hr]:,.1f}",
+                        x=_sw6['times'][idx_hr],
+                        y=closes_6h[idx_hr],
+                        text=f"<b>+{hr}H</b><br>{pct_hr:+.2f}%<br>${closes_6h[idx_hr]:,.1f}",
                         showarrow=True, arrowhead=2, arrowsize=0.8,
                         arrowwidth=1.5, arrowcolor=clr_hr,
-                        font=dict(size=9, color=clr_hr, family='Arial Black'),
-                        bgcolor='rgba(13,17,23,0.82)',
+                        font=dict(size=9, color=clr_hr, family='Arial'),
+                        bgcolor='rgba(255,255,255,0.9)',
                         bordercolor=clr_hr, borderwidth=1, borderpad=3,
-                        ay=-55 if pct_hr >= 0 else 55,
-                        yanchor='bottom' if pct_hr >= 0 else 'top',
+                        ax=0, ay=-40,
                         row=1, col=1
                     )
 
@@ -7599,9 +7695,9 @@ def display_master_oracle_terminal():
                 base_hr = a_price if hr == 0 else closes_6h[s_idx - 1]
                 hourly_rets.append((closes_6h[e_idx] - base_hr) / base_hr * 100)
                 hourly_ts.append(times_6h[e_idx])
-            h_clrs = ['#26A69A' if r >= 0 else '#EF5350' for r in hourly_rets]
+            h_clrs = ['#2c5d83' if r >= 0 else '#58d68d' for r in hourly_rets]
             fig_6h.add_trace(go.Bar(
-                x=[t.timestamp() for t in hourly_ts], y=hourly_rets,
+                x=[_sw6['times'][e_idx] for e_idx in [min((hr + 1) * 12 - 1, len(closes_6h) - 1) for hr in range(6)]], y=hourly_rets,
                 name='Hourly Return',
                 marker_color=h_clrs,
                 text=[f"{r:+.2f}%" for r in hourly_rets],
@@ -7609,59 +7705,83 @@ def display_master_oracle_terminal():
                 hovertemplate='+%{customdata}H: %{y:+.2f}%<extra></extra>',
                 customdata=list(range(1, 7))
             ), row=2, col=1)
-            fig_6h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=2, col=1)
+            fig_6h.add_hline(y=0, line_color='rgba(0,0,0,0.2)', line_width=1, row=2, col=1)
 
             # Cumulative return area chart (round to avoid floating-point noise)
             cum_rets = [round((closes_6h[k] - a_price) / a_price * 100, 6) for k in range(72)]
             final_cum = cum_rets[-1]
-            cum_clr = '#26A69A' if final_cum >= 0 else '#EF5350'
-            fill_clr_cum = 'rgba(38,166,154,0.18)' if final_cum >= 0 else 'rgba(239,83,80,0.18)'
+            cum_clr = '#2c5d83' if final_cum >= 0 else '#58d68d'
+            fill_clr_cum = 'rgba(44,93,131,0.15)' if final_cum >= 0 else 'rgba(88,214,141,0.15)'
             fig_6h.add_trace(go.Scatter(
-                x=[t.timestamp() for t in times_6h], y=cum_rets,
+                x=_sw6['times'], y=cum_rets,
                 name='Cumulative Return',
                 line=dict(color=cum_clr, width=2.5),
                 fill='tozeroy', fillcolor=fill_clr_cum,
                 hovertemplate='%{customdata}<br>Cum. Return: %{y:+.2f}%<extra></extra>',
-                customdata=[t.strftime('%H:%M') for t in times_6h]
+                customdata=[f'+{int(t)}min' for t in _sw6['times']]
             ), row=3, col=1)
-            fig_6h.add_hline(y=0, line_color='rgba(255,255,255,0.25)', line_width=1, row=3, col=1)
+            fig_6h.add_hline(y=0, line_color='rgba(0,0,0,0.2)', line_width=1, row=3, col=1)
 
             fig_6h.update_layout(
-                template='plotly_dark',
+                template=None,  # Clean white background
                 height=740,
                 showlegend=True,
                 legend=dict(orientation='h', y=1.03, x=0.5, xanchor='center',
-                            bgcolor='rgba(0,0,0,0.4)', font=dict(size=11)),
-                plot_bgcolor='#0d1117',
-                paper_bgcolor='#161b22',
+                            bgcolor='rgba(0,0,0,0.05)', font=dict(size=11, color='#2c5d83')),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
                 hovermode='x unified',
                 xaxis_rangeslider_visible=False,
-                margin=dict(l=65, r=85, t=90, b=40),
+                margin=dict(l=20, r=20, t=60, b=40),
                 title=dict(
                     text=f"ðŸ• {selected_asset} â€” 6-Hour Forecast (Every 5-Min Movement)",
-                    font=dict(size=16, color='#FF8C00', family='Arial Black'), x=0.5
+                    font=dict(size=16, color='#2c5d83', family='Arial'), x=0.5
                 )
             )
+            # Create tick labels for 6H (every 30 min)
+            tick_positions = []
+            tick_labels = []
+            for i, t in enumerate(_sw6['times']):
+                if i % 6 == 0:  # Every 30 minutes (6 * 5min)
+                    tick_positions.append(t)
+                    hours = int(t // 60)
+                    mins = int(t % 60)
+                    tick_labels.append(f'+{hours}:{mins:02d}h')
+
             for row_n in [1, 2, 3]:
-                fig_6h.update_xaxes(tickformat='%H:%M', showgrid=True,
-                                    gridcolor='rgba(255,255,255,0.07)', row=row_n, col=1)
+                fig_6h.update_xaxes(
+                    tickmode='array',
+                    tickvals=tick_positions,
+                    ticktext=tick_labels,
+                    showgrid=True,
+                    gridcolor='rgba(0,0,0,0.1)',
+                    gridwidth=0.5,
+                    zeroline=False,
+                    showline=False,
+                    row=row_n, col=1
+                )
             fig_6h.update_yaxes(tickformat='$,.2f', title_text='Price (USD)',
-                                 showgrid=True, gridcolor='rgba(255,255,255,0.06)', row=1, col=1)
-            fig_6h.update_yaxes(tickformat='+.2f', title_text='Hourly %', row=2, col=1)
-            fig_6h.update_yaxes(tickformat='+.2f', title_text='Cum. Return %', row=3, col=1)
+                                 showgrid=True, gridcolor='rgba(0,0,0,0.1)', gridwidth=0.5,
+                                 zeroline=False, showline=False, row=1, col=1)
+            fig_6h.update_yaxes(tickformat='+.2f', title_text='Hourly %',
+                                 showgrid=True, gridcolor='rgba(0,0,0,0.1)', gridwidth=0.5,
+                                 zeroline=False, showline=False, row=2, col=1)
+            fig_6h.update_yaxes(tickformat='+.2f', title_text='Cum. Return %',
+                                 showgrid=True, gridcolor='rgba(0,0,0,0.1)', gridwidth=0.5,
+                                 zeroline=False, showline=False, row=3, col=1)
             st.plotly_chart(fig_6h, use_container_width=True)
 
             # 6H summary metrics
-            up_c_6h = sum(1 for o, c in zip(opens_6h, closes_6h) if c >= o)
-            dn_c_6h = 72 - up_c_6h
+            up_c_6h = sum(1 for c in closes_6h if c >= a_price)
+            dn_c_6h = len(closes_6h) - up_c_6h
             ret_6h = (closes_6h[-1] - a_price) / a_price * 100
             peak_6h = max(closes_6h)
             trough_6h = min(closes_6h)
             vol_6h = np.std([(closes_6h[k] - closes_6h[k - 1]) / closes_6h[k - 1]
-                              for k in range(1, 72)]) * 100
+                              for k in range(1, len(closes_6h))]) * 100
             col_n1, col_n2, col_n3, col_n4, col_n5 = st.columns(5)
             col_n1.metric("6H Target Price", f"${closes_6h[-1]:,.2f}", f"{ret_6h:+.2f}%")
-            col_n2.metric("&#128994; Bull / &#128308; Bear", f"{up_c_6h} / {dn_c_6h}", "5-min candles")
+            col_n2.metric("&#128994; Bull / &#128308; Bear", f"{up_c_6h} / {dn_c_6h}", "5-min points")
             col_n3.metric("6H Peak", f"${peak_6h:,.2f}", f"{(peak_6h - a_price)/a_price*100:+.2f}%")
             col_n4.metric("6H Trough", f"${trough_6h:,.2f}", f"{(trough_6h - a_price)/a_price*100:+.2f}%")
             col_n5.metric("5-Min Volatility", f"{vol_6h:.3f}%", "Std deviation")
@@ -7670,31 +7790,23 @@ def display_master_oracle_terminal():
 
             # â”€â”€ 5-MINUTE DETAIL TABLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             st.markdown("#### ðŸ“‹ 5-Minute Interval Detail Tables")
-            tab_1h_tbl, tab_6h_tbl = st.tabs(["&#9201;&#65039; 1H â€” 12 Rows", "&#128336; 6H â€” 72 Rows"])
+            tab_1h_tbl, tab_6h_tbl = st.tabs(["&#9201;&#65039; 1H â€” 13 Points", "&#128336; 6H â€” 73 Points"])
 
             with tab_1h_tbl:
                 df_1h_tbl = pd.DataFrame({
-                    'Time': [t.strftime('%H:%M') for t in times_1h],
-                    'Open ($)': [f"{p:,.2f}" for p in opens_1h],
-                    'High ($)': [f"{p:,.2f}" for p in highs_1h],
-                    'Low ($)': [f"{p:,.2f}" for p in lows_1h],
-                    'Close ($)': [f"{p:,.2f}" for p in closes_1h],
-                    'Candle %': [f"{(closes_1h[k]-opens_1h[k])/opens_1h[k]*100:+.3f}%" for k in range(12)],
-                    'vs Entry %': [f"{(closes_1h[k]-a_price)/a_price*100:+.3f}%" for k in range(12)],
-                    'Direction': ['&#128994; UP' if c >= o else '&#128308; DOWN' for o, c in zip(opens_1h, closes_1h)]
+                    'Time': [f'+{int(t)}min' for t in _sw1['times']],
+                    'Price ($)': [f"{p:,.2f}" for p in closes_1h],
+                    'vs Entry %': [f"{(closes_1h[k]-a_price)/a_price*100:+.3f}%" for k in range(len(closes_1h))],
+                    'Direction': ['&#128994; UP' if closes_1h[k] >= a_price else '&#128308; DOWN' for k in range(len(closes_1h))]
                 })
                 st.dataframe(df_1h_tbl, use_container_width=True, height=460)
 
             with tab_6h_tbl:
                 df_6h_tbl = pd.DataFrame({
-                    'Time': [t.strftime('%H:%M') for t in times_6h],
-                    'Open ($)': [f"{p:,.2f}" for p in opens_6h],
-                    'High ($)': [f"{p:,.2f}" for p in highs_6h],
-                    'Low ($)': [f"{p:,.2f}" for p in lows_6h],
-                    'Close ($)': [f"{p:,.2f}" for p in closes_6h],
-                    'Candle %': [f"{(closes_6h[k]-opens_6h[k])/opens_6h[k]*100:+.3f}%" for k in range(72)],
-                    'Cum. Return %': [f"{(closes_6h[k]-a_price)/a_price*100:+.3f}%" for k in range(72)],
-                    'Direction': ['&#128994; UP' if c >= o else '&#128308; DOWN' for o, c in zip(opens_6h, closes_6h)]
+                    'Time': [f'+{int(t)}min' for t in _sw6['times']],
+                    'Price ($)': [f"{p:,.2f}" for p in closes_6h],
+                    'Cum. Return %': [f"{(closes_6h[k]-a_price)/a_price*100:+.3f}%" for k in range(len(closes_6h))],
+                    'Direction': ['&#128994; UP' if closes_6h[k] >= a_price else '&#128308; DOWN' for k in range(len(closes_6h))]
                 })
                 st.dataframe(df_6h_tbl, use_container_width=True, height=520)
 

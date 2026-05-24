@@ -458,15 +458,15 @@ def display_enhanced_file_upload():
     """Enhanced file upload functionality with live price integration"""
     enhanced_features = EnhancedPSXFeatures()
     
-    st.header("🚀 Enhanced CSV Upload with Live Price Integration")
+    st.header("Enhanced CSV Upload with Live Price Integration")
     
     # Market Status Display
     is_open, status_message = enhanced_features.is_market_open()
-    status_color = "🟢" if is_open else "🔴"
+    status_color = "green" if is_open else "red"
     st.info(f"{status_color} **Market Status**: {status_message}")
     
     # File Upload Section
-    st.subheader("📁 Upload Your CSV File")
+    st.subheader("Upload Your CSV File")
     uploaded_file = st.file_uploader(
         "Upload CSV from Investing.com or other sources", 
         type=['csv'], 
@@ -483,7 +483,7 @@ def display_enhanced_file_upload():
                 st.dataframe(df.head(10))
             
             # Company Selection
-            st.subheader("🏢 Select Companies for Analysis")
+            st.subheader("Select Companies for Analysis")
             available_companies = [col for col in df.columns if col not in ['Date', 'date', 'Time', 'time']]
             
             selected_companies = st.multiselect(
@@ -513,12 +513,12 @@ def display_enhanced_file_upload():
                 
                 # Live Price Integration Toggle
                 integrate_live = st.toggle(
-                    "🔄 Integrate Current Live Prices", 
+                    "Integrate Current Live Prices", 
                     value=True,
                     help="Automatically add current PSX prices to your historical data"
                 )
                 
-                if st.button("🔮 Generate Enhanced Forecast", type="primary"):
+                if st.button("Generate Enhanced Forecast", type="primary"):
                     with st.spinner("Integrating live prices and generating forecasts..."):
                         
                         if integrate_live:
@@ -532,7 +532,7 @@ def display_enhanced_file_upload():
                                 
                                 # Display integrated data for each company
                                 for company, data in enhanced_data.items():
-                                    st.subheader(f"📈 {company} Analysis")
+                                    st.subheader(f"{company} Analysis")
                                     
                                     # Show current vs historical price
                                     col1, col2, col3 = st.columns(3)
@@ -664,7 +664,7 @@ def display_enhanced_file_upload():
                                         
                                         # Forecast Summary Table
                                         if not forecast_data.empty and 'yhat' in forecast_data.columns:
-                                            st.subheader("📊 Forecast Summary")
+                                            st.subheader("Forecast Summary")
                                             
                                             summary_data = {
                                                 'Date': forecast_data['ds'].dt.strftime('%Y-%m-%d'),
@@ -687,7 +687,7 @@ def display_enhanced_file_upload():
                                     
                                     st.divider()
                             else:
-                                st.warning("⚠️ Could not integrate live prices. Please check your data format.")
+                                st.warning("Could not integrate live prices. Please check your data format.")
                         
                         # Market News Analysis
                         st.subheader("📰 Market News Impact Analysis")
@@ -700,10 +700,10 @@ def display_enhanced_file_upload():
                                 # Sentiment Display
                                 col1, col2, col3 = st.columns(3)
                                 with col1:
-                                    sentiment_color = {"positive": "🟢", "negative": "🔴", "neutral": "🟡"}
+                                    sentiment_color = {"positive": "green", "negative": "red", "neutral": "yellow"}
                                     st.metric(
-                                        "Market Sentiment", 
-                                        f"{sentiment_color.get(sentiment_analysis['sentiment'], '🟡')} {sentiment_analysis['sentiment'].title()}"
+                                        "Market Sentiment",
+                                        f"{sentiment_analysis['sentiment'].title()}"
                                     )
                                 with col2:
                                     st.metric("Sentiment Score", f"{sentiment_analysis['score']:+.2f}")

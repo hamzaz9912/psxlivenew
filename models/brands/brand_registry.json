@@ -1,0 +1,60 @@
+{
+  "generated_at": "2026-05-24T01:46:51.592995",
+  "total_brands": 6,
+  "brands": {
+    "ENGRO": {
+      "path": "D:\\psxlivenew\\models\\brands\\ENGRO",
+      "xgb": "D:\\psxlivenew\\models\\brands\\ENGRO\\ENGRO_xgb.pkl",
+      "mlp": "D:\\psxlivenew\\models\\brands\\ENGRO\\ENGRO_mlp.pkl",
+      "scaler": "D:\\psxlivenew\\models\\brands\\ENGRO\\ENGRO_scaler.pkl",
+      "meta": "D:\\psxlivenew\\models\\brands\\ENGRO\\meta.json",
+      "trained_at": "2026-05-24T01:46:43.749206",
+      "final_loss": 1414.0463279150151
+    },
+    "HBL": {
+      "path": "D:\\psxlivenew\\models\\brands\\HBL",
+      "xgb": "D:\\psxlivenew\\models\\brands\\HBL\\HBL_xgb.pkl",
+      "mlp": "D:\\psxlivenew\\models\\brands\\HBL\\HBL_mlp.pkl",
+      "scaler": "D:\\psxlivenew\\models\\brands\\HBL\\HBL_scaler.pkl",
+      "meta": "D:\\psxlivenew\\models\\brands\\HBL\\meta.json",
+      "trained_at": "2026-05-24T01:46:46.532095",
+      "final_loss": 861.7725253544465
+    },
+    "LUCK": {
+      "path": "D:\\psxlivenew\\models\\brands\\LUCK",
+      "xgb": "D:\\psxlivenew\\models\\brands\\LUCK\\LUCK_xgb.pkl",
+      "mlp": "D:\\psxlivenew\\models\\brands\\LUCK\\LUCK_mlp.pkl",
+      "scaler": "D:\\psxlivenew\\models\\brands\\LUCK\\LUCK_scaler.pkl",
+      "meta": "D:\\psxlivenew\\models\\brands\\LUCK\\meta.json",
+      "trained_at": "2026-05-24T01:46:39.096643",
+      "final_loss": 335.53993702021467
+    },
+    "MCB": {
+      "path": "D:\\psxlivenew\\models\\brands\\MCB",
+      "xgb": "D:\\psxlivenew\\models\\brands\\MCB\\MCB_xgb.pkl",
+      "mlp": "D:\\psxlivenew\\models\\brands\\MCB\\MCB_mlp.pkl",
+      "scaler": "D:\\psxlivenew\\models\\brands\\MCB\\MCB_scaler.pkl",
+      "meta": "D:\\psxlivenew\\models\\brands\\MCB\\meta.json",
+      "trained_at": "2026-05-24T01:46:49.671693",
+      "final_loss": 1924.369086407466
+    },
+    "OGDC": {
+      "path": "D:\\psxlivenew\\models\\brands\\OGDC",
+      "xgb": "D:\\psxlivenew\\models\\brands\\OGDC\\OGDC_xgb.pkl",
+      "mlp": "D:\\psxlivenew\\models\\brands\\OGDC\\OGDC_mlp.pkl",
+      "scaler": "D:\\psxlivenew\\models\\brands\\OGDC\\OGDC_scaler.pkl",
+      "meta": "D:\\psxlivenew\\models\\brands\\OGDC\\meta.json",
+      "trained_at": "2026-05-24T01:46:40.333535",
+      "final_loss": 284.90979319351624
+    },
+    "PPL": {
+      "path": "D:\\psxlivenew\\models\\brands\\PPL",
+      "xgb": "D:\\psxlivenew\\models\\brands\\PPL\\PPL_xgb.pkl",
+      "mlp": "D:\\psxlivenew\\models\\brands\\PPL\\PPL_mlp.pkl",
+      "scaler": "D:\\psxlivenew\\models\\brands\\PPL\\PPL_scaler.pkl",
+      "meta": "D:\\psxlivenew\\models\\brands\\PPL\\meta.json",
+      "trained_at": "2026-05-24T01:46:51.590578",
+      "final_loss": 1085.0187960746903
+    }
+  }
+}

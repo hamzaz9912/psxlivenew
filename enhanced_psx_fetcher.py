@@ -185,7 +185,7 @@ class EnhancedPSXFetcher:
     
     def fetch_all_kse100_live_prices(self):
         """Fetch live prices for all KSE-100 companies from multiple authentic sources"""
-        st.write("🔄 Fetching authentic live prices from Pakistan Stock Exchange (PSX) and multiple sources...")
+        st.write("Fetching authentic live prices from Pakistan Stock Exchange (PSX) and multiple sources...")
 
         companies_data = {}
         progress_bar = st.progress(0)
@@ -272,13 +272,13 @@ class EnhancedPSXFetcher:
                         'source': 'sector_based_estimate',
                         'note': 'Live data not available - showing sector-based estimate'
                     }
-                    st.info(f"📊 {company_name} ({symbol}): PKR {estimated_price:.2f} (Estimated)")
+                    st.info(f"{company_name} ({symbol}): PKR {estimated_price:.2f} (Estimated)")
 
         progress_bar.empty()
 
         # Display summary
         st.success(f"SUCCESS: **KSE-100 Data Processing Complete**")
-        st.info(f"📊 **Summary:** {successful_fetches} live prices, {total_companies - successful_fetches} estimated prices")
+        st.info(f"**Summary:** {successful_fetches} live prices, {total_companies - successful_fetches} estimated prices")
 
         return companies_data
     
@@ -440,7 +440,7 @@ class EnhancedPSXFetcher:
         batch_data = {}
         progress_bar = st.progress(0)
 
-        st.write(f"🔄 Fetching live prices for {len(symbols_list)} companies in batch mode...")
+        st.write(f"Fetching live prices for {len(symbols_list)} companies in batch mode...")
 
         # Get comprehensive market data first
         market_data = self._fetch_psx_market_summary()

@@ -1,0 +1,22 @@
+{
+  "symbol": "KSE-100",
+  "trained_at": "2026-05-24T01:39:42.804355",
+  "n_samples": 7980,
+  "features": [
+    "Close",
+    "RSI",
+    "MA_10",
+    "MA_20",
+    "Volatility",
+    "MACD",
+    "Signal",
+    "Return"
+  ],
+  "xgb_file": "kse100_xgb.pkl",
+  "mlp_file": "kse100_mlp.pkl",
+  "mlp_scaler_file": "kse100_mlp_scaler.pkl",
+  "final_mlp_loss": 1.7077316491460766,
+  "mlp_n_iter": 1,
+  "checkpoint_used": "D:\\psxlivenew\\models\\checkpoints\\latest_mlp_checkpoint.pkl",
+  "python_version": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]"
+}

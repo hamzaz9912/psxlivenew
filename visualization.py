@@ -235,7 +235,7 @@ class ChartVisualizer:
         # Update layout for LINEAR GRAPH
         fig.update_layout(
             title=dict(
-                text=f"📈 {title} - Linear Forecast Graph",
+                text=f" {title} - Linear Forecast Graph",
                 font=dict(size=22, color='#2c3e50'),
                 x=0.5
             ),
@@ -714,7 +714,7 @@ class ChartVisualizer:
         # Update layout
         fig.update_layout(
             title=dict(
-                text=f"📈 {title} - Complete Technical Analysis Dashboard",
+                text=f" {title} - Complete Technical Analysis Dashboard",
                 font=dict(size=24, color='#2c3e50'),
                 x=0.5
             ),

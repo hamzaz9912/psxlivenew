@@ -27,7 +27,7 @@ from enhanced_live_dashboard import get_enhanced_live_dashboard
 # Page configuration
 st.set_page_config(
     page_title="PSX KSE-100 Forecasting Dashboard",
-    page_icon="📈",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -75,13 +75,13 @@ def main():
     if 'enhanced_live_dashboard' not in st.session_state:
         st.session_state.enhanced_live_dashboard = get_enhanced_live_dashboard()
 
-    st.title("📈 PSX KSE-100 Forecasting Dashboard")
+    st.title("PSX KSE-100 Forecasting Dashboard")
     st.markdown("---")
 
     # Check market status
     if not is_market_open():
-        st.warning("⚠️ **Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
-        st.info("💡 You can still use file upload analysis, historical data, and forecasting features.")
+        st.warning("**Market Closed**: The Pakistan Stock Exchange (PSX) is currently closed. Market hours are Monday to Friday, 9:30 AM to 3:30 PM Pakistan time. Live data fetching is not available during off-hours.")
+        st.info("You can still use file upload analysis, historical data, and forecasting features.")
 
     # Auto-refresh every 5 minutes (300 seconds)
     # count = st_autorefresh(interval=300000, limit=None, key="data_refresh")
@@ -92,7 +92,7 @@ def main():
         # Attractive header with gradient
         st.markdown("""
         <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;'>
-            <h2 style='color: white; margin: 0; font-size: 24px;'>📊 Dashboard Controls</h2>
+            <h2 style='color: white; margin: 0; font-size: 24px;'>Dashboard Controls</h2>
             <p style='color: #e8eaf6; margin: 5px 0 0 0; font-size: 14px;'>PSX Forecasting Hub</p>
         </div>
         """, unsafe_allow_html=True)
@@ -118,13 +118,13 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-        if st.button("🔄 Refresh Data Now", use_container_width=True):
+        if st.button(" Refresh Data Now", use_container_width=True):
             st.session_state.last_update = None
             st.rerun()
 
         # Auto-refresh timer display in sidebar
         st.markdown("---")
-        st.markdown("**⏱️ 5-Minute Auto-Refresh Timer**")
+        st.markdown("**5-Minute Auto-Refresh Timer**")
         
         # Check if we're in the 15-minute live predictions section
         # This will be shown based on session state
@@ -150,7 +150,7 @@ def main():
             # Timer display
             st.markdown(f"""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; text-align: center;'>
-                <h3 style='margin: 0; color: #1565c0;'>⏱️ {minutes_left:02d}:{seconds_left:02d}</h3>
+                <h3 style='margin: 0; color: #1565c0;'>{minutes_left:02d}:{seconds_left:02d}</h3>
                 <small style='color: #1976d2;'>Next refresh</small>
             </div>
             <div style='margin-top: 5px; font-size: 12px; color: #666;'>
@@ -164,14 +164,14 @@ def main():
         if st.session_state.last_update:
             st.markdown(f"""
             <div style='background-color: #e8f5e8; padding: 8px; border-radius: 5px; border-left: 3px solid #4caf50; margin: 10px 0;'>
-                <small style='color: #2e7d32; font-weight: bold;'>🕒 Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
+                <small style='color: #2e7d32; font-weight: bold;'> Last Updated: {st.session_state.last_update.strftime('%H:%M:%S')}</small>
             </div>
             """, unsafe_allow_html=True)
 
         # Live Price Display with enhanced styling
         st.markdown("""
         <div style='background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;'>
-            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'>🔴 Live PSX Price</h4>
+            <h4 style='color: white; margin: 0 0 10px 0; font-size: 16px;'> Live PSX Price</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -198,11 +198,11 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                st.info("📊 Live price data not available at the moment.")
+                st.info("Live price data not available at the moment.")
         else:
             st.markdown("""
             <div style='background-color: #ffebee; padding: 8px; border-radius: 4px; border-left: 3px solid #f44336; margin-bottom: 10px;'>
-                <small style='color: #c62828; font-weight: bold;'>🏢 Market Closed - No live data available</small>
+                <small style='color: #c62828; font-weight: bold;'> Market Closed - No live data available</small>
             </div>
             """, unsafe_allow_html=True)
         
@@ -214,20 +214,20 @@ def main():
         # Analysis type selection with styled container
         st.markdown("""
         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #2196f3;'>
-            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'>🎯 Analysis Type</h4>
+            <h4 style='color: #1976d2; margin: 0 0 10px 0; font-size: 16px;'> Analysis Type</h4>
         </div>
         """, unsafe_allow_html=True)
 
         analysis_type = st.selectbox(
             "",
-            ["📊 Enhanced Live Dashboard (Top 80 KSE-100)", "🔍 Comprehensive Brand Predictions", "🔴 Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "⚡ 15-Minute Live Predictions", "🏛️ All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "📁 Universal File Upload", "📰 News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Database Overview"],
+            ["Enhanced Live Dashboard (Top 80 KSE-100)", "Comprehensive Brand Predictions", "Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "15-Minute Live Predictions", "All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "Universal File Upload", "News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Database Overview"],
             key="analysis_type"
         )
 
         # Forecast Settings with enhanced styling
         st.markdown("""
         <div style='background-color: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;'>
-            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>⚙️ Forecast Settings</h4>
+            <h4 style='color: #e65100; margin: 0 0 10px 0; font-size: 16px;'>Forecast Settings</h4>
         </div>
         """, unsafe_allow_html=True)
 
@@ -243,7 +243,7 @@ def main():
         if forecast_type == "Custom Date Range":
             st.markdown("""
             <div style='background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'>📅 Select Target Date</label>
+                <label style='color: #1565c0; font-weight: bold; font-size: 14px;'> Select Target Date</label>
             </div>
             """, unsafe_allow_html=True)
             custom_date = st.date_input(
@@ -265,7 +265,7 @@ def main():
         if analysis_type == "Individual Companies":
             st.markdown("""
             <div style='background-color: #f3e5f5; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'>🏢 Select Company</label>
+                <label style='color: #7b1fa2; font-weight: bold; font-size: 14px;'> Select Company</label>
             </div>
             """, unsafe_allow_html=True)
             companies = st.session_state.data_fetcher.get_kse100_companies()
@@ -276,13 +276,13 @@ def main():
             )
         
         # Debug section for file upload issues
-        if analysis_type == "📁 Universal File Upload":
+        if analysis_type == " Universal File Upload":
             st.markdown("""
             <div style='background-color: #fff8e1; padding: 10px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;'>
-                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'>🧪 File Upload Debug</h5>
+                <h5 style='color: #f57c00; margin: 0; font-size: 14px;'> File Upload Debug</h5>
             </div>
             """, unsafe_allow_html=True)
-            with st.expander("🔍 Quick File Upload Test", expanded=False):
+            with st.expander(" Quick File Upload Test", expanded=False):
                 st.markdown("### Test Your File Upload Here")
                 debug_file = st.file_uploader("Upload test file (for debugging)", type=['csv', 'xlsx', 'xls'], key="debug_uploader")
                 
@@ -301,7 +301,7 @@ def main():
                         # Test 2: Try to decode
                         try:
                             text_content = raw_content.decode('utf-8')
-                            st.success("✓ UTF-8 decode successful")
+                            st.success(" UTF-8 decode successful")
                             
                             lines = text_content.split('\n')
                             st.write(f"**Number of lines:** {len(lines)}")
@@ -315,7 +315,7 @@ def main():
                             debug_file.seek(0)
                             try:
                                 test_df = pd.read_csv(debug_file)
-                                st.success("✓ Pandas read successful")
+                                st.success(" Pandas read successful")
                                 st.write(f"**Dataframe shape:** {test_df.shape}")
                                 st.write(f"**Columns:** {list(test_df.columns)}")
                                 st.dataframe(test_df.head(3))
@@ -323,7 +323,7 @@ def main():
                                 st.success("Your file is perfectly readable! The issue is likely in the universal predictor logic.")
                                 
                             except Exception as pandas_error:
-                                st.error(f"✗ Pandas read failed: {str(pandas_error)}")
+                                st.error(f" Pandas read failed: {str(pandas_error)}")
                                 
                                 # Try alternative methods
                                 st.write("**Trying alternative methods:**")
@@ -331,40 +331,40 @@ def main():
                                     try:
                                         debug_file.seek(0)
                                         alt_df = pd.read_csv(debug_file, delimiter=delimiter)
-                                        st.success(f"✓ Alternative method with '{delimiter}' delimiter: {alt_df.shape}")
+                                        st.success(f" Alternative method with '{delimiter}' delimiter: {alt_df.shape}")
                                         st.dataframe(alt_df.head(3))
                                         break
                                     except Exception as alt_error:
-                                        st.write(f"✗ Delimiter '{delimiter}': {str(alt_error)}")
+                                        st.write(f" Delimiter '{delimiter}': {str(alt_error)}")
                             
                         except Exception as decode_error:
-                            st.error(f"✗ UTF-8 decode failed: {str(decode_error)}")
+                            st.error(f" UTF-8 decode failed: {str(decode_error)}")
                             
                             # Try other encodings
                             st.write("**Trying other encodings:**")
                             for encoding in ['latin-1', 'cp1252', 'iso-8859-1']:
                                 try:
                                     alt_content = raw_content.decode(encoding)
-                                    st.success(f"✓ {encoding} decode successful")
+                                    st.success(f" {encoding} decode successful")
                                     break
                                 except Exception as enc_error:
-                                    st.write(f"✗ {encoding}: {str(enc_error)}")
+                                    st.write(f" {encoding}: {str(enc_error)}")
                                     
                     except Exception as e:
                         st.error(f"**Error processing file:** {str(e)}")
     
     # Main content area
-    if analysis_type == "📊 Enhanced Live Dashboard (Top 80 KSE-100)":
+    if analysis_type == "Enhanced Live Dashboard (Top 80 KSE-100)":
         # Enhanced Live Dashboard with top 80 companies
         st.session_state.enhanced_live_dashboard.display_live_dashboard()
         
-    elif analysis_type == "🔴 Live KSE-40 (5-Min Updates)":
+    elif analysis_type == " Live KSE-40 (5-Min Updates)":
         st.session_state.live_kse40_dashboard.display_live_dashboard()
     elif analysis_type == "Live Market Dashboard":
         display_live_market_dashboard()
-    elif analysis_type == "⚡ 15-Minute Live Predictions":
+    elif analysis_type == " 15-Minute Live Predictions":
         display_five_minute_live_predictions()
-    elif analysis_type == "🔍 Comprehensive Brand Predictions":
+    elif analysis_type == " Comprehensive Brand Predictions":
         st.session_state.brand_predictor.display_comprehensive_brand_predictions()
     elif analysis_type == "KSE-100 Index":
         display_kse100_analysis(forecast_type, days_ahead, custom_date)
@@ -373,13 +373,13 @@ def main():
     elif analysis_type == "Advanced Forecasting Hub":
         from advanced_forecasting import display_advanced_forecasting_dashboard
         display_advanced_forecasting_dashboard()
-    elif analysis_type == "📁 Universal File Upload":
+    elif analysis_type == " Universal File Upload":
         display_universal_file_upload()
-    elif analysis_type == "📰 News-Based Predictions":
+    elif analysis_type == " News-Based Predictions":
         display_news_based_predictions()
     elif analysis_type == "Enhanced File Upload":
         display_enhanced_file_upload()
-    elif analysis_type == "🏛️ All KSE-100 Companies (Live Prices)":
+    elif analysis_type == "All KSE-100 Companies (Live Prices)":
         display_all_kse100_live_prices()
     elif analysis_type == "All Companies Live Prices":
         display_all_companies_live_prices()
@@ -418,15 +418,15 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
     col0, col1, col2 = st.columns([1, 2, 1])
     
     with col0:
-        if st.button("📈 Comprehensive Intraday", use_container_width=True, key="kse100_intraday_btn"):
+        if st.button("Comprehensive Intraday", use_container_width=True, key="kse100_intraday_btn"):
             st.session_state['analysis_type'] = "Comprehensive Intraday Forecasts"
             st.rerun()
     
     with col1:
-        st.subheader("📊 KSE-100 Index Analysis")
+        st.subheader("KSE-100 Index Analysis")
     
     with col2:
-        if st.button("💾 Export Data", use_container_width=True):
+        if st.button(" Export Data", use_container_width=True):
             if st.session_state.kse_data is not None:
                 csv = export_to_csv(st.session_state.kse_data, "KSE-100")
                 st.download_button(
@@ -457,7 +457,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 if hasattr(st.session_state, 'enhanced_psx_fetcher'):
                     kse_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
                     if kse_data is not None and not kse_data.empty:
-                        st.success("📡 Fetched historical data from Yahoo Finance")
+                        st.success(" Fetched historical data from Yahoo Finance")
                 
                 # Fallback to data_fetcher if enhanced fails
                 if (kse_data is None or kse_data.empty) and hasattr(st.session_state, 'data_fetcher'):
@@ -494,14 +494,14 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                     st.metric("Low", format_currency(kse_data['low'].iloc[-1]))
                 
                 # Historical chart
-                st.subheader("📈 Live Price Movement")
+                st.subheader(" Live Price Movement")
                 historical_chart = st.session_state.visualizer.create_price_chart(
                     kse_data, "KSE-100 Index - Live Data"
                 )
                 st.plotly_chart(historical_chart, use_container_width=True)
                 
                 # Forecasting
-                st.subheader("🔮 Price Forecast")
+                st.subheader(" Price Forecast")
                 
                 with st.spinner("Generating forecast..."):
                     try:
@@ -554,7 +554,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 # COMPREHENSIVE INTRADAY FORECAST SECTION
                 # ==========================================
                 st.markdown("---")
-                st.subheader("📈 Comprehensive Intraday Forecast")
+                st.subheader(" Comprehensive Intraday Forecast")
                 
                 # Import and display comprehensive intraday forecast
                 from comprehensive_intraday import ComprehensiveIntradayForecaster, is_trading_day, get_next_trading_day
@@ -627,12 +627,12 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 col_graph_sel, col_graph_main = st.columns([1, 4])
                 
                 with col_graph_sel:
-                    st.markdown("### 📊 Select Session")
+                    st.markdown("###  Select Session")
                     
                     # Use radio buttons for session selection
                     selected_session = st.radio(
                         "Choose Forecast Session:",
-                        options=["🌅 Full Day (9:30-15:30)", "🌅 Morning (9:45-12:00)", "☀️ Afternoon (12:00-15:30)", "📊 Main Session (9:36-15:30)", "📅 Yesterday Last Hour"],
+                        options=[" Full Day (9:30-15:30)", " Morning (9:45-12:00)", " Afternoon (12:00-15:30)", " Main Session (9:36-15:30)", " Yesterday Last Hour"],
                         key="intraday_session_select",
                         label_visibility="collapsed"
                     )
@@ -641,7 +641,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                 import plotly.graph_objects as go
                 
                 if "Full Day" in selected_session and full_day is not None and not full_day.empty:
-                    st.info("💡 **Full Day Forecast:** Complete trading day from 9:30 AM to 3:30 PM")
+                    st.info(" **Full Day Forecast:** Complete trading day from 9:30 AM to 3:30 PM")
                     
                     fig = go.Figure()
                     
@@ -670,7 +670,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="📈 KSE-100 Full Day Forecast (9:30 AM - 3:30 PM)",
+                        title=" KSE-100 Full Day Forecast (9:30 AM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -692,7 +692,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Morning" in selected_session and morning_session is not None and not morning_session.empty:
-                    st.info("💡 **Morning Session Forecast:** 9:45 AM to 12:00 PM")
+                    st.info(" **Morning Session Forecast:** 9:45 AM to 12:00 PM")
                     
                     fig = go.Figure()
                     
@@ -728,7 +728,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="🌅 KSE-100 Morning Session Forecast (9:45 AM - 12:00 PM)",
+                        title=" KSE-100 Morning Session Forecast (9:45 AM - 12:00 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -752,7 +752,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Afternoon" in selected_session and afternoon_session is not None and not afternoon_session.empty:
-                    st.info("💡 **Afternoon Session Forecast:** 12:00 PM to 3:30 PM")
+                    st.info(" **Afternoon Session Forecast:** 12:00 PM to 3:30 PM")
                     
                     fig = go.Figure()
                     
@@ -788,7 +788,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="☀️ KSE-100 Afternoon Session Forecast (12:00 PM - 3:30 PM)",
+                        title=" KSE-100 Afternoon Session Forecast (12:00 PM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -812,7 +812,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Main Session" in selected_session and main_session is not None and not main_session.empty:
-                    st.info("💡 **Main Session Forecast:** 9:36 AM to 3:30 PM (New Workflow)")
+                    st.info(" **Main Session Forecast:** 9:36 AM to 3:30 PM (New Workflow)")
                     
                     fig = go.Figure()
                     
@@ -848,7 +848,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                                   annotation_text=f"Current: {live_price:,.0f}", annotation_position="top left")
                     
                     fig.update_layout(
-                        title="📊 KSE-100 Main Session Forecast (9:36 AM - 3:30 PM)",
+                        title=" KSE-100 Main Session Forecast (9:36 AM - 3:30 PM)",
                         xaxis_title="Trading Time",
                         yaxis_title="Predicted Price (PKR)",
                         height=500,
@@ -872,7 +872,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
                     
                 elif "Yesterday" in selected_session and yesterday_last_hour is not None and not yesterday_last_hour.empty:
-                    st.info("💡 **Yesterday's Last Hour:** 2:00 PM to 3:30 PM (Used as input for today's forecast)")
+                    st.info(" **Yesterday's Last Hour:** 2:00 PM to 3:30 PM (Used as input for today's forecast)")
                     
                     price_col = 'close' if 'close' in yesterday_last_hour.columns else 'price'
                     
@@ -889,7 +889,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                     ))
                     
                     fig.update_layout(
-                        title="📅 KSE-100 Yesterday Last Hour (2:00 PM - 3:30 PM)",
+                        title=" KSE-100 Yesterday Last Hour (2:00 PM - 3:30 PM)",
                         xaxis_title="Time",
                         yaxis_title="Price (PKR)",
                         height=500,
@@ -914,7 +914,7 @@ def display_kse100_analysis(forecast_type, days_ahead, custom_date):
                             st.metric("Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
                 
                 # Show next day forecast info
-                st.info("🌙 **After 3:00 PM:** View the 'Comprehensive Intraday Forecasts' option in sidebar for next day's full forecast")
+                st.info(" **After 3:00 PM:** View the 'Comprehensive Intraday Forecasts' option in sidebar for next day's full forecast")
                 
             else:
                 st.error("Unable to fetch KSE-100 data. Please try again later.")
@@ -932,10 +932,10 @@ def display_company_analysis(selected_company, forecast_type, days_ahead, custom
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader(f"📊 {selected_company} Analysis")
+        st.subheader(f" {selected_company} Analysis")
     
     with col2:
-        if st.button("💾 Export Data", use_container_width=True):
+        if st.button(" Export Data", use_container_width=True):
             if selected_company in st.session_state.companies_data:
                 csv = export_to_csv(st.session_state.companies_data[selected_company], selected_company)
                 st.download_button(
@@ -993,14 +993,14 @@ def display_company_analysis(selected_company, forecast_type, days_ahead, custom
                     st.metric("Low", format_currency(company_data['low'].iloc[-1]))
                 
                 # Historical chart
-                st.subheader("📈 Live Price Movement")
+                st.subheader(" Live Price Movement")
                 historical_chart = st.session_state.visualizer.create_price_chart(
                     company_data, f"{selected_company} - Live Data"
                 )
                 st.plotly_chart(historical_chart, use_container_width=True)
                 
                 # Forecasting
-                st.subheader("🔮 Price Forecast")
+                st.subheader(" Price Forecast")
                 
                 with st.spinner("Generating forecast..."):
                     try:
@@ -1058,7 +1058,7 @@ def display_company_analysis(selected_company, forecast_type, days_ahead, custom
 def display_cache_overview():
     """Display cache overview and management tools"""
     
-    st.subheader("💾 Cache Overview")
+    st.subheader(" Cache Overview")
     st.markdown("Manage and view cached stock data and system information.")
     
     # Cache statistics
@@ -1067,7 +1067,7 @@ def display_cache_overview():
     cache_stats = st.session_state.cache_manager.get_cache_stats()
     
     with col1:
-        st.metric("Cache Status", "Active ✅")
+        st.metric("Cache Status", "Active ")
     
     with col2:
         st.metric("Cached Entries", cache_stats['valid_entries'])
@@ -1078,7 +1078,7 @@ def display_cache_overview():
     st.markdown("---")
     
     # Cache management options
-    tab1, tab2 = st.tabs(["📊 Cache Status", "⚙️ Settings"])
+    tab1, tab2 = st.tabs([" Cache Status", " Settings"])
     
     with tab1:
         st.subheader("Cache Information")
@@ -1105,21 +1105,21 @@ def display_cache_overview():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🗑️ Clear Cache", help="Clear all cached data"):
+            if st.button(" Clear Cache", help="Clear all cached data"):
                 st.session_state.cache_manager.clear_cache()
                 st.session_state.kse_data = None
                 st.session_state.companies_data = {}
                 st.success("Cache cleared successfully!")
         
         with col2:
-            if st.button("📊 Refresh Data"):
+            if st.button(" Refresh Data"):
                 st.session_state.last_update = None
                 st.success("Data refresh triggered!")
 
 def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
     """Display intraday trading sessions analysis with live prices and half-day forecasts"""
     
-    st.subheader("🕘 Intraday Trading Sessions - Live Analysis")
+    st.subheader(" Intraday Trading Sessions - Live Analysis")
     st.markdown("**PSX Trading Hours:** 9:30 AM - 3:30 PM (Monday to Friday)")
     
     # Get live price for current analysis
@@ -1168,7 +1168,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
             if hasattr(st.session_state, 'enhanced_psx_fetcher'):
                 kse_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
                 if kse_data is not None and not kse_data.empty:
-                    st.success("📡 Fetched historical data from Yahoo Finance")
+                    st.success(" Fetched historical data from Yahoo Finance")
             
             # Fallback to data_fetcher if enhanced fails
             if (kse_data is None or kse_data.empty) and hasattr(st.session_state, 'data_fetcher'):
@@ -1176,7 +1176,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
             
             if kse_data is not None and not kse_data.empty:
                 # Session-based forecasting
-                st.subheader("📈 Session-Based Predictions")
+                st.subheader(" Session-Based Predictions")
                 
                 tab1, tab2, tab3, tab4 = st.tabs([
                     "Morning Session (9:45-12:00)", 
@@ -1194,9 +1194,9 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     morning_end = current_time.replace(hour=12, minute=0, second=0, microsecond=0)
 
                     if current_time < morning_start:
-                        st.info("🕘 Morning session starts at 9:45 AM PKT")
+                        st.info(" Morning session starts at 9:45 AM PKT")
                     elif current_time > morning_end:
-                        st.info("🏁 Morning session ended at 12:00 PM PKT")
+                        st.info(" Morning session ended at 12:00 PM PKT")
                     else:
                         # Generate morning session intraday data
                         morning_data = generate_morning_session_data(current_price)
@@ -1235,7 +1235,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             )
 
                             fig.update_layout(
-                                title="📈 Morning Session Intraday Chart (9:45 AM - 12:00 PM)",
+                                title=" Morning Session Intraday Chart (9:45 AM - 12:00 PM)",
                                 xaxis_title="Time (PKT)",
                                 yaxis_title="Price (PKR)",
                                 height=500,
@@ -1300,7 +1300,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             )
                             
                             fig.update_layout(
-                                title="📈 Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
+                                title=" Afternoon Session Intraday Chart (12:00 PM - 3:30 PM)",
                                 xaxis_title="Time (PKT)",
                                 yaxis_title="Price (PKR)",
                                 height=500,
@@ -1329,7 +1329,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     
                     elif current_time >= eleven_am:
                         # After 11:00 AM but before 12:00 PM - show half day completed message and graph
-                        st.info("✅ **After 1st Half Completed (11:00 AM)** - Showing Half Day Graph")
+                        st.info(" **After 1st Half Completed (11:00 AM)** - Showing Half Day Graph")
                         st.write("**Half Day Analysis (9:45 AM - 12:00 PM)**")
                         
                         # Generate half day data
@@ -1369,7 +1369,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                             )
                             
                             fig.update_layout(
-                                title="📈 Half Day Chart - First Half Completed (9:45 AM - 12:00 PM)",
+                                title=" Half Day Chart - First Half Completed (9:45 AM - 12:00 PM)",
                                 xaxis_title="Time (PKT)",
                                 yaxis_title="Price (PKR)",
                                 height=500,
@@ -1398,7 +1398,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     
                     else:
                         # Before 11:00 AM - show waiting message
-                        st.info("🕐 Afternoon session forecast will be available after 11:00 AM PKT")
+                        st.info(" Afternoon session forecast will be available after 11:00 AM PKT")
                 
                 with tab3:
                     st.write("**Today's Full Day Forecast (9:45 AM - 3:30 PM)**")
@@ -1430,7 +1430,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         )
                         
                         fig.update_layout(
-                            title="📈 Today's Full Trading Day Forecast (9:45 AM - 3:30 PM)",
+                            title=" Today's Full Trading Day Forecast (9:45 AM - 3:30 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -1466,9 +1466,9 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                     afternoon_cutoff = current_time.replace(hour=15, minute=0, second=0, microsecond=0)
                     
                     if current_time >= afternoon_cutoff:
-                        st.info("🔄 **Updated at 3:00 PM** - Fresh next day forecast generated daily after 3:00 PM")
+                        st.info(" **Updated at 3:00 PM** - Fresh next day forecast generated daily after 3:00 PM")
                     else:
-                        st.info("💡 **Note**: This forecast refreshes daily at 3:00 PM with updated predictions for tomorrow")
+                        st.info(" **Note**: This forecast refreshes daily at 3:00 PM with updated predictions for tomorrow")
                     
                     # Generate next day full data
                     next_day_full_data = generate_next_day_full_data(current_price)
@@ -1497,7 +1497,7 @@ def display_intraday_sessions_analysis(forecast_type, days_ahead, custom_date):
                         )
                         
                         fig.update_layout(
-                            title="📈 Next Day Full Trading Day Forecast (9:45 AM - 3:30 PM)",
+                            title=" Next Day Full Trading Day Forecast (9:45 AM - 3:30 PM)",
                             xaxis_title="Time (PKT)",
                             yaxis_title="Predicted Price (PKR)",
                             height=500,
@@ -1729,13 +1729,13 @@ def generate_next_day_full_data(current_price):
 def display_all_companies_live_prices():
     """Display live prices for all KSE-100 companies with sector-wise organization"""
     
-    st.subheader("📊 All KSE-100 Companies - Complete Brand Data")
+    st.subheader(" All KSE-100 Companies - Complete Brand Data")
     st.markdown("Comprehensive brand data for all companies listed in KSE-100 index with live prices and estimated ranges")
     
     # Add refresh button
     col1, col2 = st.columns([1, 4])
     with col1:
-        if st.button("🔄 Refresh All Data", use_container_width=True):
+        if st.button(" Refresh All Data", use_container_width=True):
             st.rerun()
     
     # Fetch all companies data
@@ -1744,7 +1744,7 @@ def display_all_companies_live_prices():
     
     if companies_data:
         # Create comprehensive overview table
-        st.subheader("📊 Complete KSE-100 Brand Data Overview")
+        st.subheader(" Complete KSE-100 Brand Data Overview")
         
         # Prepare data for overview table
         overview_data = []
@@ -1761,11 +1761,11 @@ def display_all_companies_live_prices():
             
             # Format source display
             if source == 'estimated_range_fallback':
-                source_display = "📊 Estimated"
+                source_display = " Estimated"
             elif source == 'unavailable':
-                source_display = "❌ Unavailable"
+                source_display = " Unavailable"
             else:
-                source_display = f"✅ {source}"
+                source_display = f" {source}"
             
             overview_data.append({
                 'Company': company_name,
@@ -1874,7 +1874,7 @@ def display_all_companies_live_prices():
                             """, unsafe_allow_html=True)
                             
                             # Quick forecast button
-                            if st.button(f"📈 Forecast {symbol}", key=f"forecast_{symbol}"):
+                            if st.button(f" Forecast {symbol}", key=f"forecast_{symbol}"):
                                 st.session_state.quick_forecast_company = company_name
                                 st.rerun()
                         
@@ -1901,7 +1901,7 @@ def display_all_companies_live_prices():
         
         # Overall market summary
         st.markdown("---")
-        st.subheader("📈 Market Summary")
+        st.subheader(" Market Summary")
         
         total_companies = len(companies_data)
         total_market_value = sum(comp['current_price'] for comp in companies_data.values())
@@ -1931,9 +1931,9 @@ def display_all_companies_live_prices():
             market_close = datetime.strptime("15:30", "%H:%M").time()
             
             if market_open <= current_time <= market_close:
-                st.success("🟢 Market is OPEN")
+                st.success(" Market is OPEN")
             else:
-                st.error("🔴 Market is CLOSED")
+                st.error(" Market is CLOSED")
             
             st.write(f"Last Updated: {datetime.now().strftime('%H:%M:%S')}")
         
@@ -1945,7 +1945,7 @@ def display_all_companies_live_prices():
             st.write("**Export Options:**")
         
         with col2:
-            if st.button("💾 Export All Prices", use_container_width=True):
+            if st.button(" Export All Prices", use_container_width=True):
                 # Create export DataFrame
                 export_data = []
                 for company_name, data in companies_data.items():
@@ -1973,7 +1973,7 @@ def display_all_companies_live_prices():
             company_name = st.session_state.quick_forecast_company
             if company_name in companies_data:
                 st.markdown("---")
-                st.subheader(f"📊 Quick Forecast: {companies_data[company_name]['symbol']}")
+                st.subheader(f" Quick Forecast: {companies_data[company_name]['symbol']}")
                 
                 # Generate and display forecast
                 historical_data = companies_data[company_name]['historical_data']
@@ -2012,7 +2012,7 @@ def display_all_companies_live_prices():
                     st.plotly_chart(fig, use_container_width=True)
                     
                     # Clear the forecast selection
-                    if st.button("✖ Close Forecast"):
+                    if st.button(" Close Forecast"):
                         del st.session_state.quick_forecast_company
                         st.rerun()
     
@@ -2022,7 +2022,7 @@ def display_all_companies_live_prices():
 def display_live_market_dashboard():
     """Real-time market dashboard with 5-minute updates and live forecasting"""
     
-    st.subheader("🔴 LIVE PSX Market Dashboard")
+    st.subheader(" LIVE PSX Market Dashboard")
     st.markdown("**Real-time data with 5-minute auto-refresh and live predictions**")
     
     # Auto-refresh every 5 minutes (300 seconds) - using placeholder
@@ -2068,7 +2068,7 @@ def display_live_market_dashboard():
     
     # Live KSE-100 Index
     st.markdown("---")
-    st.subheader("📈 KSE-100 Index - Live")
+    st.subheader(" KSE-100 Index - Live")
     
     # Fetch live KSE-100 price
     live_kse_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
@@ -2103,7 +2103,7 @@ def display_live_market_dashboard():
             st.metric("Market Cap", "PKR 8.2T")
         
         # Show data source information - remove simulated data message
-        st.success(f"📊 **Live PSX Data** | Source: {source.upper()} | Last updated: {timestamp.strftime('%H:%M:%S PKT')}")
+        st.success(f" **Live PSX Data** | Source: {source.upper()} | Last updated: {timestamp.strftime('%H:%M:%S PKT')}")
         
         # Generate intraday data for today
         intraday_data = generate_intraday_market_data(current_price, market_status['is_market_open'])
@@ -2154,7 +2154,7 @@ def display_live_market_dashboard():
         
         # Next day forecast
         st.markdown("---")
-        st.subheader("🔮 Next Day Forecast")
+        st.subheader(" Next Day Forecast")
         
         # Get historical data for forecasting
         # Try enhanced fetcher first for historical data
@@ -2162,7 +2162,7 @@ def display_live_market_dashboard():
         if hasattr(st.session_state, 'enhanced_psx_fetcher'):
             historical_data = st.session_state.enhanced_psx_fetcher.fetch_kse100_historical("3mo")
             if historical_data is not None and not historical_data.empty:
-                st.success("📡 Fetched historical data from Yahoo Finance")
+                st.success(" Fetched historical data from Yahoo Finance")
 
         # Fallback to data_fetcher if enhanced fails
         if (historical_data is None or historical_data.empty) and hasattr(st.session_state, 'data_fetcher'):
@@ -2235,7 +2235,7 @@ def display_live_market_dashboard():
     
     # Brand selection for individual predictions - Now with ALL KSE-100 companies
     st.markdown("---")
-    st.subheader("🏢 Individual Company Live Tracking - All KSE-100 Brands")
+    st.subheader(" Individual Company Live Tracking - All KSE-100 Brands")
 
     # Use the comprehensive symbol_options instead of limited companies list
     all_companies = {symbol: name for symbol, name in symbol_options.items() if symbol != 'KSE-100'}
@@ -2311,12 +2311,12 @@ def display_live_market_dashboard():
                             st.write(f"**Source:** {live_price['source'].upper()}")
                             st.write(f"**Last Update:** {live_price['timestamp'].strftime('%H:%M:%S')}")
                     else:
-                        st.warning(f"⚠️ Live price data unavailable for {symbol}")
+                        st.warning(f" Live price data unavailable for {symbol}")
                         st.info("Data sources may be temporarily unavailable. Trying to fetch from authentic PSX sources...")
                         
                         with col2:
                             # Quick forecast for this company
-                            if st.button(f"📊 Forecast {symbol}", key=f"forecast_btn_{symbol}"):
+                            if st.button(f" Forecast {symbol}", key=f"forecast_btn_{symbol}"):
                                 company_data = st.session_state.data_fetcher.fetch_company_data(brand_name)
                                 if company_data is not None and not company_data.empty:
                                     forecast = st.session_state.forecaster.forecast_stock(company_data, days_ahead=1)
@@ -2351,7 +2351,7 @@ def display_live_market_dashboard():
     
     # Performance summary
     st.markdown("---")
-    st.subheader("📊 Market Performance Summary")
+    st.subheader(" Market Performance Summary")
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -2365,7 +2365,7 @@ def display_live_market_dashboard():
         st.metric("Most Active", "HBL 15.2M")
     
     with col4:
-        st.metric("Market Trend", "Bullish 📈")
+        st.metric("Market Trend", "Bullish ")
 
 def generate_intraday_market_data(current_price, is_market_open):
     """Generate realistic intraday market data for today"""
@@ -2404,7 +2404,7 @@ def generate_intraday_market_data(current_price, is_market_open):
 def display_file_upload_prediction():
     """File upload functionality for custom data prediction"""
     
-    st.subheader("📁 Upload Custom Data for Prediction")
+    st.subheader(" Upload Custom Data for Prediction")
     st.markdown("Upload your own CSV file to generate market predictions")
     
     # File upload widget
@@ -2420,12 +2420,12 @@ def display_file_upload_prediction():
             custom_data = pd.read_csv(uploaded_file)
             
             # Display file info
-            st.success(f"✅ File uploaded successfully!")
+            st.success(f" File uploaded successfully!")
             st.write(f"**File name:** {uploaded_file.name}")
             st.write(f"**Data shape:** {custom_data.shape[0]} rows, {custom_data.shape[1]} columns")
             
             # Show data preview
-            st.subheader("📋 Data Preview")
+            st.subheader(" Data Preview")
             st.dataframe(custom_data.head(10), use_container_width=True)
             
             # Data validation
@@ -2433,7 +2433,7 @@ def display_file_upload_prediction():
             missing_columns = [col for col in required_columns if col not in custom_data.columns]
             
             if missing_columns:
-                st.error(f"❌ Missing required columns: {missing_columns}")
+                st.error(f" Missing required columns: {missing_columns}")
                 st.write("**Required columns:** date, close")
                 st.write("**Optional columns:** open, high, low, volume")
                 return
@@ -2444,10 +2444,10 @@ def display_file_upload_prediction():
                 custom_data = custom_data.sort_values('date').reset_index(drop=True)
                 custom_data = custom_data.dropna(subset=['date', 'close'])
                 
-                st.success("✅ Data validation passed!")
+                st.success(" Data validation passed!")
                 
                 # Prediction options
-                st.subheader("🔮 Prediction Options")
+                st.subheader(" Prediction Options")
                 
                 col1, col2 = st.columns(2)
                 
@@ -2467,7 +2467,7 @@ def display_file_upload_prediction():
                         key="upload_model_type"
                     )
                 
-                if st.button("🚀 Generate Prediction", use_container_width=True):
+                if st.button(" Generate Prediction", use_container_width=True):
                     with st.spinner("Generating predictions..."):
                         # Generate forecast
                         if model_type == "Prophet (Advanced)":
@@ -2489,7 +2489,7 @@ def display_file_upload_prediction():
                         
                         if forecast is not None and not forecast.empty:
                             # Display forecast results
-                            st.subheader("📈 Prediction Results")
+                            st.subheader(" Prediction Results")
                             
                             # Create comprehensive forecast chart
                             fig = go.Figure()
@@ -2556,7 +2556,7 @@ def display_file_upload_prediction():
                             st.plotly_chart(fig, use_container_width=True)
                             
                             # Forecast summary
-                            st.subheader("📊 Forecast Summary")
+                            st.subheader(" Forecast Summary")
                             
                             if model_type == "Prophet (Advanced)":
                                 current_price = custom_data['close'].iloc[-1]
@@ -2581,12 +2581,12 @@ def display_file_upload_prediction():
                                     st.metric("Confidence Range", f"±{confidence_range/2:.2f}")
                             
                             # Export forecast data
-                            st.subheader("💾 Export Results")
+                            st.subheader(" Export Results")
                             
                             col1, col2 = st.columns(2)
                             
                             with col1:
-                                if st.button("📥 Download Forecast Data"):
+                                if st.button(" Download Forecast Data"):
                                     csv = forecast.to_csv(index=False)
                                     st.download_button(
                                         label="Download CSV",
@@ -2597,26 +2597,26 @@ def display_file_upload_prediction():
                                     )
                             
                             with col2:
-                                if st.button("📊 View Detailed Analysis"):
+                                if st.button(" View Detailed Analysis"):
                                     st.write("**Forecast Statistics:**")
                                     if model_type == "Prophet (Advanced)":
                                         st.write(f"• Mean Prediction: {forecast['yhat'].mean():.2f}")
                                         st.write(f"• Prediction Std: {forecast['yhat'].std():.2f}")
                                         st.write(f"• Trend Direction: {'Upward' if forecast['yhat'].iloc[-1] > forecast['yhat'].iloc[0] else 'Downward'}")
                         else:
-                            st.error("❌ Unable to generate forecast. Please check your data.")
+                            st.error(" Unable to generate forecast. Please check your data.")
                             
             except Exception as e:
-                st.error(f"❌ Data processing error: {str(e)}")
+                st.error(f" Data processing error: {str(e)}")
                 st.write("Please ensure your data has the correct format and date column.")
                 
         except Exception as e:
-            st.error(f"❌ File reading error: {str(e)}")
+            st.error(f" File reading error: {str(e)}")
             st.write("Please upload a valid CSV file.")
     
     else:
         # Show sample data format
-        st.subheader("📋 Required Data Format")
+        st.subheader(" Required Data Format")
         st.write("Your CSV file should have the following structure:")
         
         sample_data = pd.DataFrame({
@@ -2667,15 +2667,15 @@ def display_five_minute_live_predictions():
     if 'auto_refresh_start_time' not in st.session_state:
         st.session_state.auto_refresh_start_time = None
 
-    st.title("⚡ 15-Minute Live Predictions - Complete KSE-100 Brands")
+    st.title(" 15-Minute Live Predictions - Complete KSE-100 Brands")
     st.markdown("**Real-time market data scraping with continuous 15-minute predictions for all 100 KSE-100 companies**")
-    st.markdown("**✅ Complete KSE-100 coverage with accurate current prices and live 15-minute predictions for every brand**")
+    st.markdown("** Complete KSE-100 coverage with accurate current prices and live 15-minute predictions for every brand**")
     
     # Market status and real-time updates
     market_status = format_market_status()
 
     # Auto-refresh checkbox
-    auto_refresh_enabled = st.checkbox("🔄 Enable Auto-Refresh (every 5 minutes)", key="auto_refresh_checkbox")
+    auto_refresh_enabled = st.checkbox(" Enable Auto-Refresh (every 5 minutes)", key="auto_refresh_checkbox")
 
     # Track auto-refresh start time
     if auto_refresh_enabled:
@@ -2707,13 +2707,13 @@ def display_five_minute_live_predictions():
     col1, col2, col3 = st.columns(3)
     with col1:
         if market_status['is_market_open']:
-            st.success(f"🟢 **{market_status['status']}**")
+            st.success(f" **{market_status['status']}**")
         else:
-            st.info(f"🔴 **{market_status['status']}**")
+            st.info(f" **{market_status['status']}**")
     
     with col2:
         # Use the already defined current_time_pkt
-        st.info(f"📅 **PKT Time:** {current_time_pkt.strftime('%H:%M:%S')}")
+        st.info(f" **PKT Time:** {current_time_pkt.strftime('%H:%M:%S')}")
     
     with col3:
         if auto_refresh_enabled:
@@ -2727,14 +2727,14 @@ def display_five_minute_live_predictions():
             
             time_since_last = (now_pkt - last_refresh).total_seconds()
             minutes_left = max(0, (300 - time_since_last) / 60)
-            st.success(f"🔄 **Auto-refresh enabled** ({minutes_left:.1f} min left)")
+            st.success(f" **Auto-refresh enabled** ({minutes_left:.1f} min left)")
         else:
             # Manual refresh button
-            if st.button("🔄 Refresh Market Data", type="primary", key="manual_refresh_15min"):
+            if st.button(" Refresh Market Data", type="primary", key="manual_refresh_15min"):
                 pkt = pytz.timezone('Asia/Karachi')
                 st.session_state.last_refresh_15min = datetime.now(pkt)
                 st.rerun()
-            st.info("📊 **Manual Refresh Mode**")
+            st.info(" **Manual Refresh Mode**")
     
     st.markdown("---")
     
@@ -2905,7 +2905,7 @@ def display_five_minute_live_predictions():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader(f"📊 Live Data: {selected_symbol}")
+        st.subheader(f" Live Data: {selected_symbol}")
         
         # Get live price using enhanced PSX fetcher for comprehensive KSE-100 coverage
         try:
@@ -2967,13 +2967,13 @@ def display_five_minute_live_predictions():
             
             if price_change > 0:
                 color = "green"
-                trend = "📈"
+                trend = ""
             elif price_change < 0:
                 color = "red"
-                trend = "📉"
+                trend = ""
             else:
                 color = "gray"
-                trend = "➡️"
+                trend = ""
             
             st.markdown(f"""
             <div style='background-color: {color}15; padding: 20px; border-radius: 10px; border-left: 5px solid {color}; margin: 10px 0;'>
@@ -2984,7 +2984,7 @@ def display_five_minute_live_predictions():
             """, unsafe_allow_html=True)
             
             # Generate Complete Day 5-Minute Data
-            st.subheader("📈 Complete Trading Day 5-Minute Chart")
+            st.subheader(" Complete Trading Day 5-Minute Chart")
 
             # Create comprehensive full-day 5-minute data
             try:
@@ -3107,13 +3107,13 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(fig, use_container_width=True)
                 
                 # Display daily statistics
-                st.subheader("📊 Daily Trading Statistics")
+                st.subheader(" Daily Trading Statistics")
                 
                 # Debug information
                 from datetime import datetime
                 start_dt = datetime.fromisoformat(complete_day_times[0])
                 end_dt = datetime.fromisoformat(complete_day_times[-1])
-                st.info(f"📊 Chart Data: {len(complete_day_times)} intervals from {start_dt.strftime('%H:%M')} to {end_dt.strftime('%H:%M')}")
+                st.info(f" Chart Data: {len(complete_day_times)} intervals from {start_dt.strftime('%H:%M')} to {end_dt.strftime('%H:%M')}")
                 
                 opening_price = complete_day_prices[0]
                 closing_price = complete_day_prices[-1]
@@ -3132,7 +3132,7 @@ def display_five_minute_live_predictions():
                     st.metric("Daily Change", f"{daily_change:+.2f} PKR", f"{daily_change_pct:+.2f}%")
                 
                 # Volume and additional metrics
-                st.subheader("📈 Additional Analysis")
+                st.subheader(" Additional Analysis")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -3154,19 +3154,19 @@ def display_five_minute_live_predictions():
                 with col3:
                     # Market trend analysis
                     if daily_change_pct > 1:
-                        trend_status = "📈 Strong Bullish"
+                        trend_status = " Strong Bullish"
                         trend_color = "green"
                     elif daily_change_pct > 0:
-                        trend_status = "📊 Bullish"
+                        trend_status = " Bullish"
                         trend_color = "lightgreen"
                     elif daily_change_pct < -1:
-                        trend_status = "📉 Strong Bearish"
+                        trend_status = " Strong Bearish"
                         trend_color = "red"
                     elif daily_change_pct < 0:
-                        trend_status = "📊 Bearish"
+                        trend_status = " Bearish"
                         trend_color = "lightcoral"
                     else:
-                        trend_status = "➡️ Neutral"
+                        trend_status = " Neutral"
                         trend_color = "gray"
                     
                     st.markdown(f"**Market Trend:**")
@@ -3201,7 +3201,7 @@ def display_five_minute_live_predictions():
             st.warning("Unable to fetch live price data")
     
     with col2:
-        st.subheader("📈 Prediction Metrics")
+        st.subheader(" Prediction Metrics")
         
         if live_price:
             try:
@@ -3237,7 +3237,7 @@ def display_five_minute_live_predictions():
     # ==========================================
     # 15-MINUTE LIVE PREDICTION SESSION GRAPH
     # ==========================================
-    st.subheader("⏱️ 15-Minute Live Prediction Session")
+    st.subheader("⏱ 15-Minute Live Prediction Session")
     
     # Auto-refresh status display with start time
     col_15min_1, col_15min_2, col_15min_3 = st.columns([2, 2, 1])
@@ -3247,11 +3247,11 @@ def display_five_minute_live_predictions():
             # Show start time
             start_time = st.session_state.auto_refresh_start_time
             if start_time:
-                st.success(f"▶️ Auto-Refresh Started: {start_time.strftime('%H:%M:%S')}")
+                st.success(f" Auto-Refresh Started: {start_time.strftime('%H:%M:%S')}")
             else:
-                st.success("▶️ Auto-Refresh Active")
+                st.success(" Auto-Refresh Active")
         else:
-            st.info("📌 Auto-Refresh: OFF")
+            st.info(" Auto-Refresh: OFF")
     
     with col_15min_2:
         if auto_refresh_enabled:
@@ -3276,19 +3276,19 @@ def display_five_minute_live_predictions():
             progress_pct = min(100, (time_since_start / 300) * 100)
             
             st.progress(progress_pct / 100)
-            st.markdown(f"**⏰ Next refresh in: {minutes_left:02d}:{seconds_left:02d}**")
+            st.markdown(f"** Next refresh in: {minutes_left:02d}:{seconds_left:02d}**")
         else:
-            st.markdown("**⏰ Refresh every 5 minutes when enabled**")
+            st.markdown("** Refresh every 5 minutes when enabled**")
     
     with col_15min_3:
         if not auto_refresh_enabled:
-            if st.button("🔄 Refresh", key="refresh_15min_session_btn"):
+            if st.button(" Refresh", key="refresh_15min_session_btn"):
                 pkt = pytz.timezone('Asia/Karachi')
                 st.session_state.last_15min_session_refresh = datetime.now(pkt)
                 st.rerun()
         else:
             # Show refresh now button
-            if st.button("🔄 Refresh Now", key="refresh_now_15min_btn"):
+            if st.button(" Refresh Now", key="refresh_now_15min_btn"):
                 pkt = pytz.timezone('Asia/Karachi')
                 st.session_state.last_refresh_15min = datetime.now(pkt)
                 st.session_state.auto_refresh_start_time = datetime.now(pkt)  # Reset timer
@@ -3392,7 +3392,7 @@ def display_five_minute_live_predictions():
             st.plotly_chart(fig_15min, use_container_width=True)
             
             # Display prediction metrics for 15-minute session
-            st.markdown("**📊 15-Minute Session Prediction Summary:**")
+            st.markdown("** 15-Minute Session Prediction Summary:**")
             metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
             
             with metric_col1:
@@ -3412,7 +3412,7 @@ def display_five_minute_live_predictions():
     st.markdown("---")
     
     # Trading Sessions Analysis
-    st.subheader("🕐 Intraday Trading Sessions")
+    st.subheader(" Intraday Trading Sessions")
     
     # Session tabs
     session_tab1, session_tab2, session_tab3 = st.tabs([
@@ -3428,11 +3428,11 @@ def display_five_minute_live_predictions():
         morning_end = current_time_pkt.replace(hour=12, minute=0, second=0, microsecond=0)
         
         if morning_start <= current_time_pkt <= morning_end:
-            st.success("🟢 Currently in Morning Session")
+            st.success(" Currently in Morning Session")
         elif current_time_pkt < morning_start:
-            st.info("⏰ Morning Session starts soon")
+            st.info(" Morning Session starts soon")
         else:
-            st.info("✅ Morning Session completed")
+            st.info(" Morning Session completed")
         
         # Morning session predictions with graph
         if live_price and 'current_price' in locals():
@@ -3448,7 +3448,7 @@ def display_five_minute_live_predictions():
                 st.metric("Expected Volume", morning_volume)
             
             # Generate Morning Session Forecast Graph
-            st.subheader("📈 Morning Session Forecast Chart")
+            st.subheader(" Morning Session Forecast Chart")
             
             try:
                 # Create time points for morning session (9:30 AM to 12:00 PM)
@@ -3522,7 +3522,7 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(morning_fig, use_container_width=True)
                 
                 # Morning session insights
-                st.markdown("**📊 Morning Session Insights:**")
+                st.markdown("** Morning Session Insights:**")
                 opening_price = morning_prices[0]
                 closing_price = morning_prices[-1]
                 session_change = closing_price - opening_price
@@ -3546,11 +3546,11 @@ def display_five_minute_live_predictions():
         afternoon_end = current_time_pkt.replace(hour=15, minute=30, second=0, microsecond=0)
         
         if afternoon_start <= current_time_pkt <= afternoon_end:
-            st.success("🟢 Currently in Afternoon Session")
+            st.success(" Currently in Afternoon Session")
         elif current_time_pkt < afternoon_start:
-            st.info("⏰ Afternoon Session starts soon")
+            st.info(" Afternoon Session starts soon")
         else:
-            st.info("✅ Afternoon Session completed")
+            st.info(" Afternoon Session completed")
         
         # Afternoon session predictions with graph
         if live_price and 'current_price' in locals():
@@ -3566,7 +3566,7 @@ def display_five_minute_live_predictions():
                 st.metric("Expected Volume", afternoon_volume)
             
             # Generate Afternoon Session Forecast Graph
-            st.subheader("📈 Afternoon Session Forecast Chart")
+            st.subheader(" Afternoon Session Forecast Chart")
             
             try:
                 # Create time points for afternoon session (12:00 PM to 3:30 PM)
@@ -3636,7 +3636,7 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(afternoon_fig, use_container_width=True)
                 
                 # Afternoon session insights
-                st.markdown("**📊 Afternoon Session Insights:**")
+                st.markdown("** Afternoon Session Insights:**")
                 session_opening = afternoon_prices[0]
                 session_closing = afternoon_prices[-1]
                 session_change = session_closing - session_opening
@@ -3691,7 +3691,7 @@ def display_five_minute_live_predictions():
                 st.metric("Volatility", f"{volatility:.2f}%")
             
             # Generate Full Day Forecast Graph
-            st.subheader("📈 Complete Trading Day Forecast")
+            st.subheader(" Complete Trading Day Forecast")
             
             try:
                 # Import required modules
@@ -3775,7 +3775,7 @@ def display_five_minute_live_predictions():
                 st.plotly_chart(full_day_fig, use_container_width=True)
                 
                 # Full day insights
-                st.markdown("**📊 Full Trading Day Insights:**")
+                st.markdown("** Full Trading Day Insights:**")
                 day_opening = full_day_prices[0]
                 day_closing = full_day_prices[-1]
                 day_change = day_closing - day_opening
@@ -3800,22 +3800,22 @@ def display_five_minute_live_predictions():
                 st.error(f"Error generating full day forecast: {e}")
             
             # Trading recommendations
-            st.subheader("💡 Trading Recommendations")
+            st.subheader(" Trading Recommendations")
             
             if price_change_pct > 1:
-                st.success("🟢 **BULLISH TREND** - Consider buying opportunities")
+                st.success(" **BULLISH TREND** - Consider buying opportunities")
             elif price_change_pct < -1:
-                st.error("🔴 **BEARISH TREND** - Consider selling or shorting")
+                st.error(" **BEARISH TREND** - Consider selling or shorting")
             else:
-                st.info("🟡 **NEUTRAL TREND** - Monitor for breakout signals")
+                st.info(" **NEUTRAL TREND** - Monitor for breakout signals")
     
     # Data sources info
     st.markdown("---")
-    st.info("📊 **Data Sources:** Live scraping from PSX, Yahoo Finance, and Investing.com | Updates every 5 seconds")
+    st.info(" **Data Sources:** Live scraping from PSX, Yahoo Finance, and Investing.com | Updates every 5 seconds")
 
 def display_universal_file_upload():
     """Universal file upload functionality for any brand prediction"""
-    st.subheader("📁 Universal File Upload & Prediction")
+    st.subheader(" Universal File Upload & Prediction")
     
     st.markdown("""
     **Upload financial data for ANY brand or instrument**
@@ -3827,10 +3827,10 @@ def display_universal_file_upload():
     
     # Add sample data download option
     st.markdown("---")
-    st.subheader("📋 Sample Data")
+    st.subheader(" Sample Data")
     st.markdown("If you're testing the functionality, you can download and use this sample XAUSD data:")
     
-    if st.button("📥 Download Sample XAUSD Data"):
+    if st.button(" Download Sample XAUSD Data"):
         sample_data = """Date,Close,Open,High,Low,Volume
 2025-01-01,2654.32,2650.00,2658.45,2647.23,12500
 2025-01-02,2658.91,2654.32,2662.18,2651.67,15200
@@ -3844,7 +3844,7 @@ def display_universal_file_upload():
 2025-01-10,2685.67,2681.23,2691.45,2678.90,18900"""
         
         st.download_button(
-            label="💾 Download sample_xausd.csv",
+            label=" Download sample_xausd.csv",
             data=sample_data,
             file_name="sample_xausd.csv",
             mime="text/csv"
@@ -3889,7 +3889,7 @@ def display_universal_file_upload():
                     file_analysis = analyze_uploaded_file(uploaded_file)
                 
                 # Show comprehensive debug information
-                with st.expander("🔍 Comprehensive File Analysis", expanded=True):
+                with st.expander(" Comprehensive File Analysis", expanded=True):
                     st.write("### Basic File Information")
                     st.write(f"**File name:** {file_analysis.get('file_name', 'Unknown')}")
                     st.write(f"**File size:** {file_analysis.get('file_size', 0)} bytes")
@@ -3932,7 +3932,7 @@ def display_universal_file_upload():
                                         st.write(f"{i+1}. {header}")
                                 
                                 st.write(f"**Consistent data rows:** {file_analysis.get('consistent_data_rows', 0)}")
-                                st.write(f"**Data consistency:** {'✓' if file_analysis.get('data_consistency', False) else '✗'}")
+                                st.write(f"**Data consistency:** {'' if file_analysis.get('data_consistency', False) else ''}")
                         
                         # Show first few lines
                         if 'first_5_lines' in file_analysis:
@@ -3951,11 +3951,11 @@ def display_universal_file_upload():
                         
                         for attempt in file_analysis['pandas_attempts']:
                             if attempt['success']:
-                                st.success(f"✓ {attempt['method']}: {attempt['rows']} rows, {attempt['columns']} columns")
+                                st.success(f" {attempt['method']}: {attempt['rows']} rows, {attempt['columns']} columns")
                                 if 'column_names' in attempt:
                                     st.write(f"   Columns: {attempt['column_names']}")
                             else:
-                                st.error(f"✗ {attempt['method']}: {attempt['error']}")
+                                st.error(f" {attempt['method']}: {attempt['error']}")
                         
                         # Show recommended method
                         if 'recommended_method' in file_analysis:
@@ -3964,13 +3964,13 @@ def display_universal_file_upload():
                 
                 # Enhanced manual processing
                 st.markdown("---")
-                st.subheader("🔧 Enhanced Manual Processing")
+                st.subheader(" Enhanced Manual Processing")
                 
                 if file_analysis.get('decode_success', False) and file_analysis.get('data_consistency', False):
                     st.success("File appears to have consistent structure. Try automatic processing:")
                     
                     # Automatic processing with detected parameters
-                    if st.button("🚀 Try Automatic Processing with Detected Parameters", key="auto_process"):
+                    if st.button(" Try Automatic Processing with Detected Parameters", key="auto_process"):
                         try:
                             uploaded_file.seek(0)
                             if file_analysis.get('suggested_delimiter') == 'comma':
@@ -4023,7 +4023,7 @@ def display_universal_file_upload():
                     encoding_options = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252', 'ascii']
                     selected_encoding = st.selectbox("Select encoding:", encoding_options, key="manual_encoding_select")
                 
-                if st.button("🔄 Try Manual Processing", key="manual_process"):
+                if st.button(" Try Manual Processing", key="manual_process"):
                     try:
                         uploaded_file.seek(0)
                         raw_content = uploaded_file.read().decode(selected_encoding)
@@ -4048,7 +4048,7 @@ def display_universal_file_upload():
                 return
             
             # Display file analysis
-            st.subheader(f"📊 Data Analysis for {brand_name}")
+            st.subheader(f" Data Analysis for {brand_name}")
             
             col1, col2, col3, col4 = st.columns(4)
             
@@ -4074,7 +4074,7 @@ def display_universal_file_upload():
                     st.metric("Current Price", "N/A")
             
             # Show detailed column information
-            st.subheader("📋 Column Information")
+            st.subheader(" Column Information")
             col_info = []
             columns = analysis.get('columns', [])
             data_types = analysis.get('data_types', {})
@@ -4095,7 +4095,7 @@ def display_universal_file_upload():
                 st.warning("No column information available.")
             
             # Show data preview
-            st.subheader("📋 Data Preview")
+            st.subheader(" Data Preview")
             try:
                 if 'data' in analysis and isinstance(analysis['data'], pd.DataFrame):
                     st.dataframe(analysis['data'].head(10), use_container_width=True)
@@ -4112,26 +4112,26 @@ def display_universal_file_upload():
                 st.write("Raw sample data type:", type(analysis.get('sample_data', 'None')))
             
             # Column mapping
-            st.subheader("🎯 Column Mapping")
+            st.subheader(" Column Mapping")
             
             col1, col2 = st.columns(2)
             
             with col1:
                 if analysis['price_column']:
-                    st.success(f"✅ Price column detected: {analysis['price_column']}")
+                    st.success(f" Price column detected: {analysis['price_column']}")
                     price_column = analysis['price_column']
                 else:
                     price_column = st.selectbox("Select Price Column:", analysis['columns'])
             
             with col2:
                 if analysis['date_column']:
-                    st.success(f"✅ Date column detected: {analysis['date_column']}")
+                    st.success(f" Date column detected: {analysis['date_column']}")
                     date_column = analysis['date_column']
                 else:
                     date_column = st.selectbox("Select Date Column:", ['None'] + analysis['columns'])
             
             # Generate predictions
-            if st.button("🔮 Generate Predictions", key="generate_universal_prediction"):
+            if st.button(" Generate Predictions", key="generate_universal_prediction"):
                 if price_column:
                     with st.spinner("Generating comprehensive predictions..."):
                         # Use the already loaded dataframe
@@ -4147,7 +4147,7 @@ def display_universal_file_upload():
                             return
                         
                         # Display prediction results
-                        st.subheader(f"🔮 Prediction Results for {brand_name}")
+                        st.subheader(f" Prediction Results for {brand_name}")
                         
                         # Current statistics
                         col1, col2, col3, col4 = st.columns(4)
@@ -4169,15 +4169,15 @@ def display_universal_file_upload():
                         
                         # Prediction tabs
                         pred_tab1, pred_tab2, pred_tab3, pred_tab4, pred_tab5 = st.tabs([
-                            "📅 Next 7 Days", 
-                            "⚡ Intraday 5-Min",
-                            "📆 Medium-term (1-4 weeks)", 
-                            "📊 Long-term (1-3 months)",
-                            "🔧 Technical Analysis"
+                            " Next 7 Days", 
+                            " Intraday 5-Min",
+                            " Medium-term (1-4 weeks)", 
+                            " Long-term (1-3 months)",
+                            " Technical Analysis"
                         ])
                         
                         with pred_tab1:
-                            st.markdown("**📅 Next 7 Days Detailed Predictions**")
+                            st.markdown("** Next 7 Days Detailed Predictions**")
                             next_7_days = predictions['predictions']['next_7_days']
                             
                             # Display predictions in enhanced table
@@ -4248,7 +4248,7 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_7days, use_container_width=True)
                         
                         with pred_tab2:
-                            st.markdown("**⚡ Intraday 5-Minute Predictions with Day Selection**")
+                            st.markdown("** Intraday 5-Minute Predictions with Day Selection**")
                             
                             intraday_data = predictions['predictions']['intraday_5min']
                             available_days = list(intraday_data.keys())
@@ -4267,7 +4267,7 @@ def display_universal_file_upload():
                                 st.metric("Daily Change", f"{day_summary['daily_change']:+.2f}%")
                             
                             # Display day summary
-                            st.subheader(f"📊 {selected_day} Trading Session Summary")
+                            st.subheader(f" {selected_day} Trading Session Summary")
                             
                             col1, col2, col3, col4 = st.columns(4)
                             with col1:
@@ -4347,13 +4347,13 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_intraday, use_container_width=True)
                             
                             # Show data table (limited to avoid clutter)
-                            st.subheader("📋 5-Minute Interval Data (Every 30 minutes)")
+                            st.subheader(" 5-Minute Interval Data (Every 30 minutes)")
                             # Show every 6th row (30-minute intervals)
                             df_sample = df_intraday.iloc[::6].copy()
                             st.dataframe(df_sample[['time', 'predicted_price', 'change_from_prev']], use_container_width=True)
                         
                         with pred_tab3:
-                            st.markdown("**📆 Medium-term Predictions (Next 4 Weeks)**")
+                            st.markdown("** Medium-term Predictions (Next 4 Weeks)**")
                             medium_term = predictions['predictions']['medium_term']
                             
                             df_medium = pd.DataFrame(medium_term)
@@ -4399,7 +4399,7 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_medium, use_container_width=True)
                         
                         with pred_tab4:
-                            st.markdown("**📊 Long-term Predictions (Next 3 Months)**")
+                            st.markdown("** Long-term Predictions (Next 3 Months)**")
                             long_term = predictions['predictions']['long_term']
                             
                             df_long = pd.DataFrame(long_term)
@@ -4445,7 +4445,7 @@ def display_universal_file_upload():
                             st.plotly_chart(fig_long, use_container_width=True)
                         
                         with pred_tab5:
-                            st.markdown("**🔧 Technical Analysis**")
+                            st.markdown("** Technical Analysis**")
                             tech_analysis = predictions['technical_analysis']
                             
                             if 'error' not in tech_analysis:
@@ -4482,7 +4482,7 @@ def display_universal_file_upload():
     # Check if manual processing was successful
     if 'manual_df' in st.session_state and 'manual_brand' in st.session_state:
         st.markdown("---")
-        st.subheader("🔮 Generate Predictions from Manual Processing")
+        st.subheader(" Generate Predictions from Manual Processing")
         
         manual_df = st.session_state.manual_df
         manual_brand = st.session_state.manual_brand
@@ -4500,7 +4500,7 @@ def display_universal_file_upload():
         with col2:
             date_column = st.selectbox("Select Date Column:", ['None'] + manual_df.columns.tolist(), key="manual_date_col")
         
-        if st.button("🔮 Generate Predictions from Manual Data", key="manual_predictions"):
+        if st.button(" Generate Predictions from Manual Data", key="manual_predictions"):
             with st.spinner("Generating predictions from manually processed data..."):
                 try:
                     # Generate predictions using the manual dataframe
@@ -4513,7 +4513,7 @@ def display_universal_file_upload():
                         st.error(predictions['error'])
                     else:
                         # Display prediction results
-                        st.subheader(f"🔮 Prediction Results for {manual_brand}")
+                        st.subheader(f" Prediction Results for {manual_brand}")
                         
                         # Current statistics
                         col1, col2, col3, col4 = st.columns(4)
@@ -4535,7 +4535,7 @@ def display_universal_file_upload():
                         # Market and timezone information
                         if 'market_info' in predictions:
                             st.markdown("---")
-                            st.subheader("🌍 Market & Timezone Information")
+                            st.subheader(" Market & Timezone Information")
                             
                             market_info = predictions['market_info']
                             
@@ -4566,7 +4566,7 @@ def display_universal_file_upload():
                                 st.write(f"**Timezone**: {market_info['timezone']}")
                         
                         # Show short-term predictions
-                        st.subheader("📅 Short-term Predictions (Next 7 Days)")
+                        st.subheader(" Short-term Predictions (Next 7 Days)")
                         short_term = predictions['predictions']['short_term']
                         df_short = pd.DataFrame(short_term)
                         st.dataframe(df_short, use_container_width=True)
@@ -4619,7 +4619,7 @@ def display_universal_file_upload():
 
 def display_news_based_predictions():
     """Display news-based market predictions"""
-    st.subheader("📰 News-Based Market Predictions")
+    st.subheader(" News-Based Market Predictions")
     
     st.markdown("""
     **Live Market Predictions Based on News Sentiment Analysis**
@@ -4638,7 +4638,7 @@ def display_news_based_predictions():
         )
     
     with col2:
-        if st.button("🔄 Fetch Live News & Predict", key="fetch_news_predict"):
+        if st.button(" Fetch Live News & Predict", key="fetch_news_predict"):
             with st.spinner("Fetching live news and analyzing sentiment..."):
                 # Get current price
                 live_price_data = st.session_state.data_fetcher.get_live_company_price(symbol)
@@ -4649,7 +4649,7 @@ def display_news_based_predictions():
                 
                 if news_prediction:
                     # Display prediction results
-                    st.subheader(f"📊 News-Based Prediction for {symbol}")
+                    st.subheader(f" News-Based Prediction for {symbol}")
                     
                     # Current vs predicted metrics
                     col1, col2, col3, col4 = st.columns(4)
@@ -4671,20 +4671,20 @@ def display_news_based_predictions():
                         st.metric("Confidence", f"{confidence:.1f}%")
                     
                     # Sentiment analysis results
-                    st.subheader("📈 Sentiment Analysis")
+                    st.subheader(" Sentiment Analysis")
                     sentiment = news_prediction['sentiment']
                     
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
                         if sentiment['sentiment'] == 'positive':
-                            st.success(f"✅ **Positive Sentiment**")
+                            st.success(f" **Positive Sentiment**")
                             st.write(f"Prediction: **{sentiment['prediction'].upper()}**")
                         elif sentiment['sentiment'] == 'negative':
-                            st.error(f"❌ **Negative Sentiment**")
+                            st.error(f" **Negative Sentiment**")
                             st.write(f"Prediction: **{sentiment['prediction'].upper()}**")
                         else:
-                            st.info(f"➡️ **Neutral Sentiment**")
+                            st.info(f" **Neutral Sentiment**")
                             st.write(f"Prediction: **{sentiment['prediction'].upper()}**")
                     
                     with col2:
@@ -4695,14 +4695,14 @@ def display_news_based_predictions():
                         st.metric("Analysis Confidence", f"{sentiment['confidence']*100:.1f}%")
                         trend = news_prediction['trend']
                         if trend == 'upward':
-                            st.success("📈 Upward Trend")
+                            st.success(" Upward Trend")
                         elif trend == 'downward':
-                            st.error("📉 Downward Trend")
+                            st.error(" Downward Trend")
                         else:
-                            st.info("➡️ Stable Trend")
+                            st.info(" Stable Trend")
                     
                     # Price prediction chart
-                    st.subheader("📊 Price Prediction Visualization")
+                    st.subheader(" Price Prediction Visualization")
                     
                     fig = go.Figure()
                     
@@ -4745,7 +4745,7 @@ def display_news_based_predictions():
                     st.plotly_chart(fig, use_container_width=True)
                     
                     # News insights
-                    st.subheader("📝 Market Insights")
+                    st.subheader(" Market Insights")
                     
                     if sentiment['sentiment'] == 'positive':
                         st.success(f"""
@@ -4780,7 +4780,7 @@ def display_news_based_predictions():
 
 def display_all_kse100_live_prices():
     """Display live prices for all KSE-100 companies using enhanced PSX fetcher"""
-    st.header("🏛️ All KSE-100 Companies - Live Prices")
+    st.header(" All KSE-100 Companies - Live Prices")
     st.markdown("Real-time market data from Pakistan Stock Exchange (PSX)")
     
     # Check if we need to fetch fresh data (cache for 5 minutes)
@@ -4791,7 +4791,7 @@ def display_all_kse100_live_prices():
             need_refresh = False
     
     # Fetch data if needed
-    if need_refresh or st.button("🔄 Refresh All Data", key="refresh_kse100"):
+    if need_refresh or st.button(" Refresh All Data", key="refresh_kse100"):
         with st.spinner("Fetching live prices for all KSE-100 companies..."):
             st.session_state.all_kse100_data = st.session_state.enhanced_psx_fetcher.fetch_all_kse100_live_prices()
             st.session_state.kse100_last_fetch = datetime.now()
@@ -4801,7 +4801,7 @@ def display_all_kse100_live_prices():
         companies_data = st.session_state.all_kse100_data
         
         # Summary metrics
-        st.subheader("📊 Market Summary")
+        st.subheader(" Market Summary")
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -4829,12 +4829,12 @@ def display_all_kse100_live_prices():
         table_data = []
         for symbol, data in companies_data.items():
             source_display = {
-                'psx_official_direct_match': '🟢 PSX Live',
-                'psx_official_name_match': '🟢 PSX Live', 
-                'psx_official_partial_match': '🟡 PSX Match',
-                'sector_based_estimate': '📊 Estimated',
-                'unavailable': '❌ N/A'
-            }.get(data['source'], '🔄 Other')
+                'psx_official_direct_match': ' PSX Live',
+                'psx_official_name_match': ' PSX Live', 
+                'psx_official_partial_match': ' PSX Match',
+                'sector_based_estimate': ' Estimated',
+                'unavailable': ' N/A'
+            }.get(data['source'], ' Other')
             
             table_data.append({
                 'Symbol': symbol,
@@ -4871,7 +4871,7 @@ def display_all_kse100_live_prices():
             sector_data = [item for item in table_data if item['Symbol'] in sector_symbols]
             
             if sector_data:
-                with st.expander(f"🏢 {sector_name} ({len(sector_data)} companies)", expanded=False):
+                with st.expander(f" {sector_name} ({len(sector_data)} companies)", expanded=False):
                     df = pd.DataFrame(sector_data)
                     st.dataframe(df, use_container_width=True, hide_index=True)
                     
@@ -4881,14 +4881,14 @@ def display_all_kse100_live_prices():
                         cols = st.columns(min(len(sector_data), 4))
                         for idx, company in enumerate(sector_data):
                             with cols[idx % 4]:
-                                if st.button(f"📊 {company['Symbol']}", key=f"analyze_{company['Symbol']}", use_container_width=True):
+                                if st.button(f" {company['Symbol']}", key=f"analyze_{company['Symbol']}", use_container_width=True):
                                     display_individual_company_forecast(company['Symbol'], company['Company Name'])
                     else:
                         # For larger sectors, show sector summary
                         st.markdown("**Sector Summary:**")
                         sector_symbols = [item['Symbol'] for item in sector_data]
                         avg_price = sum(float(item['Current Price (PKR)'].replace(',', '')) for item in sector_data) / len(sector_data)
-                        live_count = sum(1 for item in sector_data if '🟢' in item['Data Source'])
+                        live_count = sum(1 for item in sector_data if '' in item['Data Source'])
                         
                         col1, col2, col3 = st.columns(3)
                         with col1:
@@ -4903,12 +4903,12 @@ def display_all_kse100_live_prices():
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            if st.button("💾 Export All Data to CSV", use_container_width=True):
+            if st.button(" Export All Data to CSV", use_container_width=True):
                 df_export = pd.DataFrame(table_data)
                 csv_data = df_export.to_csv(index=False)
                 
                 st.download_button(
-                    label="📥 Download KSE-100 Data",
+                    label=" Download KSE-100 Data",
                     data=csv_data,
                     file_name=f"kse100_all_companies_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                     mime="text/csv",
@@ -4922,10 +4922,10 @@ def display_all_kse100_live_prices():
         st.markdown("---")
         st.markdown("""
         **Data Source Information:**
-        - 🟢 **PSX Live**: Real-time data from Pakistan Stock Exchange official website
-        - 🟡 **PSX Match**: Price data matched from PSX market summary
-        - 📊 **Estimated**: Sector-based estimates when live data unavailable
-        - ❌ **N/A**: Data currently unavailable from all sources
+        -  **PSX Live**: Real-time data from Pakistan Stock Exchange official website
+        -  **PSX Match**: Price data matched from PSX market summary
+        -  **Estimated**: Sector-based estimates when live data unavailable
+        -  **N/A**: Data currently unavailable from all sources
         
         **Note:** This application uses official PSX data for educational purposes. 
         For commercial use, proper licensing from PSX is required (contact: marketdatarequest@psx.com.pk)
@@ -4936,7 +4936,7 @@ def display_all_kse100_live_prices():
 
 def display_individual_company_forecast(symbol, company_name):
     """Display comprehensive forecasting analysis for individual company"""
-    st.subheader(f"📊 {company_name} ({symbol}) - Comprehensive Analysis")
+    st.subheader(f" {company_name} ({symbol}) - Comprehensive Analysis")
     
     # Generate synthetic historical data for forecasting (since we have live prices)
     historical_data = generate_company_historical_data(symbol)
@@ -4966,7 +4966,7 @@ def display_individual_company_forecast(symbol, company_name):
             st.metric("52W High", f"PKR {high_52w:,.2f}")
         
         # Forecasting tabs
-        tab1, tab2, tab3, tab4 = st.tabs(["📈 Price Chart", "🔮 7-Day Forecast", "⚡ Intraday Analysis", "📊 Technical Analysis"])
+        tab1, tab2, tab3, tab4 = st.tabs([" Price Chart", " 7-Day Forecast", " Intraday Analysis", " Technical Analysis"])
         
         with tab1:
             # Historical price chart

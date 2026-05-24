@@ -345,16 +345,16 @@ def format_market_status():
     debug_info = f"Current PKT: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}"
     
     if is_weekend:
-        status = "🔴 Closed (Weekend)"
+        status = " Closed (Weekend)"
         next_open = "Monday 9:30 AM PKT"
     elif current_time_minutes < market_open_minutes:
-        status = "⏰ Pre-Market"
+        status = " Pre-Market"
         next_open = "Today 9:30 AM PKT"
     elif market_open_minutes <= current_time_minutes <= market_close_minutes:
-        status = "🟢 MARKET OPEN"
+        status = " MARKET OPEN"
         next_open = f"Market closes at 3:00 PM PKT"
     else:
-        status = "🔴 Closed (After Hours)"
+        status = " Closed (After Hours)"
         if now.weekday() == 4:  # Friday
             next_open = "Monday 9:30 AM PKT"
         else:

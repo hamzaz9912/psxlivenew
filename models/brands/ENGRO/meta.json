@@ -1,0 +1,21 @@
+{
+  "symbol": "ENGRO",
+  "trained_at": "2026-05-24T01:46:43.749206",
+  "n_samples": 5980,
+  "features": [
+    "Close",
+    "RSI",
+    "MA_10",
+    "MA_20",
+    "Volatility",
+    "MACD",
+    "Signal",
+    "Return"
+  ],
+  "epochs": 12,
+  "final_loss": 1414.0463279150151,
+  "xgb_file": "ENGRO_xgb.pkl",
+  "mlp_file": "ENGRO_mlp.pkl",
+  "scaler_file": "ENGRO_scaler.pkl",
+  "checkpoint": "checkpoint_mlp.pkl"
+}

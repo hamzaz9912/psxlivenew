@@ -333,7 +333,7 @@ class EnhancedLiveDashboard:
     def display_live_dashboard(self):
         """Main function to display the enhanced live dashboard"""
         
-        st.title("📊 Enhanced Live KSE-100 Dashboard")
+        st.title("Enhanced Live KSE-100 Dashboard")
         st.markdown("**Real-time data for top 80 KSE-100 companies with advanced forecasting**")
         
         # Market status
@@ -345,7 +345,7 @@ class EnhancedLiveDashboard:
         
         with col1:
             if market_status['is_market_open']:
-                st.success(f"🟢 **{market_status['status']}**")
+                st.success(f"**{market_status['status']}**")
             else:
                 st.info(f"🔴 **{market_status['status']}**")
         
@@ -353,13 +353,13 @@ class EnhancedLiveDashboard:
             st.info(f"📅 **PKT Time:** {current_time.strftime('%H:%M:%S')}")
         
         with col3:
-            if st.button("🔄 Refresh Data", type="primary"):
+            if st.button("Refresh Data", type="primary"):
                 st.rerun()
         
         st.markdown("---")
         
         # Company selection
-        st.subheader("🏢 Select Company for Detailed Analysis")
+        st.subheader("Select Company for Detailed Analysis")
         
         # Create a more user-friendly selection
         company_options = {}
@@ -376,7 +376,7 @@ class EnhancedLiveDashboard:
         selected_company_name = self.top_80_companies[selected_symbol]
         
         # Fetch live data for selected company
-        st.subheader(f"📈 Live Analysis: {selected_symbol}")
+        st.subheader(f"Live Analysis: {selected_symbol}")
         
         with st.spinner("Fetching live data..."):
             live_data = self.get_live_data_for_companies([selected_symbol])
@@ -414,10 +414,10 @@ class EnhancedLiveDashboard:
                 st.metric("Volume", volume)
             
             # Data source info
-            st.info(f"📊 Data Source: {source} | Last Updated: {timestamp.strftime('%H:%M:%S')}")
+            st.info(f"Data Source: {source} | Last Updated: {timestamp.strftime('%H:%M:%S')}")
             
             # Advanced forecasting chart
-            st.subheader("🔮 Advanced Price Forecasting")
+            st.subheader("Advanced Price Forecasting")
             
             forecast_fig = self.generate_forecasting_chart(
                 selected_symbol, 
@@ -428,7 +428,7 @@ class EnhancedLiveDashboard:
             st.plotly_chart(forecast_fig, use_container_width=True)
             
             # Forecast insights
-            st.subheader("📊 Forecast Insights")
+            st.subheader("Forecast Insights")
             
             # Generate forecast metrics
             next_5min = current_price * (1 + (price_change_pct / 100) * 0.1)
@@ -458,9 +458,9 @@ class EnhancedLiveDashboard:
         
         # Show 5-minute live plotting chart for selected company
         st.markdown("---")
-        st.subheader("📈 5-Minute Live Chart")
+        st.subheader("5-Minute Live Chart")
         
-        if st.button("🔄 Generate 5-Minute Live Chart", type="secondary"):
+        if st.button("Generate 5-Minute Live Chart", type="secondary"):
             with st.spinner("Generating 5-minute live chart..."):
                 try:
                     # Generate realistic 5-minute intraday chart data

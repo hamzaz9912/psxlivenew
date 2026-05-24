@@ -179,7 +179,7 @@ class DataFetcher:
         """Fetch live prices for all KSE-100 companies with comprehensive web scraping"""
         companies_data = {}
         
-        st.write("🔄 Fetching live prices for all 100 KSE-100 companies from authentic Pakistani sources...")
+        st.write("Fetching live prices for all 100 KSE-100 companies from authentic Pakistani sources...")
         progress_bar = st.progress(0)
         total_companies = len(self.kse100_companies)
         
@@ -192,7 +192,7 @@ class DataFetcher:
             progress_bar.progress((i + 1) / total_companies)
             
             # Display current company being processed
-            st.write(f"📊 Processing {company_name} ({symbol})...")
+            st.write(f"Processing {company_name} ({symbol})...")
             
             # Get live price for this company
             live_price = self.get_live_company_price(symbol)
@@ -220,7 +220,7 @@ class DataFetcher:
                 # Get estimated price based on historical range
                 estimated_price = self._get_estimated_price_for_symbol(symbol)
                 if estimated_price:
-                    st.info(f"📊 {company_name}: PKR {estimated_price:.2f} (Estimated - Live data unavailable)")
+                    st.info(f"{company_name}: PKR {estimated_price:.2f} (Estimated - Live data unavailable)")
                     companies_data[company_name] = {
                         'current_price': estimated_price,
                         'timestamp': datetime.now(),
@@ -269,21 +269,21 @@ class DataFetcher:
                     sources_summary[source] += 1
             
             st.success(f"✅ **KSE-100 Data Fetching Complete**")
-            st.info(f"📊 **Data Summary:** {successful_fetches} live prices, {estimated_fetches} estimated prices, {failed_fetches} unavailable")
+            st.info(f"**Data Summary:** {successful_fetches} live prices, {estimated_fetches} estimated prices, {failed_fetches} unavailable")
             
             if sources_summary:
                 st.write("**Data Sources Used:**")
                 for source, count in sources_summary.items():
                     if source == 'estimated_range_fallback':
-                        st.write(f"  • 📊 Estimated based on historical range: {count} companies")
+                        st.write(f"  • Estimated based on historical range: {count} companies")
                     else:
                         st.write(f"  • ✅ {source}: {count} companies")
             
             if failed_fetches > 0:
-                st.warning(f"⚠️ {failed_fetches} companies could not be processed. Consider checking data provider availability.")
+                st.warning(f"{failed_fetches} companies could not be processed. Consider checking data provider availability.")
             
             if estimated_fetches > 0:
-                st.info(f"📊 {estimated_fetches} companies showing estimated prices based on historical ranges when live data is unavailable.")
+                st.info(f"{estimated_fetches} companies showing estimated prices based on historical ranges when live data is unavailable.")
         
         return companies_data
     

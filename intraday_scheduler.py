@@ -386,7 +386,7 @@ def show_intraday_predictions():
     
     # 9:36 AM Session (new)
     if scheduler.should_show_morning_936_session() and predictions['morning_936_session'] is not None:
-        st.subheader("📊 9:36 AM Session Prediction (9:36 AM - 3:00 PM)")
+        st.subheader(" 9:36 AM Session Prediction (9:36 AM - 3:00 PM)")
         st.dataframe(predictions['morning_936_session'])
         morning_936_df = predictions['morning_936_session']
         fig = go.Figure()

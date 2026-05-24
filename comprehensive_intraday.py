@@ -784,7 +784,7 @@ class ComprehensiveIntradayForecaster:
 def display_comprehensive_intraday_forecasts():
     """Display comprehensive intraday forecasting dashboard with new workflow"""
 
-    st.header("🔮 Comprehensive Intraday Forecasting Dashboard")
+    st.header("Comprehensive Intraday Forecasting Dashboard")
     
     # ==========================================
     # LIVE KSE-100 PRICE DISPLAY (PROMINENT)
@@ -837,7 +837,7 @@ def display_comprehensive_intraday_forecasts():
     if live_kse100_price and live_kse100_price > 0:
         st.markdown(f"""
         <div class="live-price-banner">
-            <div class="live-price-label">📊 LIVE KSE-100 INDEX</div>
+            <div class="live-price-label">LIVE KSE-100 INDEX</div>
             <div class="live-price-value">PKR {live_kse100_price:,.2f}</div>
             <div class="live-price-source">Source: {live_source} | Updated: {live_timestamp}</div>
         </div>
@@ -846,7 +846,7 @@ def display_comprehensive_intraday_forecasts():
         # Show unavailable message
         st.markdown("""
         <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 24px; color: white;">⚠️ Live Data Unavailable</div>
+            <div style="font-size: 24px; color: white;">Live Data Unavailable</div>
             <div style="font-size: 14px; color: white; opacity: 0.9;">Unable to fetch live KSE-100 price</div>
         </div>
         """, unsafe_allow_html=True)
@@ -871,11 +871,11 @@ def display_comprehensive_intraday_forecasts():
     
     data_status, data_source = get_data_source_status()
     if data_status == 'live':
-        st.success(f"📡 **REAL-TIME DATA ACTIVE** - Source: {data_source}")
+        st.success(f"**REAL-TIME DATA ACTIVE** - Source: {data_source}")
     elif data_status == 'unavailable':
-        st.warning("⚠️ **Live data currently unavailable** - Will retry on next refresh")
+        st.warning("**Live data currently unavailable** - Will retry on next refresh")
     else:
-        st.info("ℹ️ Using enhanced PSX fetcher")
+        st.info("ℹ Using enhanced PSX fetcher")
     
     # Display intraday session status
     display_intraday_session_status()
@@ -884,12 +884,12 @@ def display_comprehensive_intraday_forecasts():
     executed_actions = check_intraday_scheduled_actions()
     
     if executed_actions:
-        with st.expander("⚡ Scheduled Actions Executed", expanded=True):
+        with st.expander(" Scheduled Actions Executed", expanded=True):
             for action, result in executed_actions.items():
                 if result['success']:
-                    st.success(f"✅ {result['description']} at {result['time']}")
+                    st.success(f" {result['description']} at {result['time']}")
                 else:
-                    st.error(f"❌ {result['description']} at {result['time']}: {result.get('error', 'Unknown error')}")
+                    st.error(f" {result['description']} at {result['time']}: {result.get('error', 'Unknown error')}")
     
     st.markdown("**Trading Hours: 9:30 AM - 3:30 PM | After 3:00 PM: Shows Tomorrow's Forecast**")
     st.markdown("**Workflow: Yesterday last hour + Today session predictions**")
@@ -902,15 +902,15 @@ def display_comprehensive_intraday_forecasts():
 
     # Create tabs for different forecast types
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📈 New Workflow KSE-100",
-        "🏢 Selected Company",
-        "📊 Session Comparisons",
-        "📁 Data-Based Forecasts",
-        "🔄 Live Refresh Triggers"
+        "New Workflow KSE-100",
+        "Selected Company",
+        "Session Comparisons",
+
+        "Live Refresh Triggers"
     ])
     
     with tab1:
-        st.subheader("📈 KSE-100 Index - New Workflow Forecast")
+        st.subheader("KSE-100 Index - New Workflow Forecast")
         
         # Check if today is a trading day
         trading_day = is_trading_day()
@@ -922,15 +922,15 @@ def display_comprehensive_intraday_forecasts():
             next_trading_day = get_next_trading_day()
             
             # Show clear market closed status
-            st.error("🔴 **MARKET CLOSED** - Today is {}".format(today.strftime('%A, %Y-%m-%d')))
-            st.warning("📅 **Next Trading Day:** {} ({})".format(
+            st.error(" **MARKET CLOSED** - Today is {}".format(today.strftime('%A, %Y-%m-%d')))
+            st.warning(" **Next Trading Day:** {} ({})".format(
                 next_trading_day.strftime('%Y-%m-%d'),
                 next_trading_day.strftime('%A')
             ))
             
             # Show next trading day's forecast
             show_forecast_for = next_trading_day
-            st.info("🌐 **Showing Forecast for Next Trading Day:** {}".format(show_forecast_for.strftime('%A, %Y-%m-%d')))
+            st.info(" **Showing Forecast for Next Trading Day:** {}".format(show_forecast_for.strftime('%A, %Y-%m-%d')))
         
         # Determine forecast type based on current time
         forecast_type = forecaster.get_current_forecast_type()
@@ -939,18 +939,18 @@ def display_comprehensive_intraday_forecasts():
         if not trading_day:
             # Show next trading day's forecast for weekends
             show_forecast_for = next_trading_day
-            st.info(f"🌐 **Weekend Forecast** - Showing predictions for {show_forecast_for.strftime('%A, %Y-%m-%d')}")
+            st.info(f" **Weekend Forecast** - Showing predictions for {show_forecast_for.strftime('%A, %Y-%m-%d')}")
         elif forecast_type == "pre_market":
-            st.info("🌅 **Pre-Market** - Showing Today's Forecast (Opens at 9:30 AM)")
+            st.info(" **Pre-Market** - Showing Today's Forecast (Opens at 9:30 AM)")
             show_forecast_for = today
         elif forecast_type == "closing_session":
-            st.info("🌤️ **Market Closing (3:00 PM)** - Generating Next Day Forecast with Today's Data")
+            st.info(" **Market Closing (3:00 PM)** - Generating Next Day Forecast with Today's Data")
             show_forecast_for = get_next_trading_day()
         elif forecast_type == "next_day":
-            st.info("🌙 **After Market Close (3:30 PM)** - Showing Tomorrow's Full Day Forecast")
+            st.info(" **After Market Close (3:30 PM)** - Showing Tomorrow's Full Day Forecast")
             show_forecast_for = get_next_trading_day()
         else:
-            st.info("☀️ **Trading Hours (9:30 AM - 3:30 PM)** - Showing Today's Live Forecast")
+            st.info(" **Trading Hours (9:30 AM - 3:30 PM)** - Showing Today's Live Forecast")
             show_forecast_for = today
 
         # Get live KSE-100 data using enhanced fetcher for real-time data
@@ -966,19 +966,19 @@ def display_comprehensive_intraday_forecasts():
                     live_data_source = live_kse_data.get('source', 'enhanced_psx_fetcher')
                     # Show source info
                     if 'yahoo' in live_data_source.lower():
-                        st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Source: Yahoo Finance)")
+                        st.success(f"LIVE KSE-100: PKR {live_price:,.2f} (Source: Yahoo Finance)")
                     elif 'psx' in live_data_source.lower():
-                        st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Source: PSX Official)")
+                        st.success(f"LIVE KSE-100: PKR {live_price:,.2f} (Source: PSX Official)")
                     else:
-                        st.success(f"📡 LIVE KSE-100: PKR {live_price:,.2f} (Source: {live_data_source})")
+                        st.success(f"LIVE KSE-100: PKR {live_price:,.2f} (Source: {live_data_source})")
                 else:
-                    st.warning("⚠️ Live data unavailable - trying alternative method")
+                    st.warning("Live data unavailable - trying alternative method")
                     # Try to get KSE-100 index value directly
                     try:
                         kse_index = st.session_state.enhanced_psx_fetcher.get_kse100_index_value()
                         if kse_index and kse_index.get('value'):
                             live_price = kse_index['value']
-                            st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f} (Source: {kse_index.get('source')})")
+                            st.success(f"KSE-100 Index: PKR {live_price:,.2f} (Source: {kse_index.get('source')})")
                     except:
                         pass
                     
@@ -988,7 +988,7 @@ def display_comprehensive_intraday_forecasts():
                             fallback_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
                             if fallback_data and fallback_data.get('price'):
                                 live_price = fallback_data['price']
-                                st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f} (Source: data_fetcher)")
+                                st.success(f"KSE-100 Index: PKR {live_price:,.2f} (Source: data_fetcher)")
                         except:
                             pass
             except Exception as e:
@@ -999,7 +999,7 @@ def display_comprehensive_intraday_forecasts():
                         fallback_data = st.session_state.data_fetcher.get_live_psx_price("KSE-100")
                         if fallback_data and fallback_data.get('price'):
                             live_price = fallback_data['price']
-                            st.success(f"📡 KSE-100 Index: PKR {live_price:,.2f} (Source: fallback)")
+                            st.success(f"KSE-100 Index: PKR {live_price:,.2f} (Source: fallback)")
                     except:
                         pass
         
@@ -1053,7 +1053,7 @@ def display_comprehensive_intraday_forecasts():
                 current_price = live_price
             else:
                 current_price = 152700  # Default KSE-100 level
-            st.warning("⚠️ Historical data unavailable - using fallback price for forecast")
+            st.warning("Historical data unavailable - using fallback price for forecast")
             # Create empty historical data structure
             historical_kse = None
 
@@ -1066,7 +1066,7 @@ def display_comprehensive_intraday_forecasts():
             # Check if we have cached forecast for the target date
             if cache_key in st.session_state and 'kse_forecasts' in st.session_state[cache_key]:
                 kse_forecasts = st.session_state[cache_key]
-                st.info(f"📅 **Forecast cached for:** {show_forecast_for} - Same predictions all day")
+                st.info(f" **Forecast cached for:** {show_forecast_for} - Same predictions all day")
             else:
                 # Generate new forecast and cache it
                 kse_forecasts = forecaster.generate_comprehensive_forecasts(
@@ -1074,7 +1074,7 @@ def display_comprehensive_intraday_forecasts():
                 )
                 # Store in session state with full data
                 st.session_state[cache_key] = kse_forecasts
-                st.info(f"📅 **New forecast generated for:** {show_forecast_for}")
+                st.info(f" **New forecast generated for:** {show_forecast_for}")
 
             # Check for cached forecast
             cache_key = f"kse100_forecast_{show_forecast_for}"
@@ -1082,7 +1082,7 @@ def display_comprehensive_intraday_forecasts():
             # Check if we have cached forecast for the target date
             if cache_key in st.session_state and 'kse_forecasts' in st.session_state[cache_key]:
                 kse_forecasts = st.session_state[cache_key]
-                st.info(f"📅 **Forecast cached for:** {show_forecast_for} - Same predictions all day")
+                st.info(f" **Forecast cached for:** {show_forecast_for} - Same predictions all day")
             else:
                 # Generate new forecast and cache it
                 kse_forecasts = forecaster.generate_comprehensive_forecasts(
@@ -1090,19 +1090,19 @@ def display_comprehensive_intraday_forecasts():
                 )
                 # Store in session state with full data
                 st.session_state[cache_key] = kse_forecasts
-                st.info(f"📅 **New forecast generated for:** {show_forecast_for}")
+                st.info(f" **New forecast generated for:** {show_forecast_for}")
 
             # Display yesterday's last hour data
-            st.subheader("📅 Yesterday's Last Hour Analysis (14:00-15:30)")
+            st.subheader(" Yesterday's Last Hour Analysis (14:00-15:30)")
             yesterday_data = kse_forecasts.get('yesterday_last_hour')
             if yesterday_data is not None and not yesterday_data.empty:
                 # Check if data is synthetic or real
                 is_synthetic = yesterday_data.get('synthetic', pd.Series([False])).iloc[0] if 'synthetic' in yesterday_data.columns else False
                 
                 if is_synthetic:
-                    st.info("📊 Using synthesized intraday data based on historical closing prices")
+                    st.info("Using synthesized intraday data based on historical closing prices")
                 else:
-                    st.success("✅ Using actual intraday data from yesterday's last trading hour")
+                    st.success(" Using actual intraday data from yesterday's last trading hour")
                 
                 # Display data preview
                 display_cols = [col for col in yesterday_data.columns if col != 'synthetic']
@@ -1124,10 +1124,10 @@ def display_comprehensive_intraday_forecasts():
                     with col3:
                         st.metric("Last Hour Change", f"PKR {change:+.2f}", f"{change_pct:+.2f}%")
             else:
-                st.warning("⚠️ Yesterday's data not available - using fallback analysis")
+                st.warning("Yesterday's data not available - using fallback analysis")
             
             # ALWAYS show the forecast graph regardless of yesterday data availability
-            st.subheader("📈 KSE-100 Forecast Graph")
+            st.subheader("KSE-100 Forecast Graph")
             
             # Determine which data to display based on forecast type and trading day
             if not trading_day or forecast_type == "next_day" or forecast_type == "closing_session":
@@ -1144,7 +1144,7 @@ def display_comprehensive_intraday_forecasts():
                 
                 # Show opening bias
                 bias_result = forecaster.generate_tomorrow_open_bias(yesterday_last_hour, today_full_session)
-                st.subheader("🔮 Opening Bias")
+                st.subheader("Opening Bias")
                 bias_col1, bias_col2, bias_col3 = st.columns(3)
                 with bias_col1:
                     bias_color = "green" if bias_result['bias'] == "UP" else "red" if bias_result['bias'] == "DOWN" else "gray"
@@ -1155,7 +1155,7 @@ def display_comprehensive_intraday_forecasts():
                     st.metric("Bias Score", f"{bias_result['bias_score']:.4f}")
                 
                 # Show combined chart with all sessions
-                st.subheader("📈 Combined Session Forecasts + Next Day")
+                st.subheader("Combined Session Forecasts + Next Day")
                 
                 # Create combined figure with multiple traces
                 fig = go.Figure()
@@ -1235,7 +1235,7 @@ def display_comprehensive_intraday_forecasts():
                         ))
                     
                     fig.update_layout(
-                        title=f"📈 NEXT DAY FORECAST - KSE-100 ({show_forecast_for.strftime('%Y-%m-%d')})",
+                        title=f"NEXT DAY FORECAST - KSE-100 ({show_forecast_for.strftime('%Y-%m-%d')})",
                         xaxis_title="Trading Time (09:30 - 15:30)",
                         yaxis_title="Forecast Price (PKR)",
                         height=550,
@@ -1247,7 +1247,7 @@ def display_comprehensive_intraday_forecasts():
                     st.plotly_chart(fig, use_container_width=True)
                     
                     # Forecast summary metrics
-                    st.subheader("📊 Next Day Forecast Summary")
+                            st.subheader("Next Day Forecast Summary")
                     col1, col2, col3, col4 = st.columns(4)
                     
                     with col1:
@@ -1331,7 +1331,7 @@ def display_comprehensive_intraday_forecasts():
                         st.plotly_chart(fig, use_container_width=True)
                         
                         # Today's forecast summary
-                        st.subheader("📊 Today's Forecast Summary")
+                        st.subheader("Today's Forecast Summary")
                         col1, col2, col3, col4 = st.columns(4)
 
                         with col1:
@@ -1351,13 +1351,13 @@ def display_comprehensive_intraday_forecasts():
                 
                 # Note about forecast stability
                 if not trading_day:
-                    st.info(f"📅 **Forecast for:** {show_forecast_for.strftime('%A, %Y-%m-%d')} | Market is closed today ({today.strftime('%A')})")
+                    st.info(f" **Forecast for:** {show_forecast_for.strftime('%A, %Y-%m-%d')} | Market is closed today ({today.strftime('%A')})")
                 else:
-                    st.info(f"📅 **Forecast Date:** {show_forecast_for} | Predictions remain constant until next trading day 9:30 AM")
+                    st.info(f" **Forecast Date:** {show_forecast_for} | Predictions remain constant until next trading day 9:30 AM")
     
     with tab2:
-        st.subheader("🏢 Individual Company Forecasts")
-        st.info("📅 **Daily Update:** This forecast updates at 9:30 AM PKT on weekdays and remains constant throughout the day")
+        st.subheader("Individual Company Forecasts")
+        st.info(" **Daily Update:** This forecast updates at 9:30 AM PKT on weekdays and remains constant throughout the day")
         
         # Company selection
         if hasattr(st.session_state, 'data_fetcher'):
@@ -1380,7 +1380,7 @@ def display_comprehensive_intraday_forecasts():
                     try:
                         live_price_data = st.session_state.enhanced_psx_fetcher.get_live_price(symbol)
                         if live_price_data:
-                            st.success(f"📡 Live {symbol} Price: PKR {live_price_data.get('price', 0):,.2f} (Source: {live_price_data.get('source', 'enhanced')})")
+                            st.success(f"Live {symbol} Price: PKR {live_price_data.get('price', 0):,.2f} (Source: {live_price_data.get('source', 'enhanced')})")
                     except Exception as e:
                         st.warning(f"Enhanced fetcher error: {e}")
                 
@@ -1465,11 +1465,11 @@ def display_comprehensive_intraday_forecasts():
                     if now >= next_refresh:
                         next_refresh += timedelta(days=1)
                     
-                    st.info(f"🔄 **Next Update:** {next_refresh.strftime('%A, %Y-%m-%d at 9:30 AM PKT')}")
+                    st.info(f"**Next Update:** {next_refresh.strftime('%A, %Y-%m-%d at 9:30 AM PKT')}")
     
     with tab3:
-        st.subheader("📊 Session Comparison Analysis")
-        st.info("📅 **Daily Update:** Session forecasts update at 9:30 AM PKT on weekdays and remain constant throughout the day")
+        st.subheader("Session Comparison Analysis")
+        st.info(" **Daily Update:** Session forecasts update at 9:30 AM PKT on weekdays and remain constant throughout the day")
         st.write("Compare morning vs afternoon trading patterns")
 
         # Get KSE-100 data for session comparison (using enhanced fetcher for real-time data)
@@ -1479,7 +1479,7 @@ def display_comprehensive_intraday_forecasts():
                 live_kse_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
                 if live_kse_data and live_kse_data.get('price'):
                     current_price = live_kse_data['price']
-                    st.success(f"📡 Real-time KSE-100: PKR {current_price:,.2f}")
+                            st.success(f"Real-time KSE-100: PKR {current_price:,.2f}")
             except Exception:
                 pass
         
@@ -1605,7 +1605,7 @@ def display_comprehensive_intraday_forecasts():
                 st.plotly_chart(fig, use_container_width=True)
 
                 # Session metrics comparison
-                st.subheader("📊 Session Metrics Comparison")
+                st.subheader("Session Metrics Comparison")
 
                 col1, col2, col3, col4 = st.columns(4)
 
@@ -1636,7 +1636,7 @@ def display_comprehensive_intraday_forecasts():
                         st.metric("Avg Confidence", f"{avg_conf:.0%}")
 
                 # Session trend analysis
-                st.subheader("📈 Session Trend Analysis")
+                st.subheader("Session Trend Analysis")
 
                 trend_col1, trend_col2 = st.columns(2)
 
@@ -1665,13 +1665,13 @@ def display_comprehensive_intraday_forecasts():
                 if now >= next_refresh:
                     next_refresh += timedelta(days=1)
                 
-                st.info(f"🔄 **Next Update:** Session analysis will update on {next_refresh.strftime('%A, %Y-%m-%d at 9:30 AM PKT')}")
+                st.info(f"**Next Update:** Session analysis will update on {next_refresh.strftime('%A, %Y-%m-%d at 9:30 AM PKT')}")
 
         else:
             st.warning("Unable to fetch KSE-100 data for session comparison")
     
     with tab4:
-        st.subheader("📁 Upload-Based Forecasts")
+        st.subheader(" Upload-Based Forecasts")
         st.write("Generate forecasts based on your uploaded historical data")
         
         # File upload for custom forecasts
@@ -1708,18 +1708,18 @@ def display_comprehensive_intraday_forecasts():
                 st.error(f"Error processing file: {e}")
 
     with tab5:
-        st.subheader("🔄 Live Refresh Triggers & Accuracy")
+        st.subheader("Live Refresh Triggers & Accuracy")
         st.markdown("**Automated predictions at specific market times**")
 
         # Manual trigger buttons for testing
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("1️⃣ 15:00 PM - 3:30 PM Market Close & Next Day Refresh")
+            st.subheader("1⃣ 15:00 PM - 3:30 PM Market Close & Next Day Refresh")
             st.markdown("*Input: Yesterday last hour + Today full session + Historical data*")
             st.markdown("*Output: Next Day Forecast (09:30-15:30) with improved accuracy*")
 
-            if st.button("🔄 Generate Next Day Forecast (3:00 PM)", use_container_width=True):
+            if st.button("Generate Next Day Forecast (3:00 PM)", use_container_width=True):
                 # Get required data using enhanced fetcher for real-time data
                 current_price = None
                 if hasattr(st.session_state, 'enhanced_psx_fetcher'):
@@ -1727,7 +1727,7 @@ def display_comprehensive_intraday_forecasts():
                         live_kse_data = st.session_state.enhanced_psx_fetcher.get_live_price("KSE-100")
                         if live_kse_data and live_kse_data.get('price'):
                             current_price = live_kse_data['price']
-                            st.success(f"📡 Real-time KSE-100: PKR {current_price:,.2f}")
+                    st.success(f"Real-time KSE-100: PKR {current_price:,.2f}")
                     except Exception:
                         pass
                 
@@ -1817,7 +1817,7 @@ def display_comprehensive_intraday_forecasts():
                             st.plotly_chart(fig, use_container_width=True)
                             
                             # Display forecast summary
-                            st.subheader("📊 Next Day Forecast Summary")
+                    st.subheader("Next Day Forecast Summary")
                             col_f1, col_f2, col_f3, col_f4 = st.columns(4)
                             
                             with col_f1:
@@ -1834,11 +1834,11 @@ def display_comprehensive_intraday_forecasts():
                                 st.metric("Avg Confidence", f"{avg_conf:.0%}")
 
         with col2:
-            st.subheader("2️⃣ 09:36 Morning Trigger")
+            st.subheader("2⃣ 09:36 Morning Trigger")
             st.markdown("*Input: Yesterday + Today first 5 min + 09:30–09:36 live candles*")
             st.markdown("*Output: Today remaining session (09:36–15:30) prediction*")
 
-            if st.button("🔄 Calculate Remaining Session (09:36)", use_container_width=True):
+            if st.button("Calculate Remaining Session (09:36)", use_container_width=True):
                 # Get required data
                 if hasattr(st.session_state, 'data_fetcher'):
                     historical_kse = st.session_state.data_fetcher.fetch_kse100_data()
@@ -1895,7 +1895,7 @@ def display_comprehensive_intraday_forecasts():
                                 st.metric("Trend Influence", f"{trend_influence:.4f}")
 
                             # Show inputs used
-                            st.subheader("📊 Inputs Used")
+                            st.subheader("Inputs Used")
                             input_col1, input_col2, input_col3 = st.columns(3)
 
                             with input_col1:
@@ -1915,7 +1915,7 @@ def display_comprehensive_intraday_forecasts():
 
         # Add Accuracy Tracking Section
         st.markdown("---")
-        st.subheader("📈 Forecast Accuracy Tracking")
+        st.subheader("Forecast Accuracy Tracking")
         
         # Get accuracy stats
         accuracy_stats = get_accuracy_stats(days=7)
@@ -1987,7 +1987,7 @@ def display_comprehensive_intraday_forecasts():
                     
                     st.plotly_chart(fig_session, use_container_width=True)
         else:
-            st.info("📊 No accuracy data available yet. Predictions will be tracked over time.")
+            st.info("No accuracy data available yet. Predictions will be tracked over time.")
             st.markdown("""
             **How Accuracy Tracking Works:**
             - Record predicted vs actual prices at each time slot
@@ -2000,7 +2000,7 @@ def display_comprehensive_intraday_forecasts():
 
         # Market Refresh Schedule
         st.markdown("---")
-        st.subheader("⏰ Market Refresh Schedule")
+        st.subheader(" Market Refresh Schedule")
         
         schedule_col1, schedule_col2, schedule_col3, schedule_col4 = st.columns(4)
         

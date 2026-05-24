@@ -638,7 +638,7 @@ class LiveKSE40Dashboard:
     
     def display_live_dashboard(self):
         """Display the main live dashboard"""
-        st.title("📊 Live KSE-100 Dashboard (5-Minute Updates)")
+        st.title("Live KSE-100 Dashboard (5-Minute Updates)")
         st.markdown("**Comprehensive KSE-100 Companies (120+ Companies) with Real-Time Price Updates**")
         
         # Auto-refresh component (8 hours = 28800 seconds)
@@ -648,12 +648,12 @@ class LiveKSE40Dashboard:
         # Auto-refresh control
         col1, col2, col3 = st.columns([2, 1, 1])
         with col1:
-            st.markdown(f"🔄 **Auto-refreshing every 8 hours** (Refresh #{refresh_count})")
+            st.markdown(f"**Auto-refreshing every 8 hours** (Refresh #{refresh_count})")
         with col2:
-            if st.button("🔄 Refresh Now", use_container_width=True):
+            if st.button("Refresh Now", use_container_width=True):
                 st.rerun()
         with col3:
-            st.markdown(f"⏰ **{self.get_pakistan_time().strftime('%H:%M:%S')}**")
+            st.markdown(f" **{self.get_pakistan_time().strftime('%H:%M:%S')}**")
         
         # KSE-100 Index
         kse_index = 152700.00 + np.random.normal(0, 100)  # Simulate index movement (March 2026 ~152,700)
@@ -684,7 +684,7 @@ class LiveKSE40Dashboard:
         
         # Market overview
         st.markdown("---")
-        st.subheader("🎯 Market Overview")
+        st.subheader(" Market Overview")
         
         # Calculate market statistics
         gainers = [data for data in live_data.values() if data['change_pct'] > 0]
@@ -705,7 +705,7 @@ class LiveKSE40Dashboard:
         
         # Live prices table with enhanced tabs
         st.markdown("---")
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📈 All Companies", "🚀 Top Gainers", "📉 Top Losers", "📊 Sector View", "🎯 Watch List", "🔮 Session Prediction"])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["All Companies", "Top Gainers", "Top Losers", "Sector View", "Watch List", "Session Prediction"])
         
         with tab1:
             self.display_all_companies_table(live_data)
@@ -727,7 +727,7 @@ class LiveKSE40Dashboard:
         
         # Price movement chart
         st.markdown("---")
-        st.subheader("📈 Real-Time Price Movements")
+        st.subheader("Real-Time Price Movements")
         self.display_price_movement_chart(live_data)
         
         # Market status and next refresh info
@@ -735,7 +735,7 @@ class LiveKSE40Dashboard:
         col1, col2, col3 = st.columns(3)
         with col1:
             pakistan_time = self.get_pakistan_time()
-            market_status = "🟢 OPEN" if 9 <= pakistan_time.hour <= 16 else "🔴 CLOSED"
+            market_status = "OPEN" if 9 <= pakistan_time.hour <= 16 else "CLOSED"
             st.markdown(f"**Market Status:** {market_status}")
         with col2:
             next_refresh = self.get_pakistan_time() + timedelta(hours=8)
@@ -748,16 +748,16 @@ class LiveKSE40Dashboard:
         table_data = []
         
         for symbol, data in live_data.items():
-            # Determine trend emoji
+            # Determine trend indicator
             if data['change_pct'] > 0.5:
-                trend = "🚀"
+                trend = "UP"
             elif data['change_pct'] < -0.5:
-                trend = "📉"
+                trend = "DOWN"
             else:
-                trend = "➡️"
+                trend = "FLAT"
             
             # Data source indicator
-            source_emoji = "🟢" if data['data_source'] == 'psx_live' else "📊"
+            source_indicator = "LIVE" if data['data_source'] == 'psx_live' else "ESTIMATED"
             
             table_data.append({
                 'Symbol': symbol,
@@ -769,7 +769,7 @@ class LiveKSE40Dashboard:
                 'High': f"{data['high']:,.2f}",
                 'Low': f"{data['low']:,.2f}",
                 'Trend': trend,
-                'Source': source_emoji
+                'Source': source_indicator
             })
         
         # Sort by change percentage (descending)
@@ -779,26 +779,26 @@ class LiveKSE40Dashboard:
         st.dataframe(df, use_container_width=True, hide_index=True)
         
         # Export button
-        if st.button("💾 Export Live Data", use_container_width=True):
+        if st.button(" Export Live Data", use_container_width=True):
             csv_data = df.to_csv(index=False)
             st.download_button(
-                label="📥 Download CSV",
+                label=" Download CSV",
                 data=csv_data,
                 file_name=f"kse40_live_{self.get_pakistan_time().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv"
             )
     
     def display_top_gainers(self, live_data):
-        """Display all gaining companies with sector-wise predictions using sklearn"""
+        """Display top gaining companies with sector-wise predictions using sklearn"""
         gainers = [(symbol, data) for symbol, data in live_data.items() if data['change_pct'] > 0]
         gainers.sort(key=lambda x: x[1]['change_pct'], reverse=True)
+        gainers = gainers[:10]  # Top 10
 
-        st.markdown("🚀 **All Gaining Companies with Sector Predictions**")
+        st.subheader("Top Gaining Companies")
 
-        # Process each gainer with sklearn model for sector-wise prediction
         for i, (symbol, data) in enumerate(gainers):
             col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 2])
-            
+
             with col1:
                 st.write(f"**{i+1}. {symbol}**")
             with col2:
@@ -821,14 +821,14 @@ class LiveKSE40Dashboard:
                         if hasattr(st.session_state, 'process_stock_data_sector'):
                             prediction = st.session_state.process_stock_data_sector(symbol, data['current_price'], features)
                             if prediction:
-                                st.info(f"📊 {sector}: {prediction:.2f}")
+                                st.info(f"{sector}: {prediction:.2f}")
     
     def display_top_losers(self, live_data):
         """Display all losing companies with sector-wise predictions using sklearn"""
         losers = [(symbol, data) for symbol, data in live_data.items() if data['change_pct'] < 0]
         losers.sort(key=lambda x: x[1]['change_pct'])
 
-        st.markdown("📉 **All Losing Companies with Sector Predictions**")
+        st.markdown("**All Losing Companies with Sector Predictions**")
 
         for i, (symbol, data) in enumerate(losers):
             col1, col2, col3, col4, col5 = st.columns([2, 2, 1, 1, 2])
@@ -855,8 +855,8 @@ class LiveKSE40Dashboard:
                         if hasattr(st.session_state, 'process_stock_data_sector'):
                             prediction = st.session_state.process_stock_data_sector(symbol, data['current_price'], features)
                             if prediction:
-                                st.info(f"📊 {sector}: {prediction:.2f}")
-    
+                                st.info(f"{sector}: {prediction:.2f}")
+
     def display_sector_performance(self, live_data):
         """Display performance by sector for expanded KSE-100"""
         sectors = {
@@ -889,7 +889,7 @@ class LiveKSE40Dashboard:
                     'Companies': len(sector_companies),
                     'Gainers': gainers_count,
                     'Total Volume': f"{total_volume:,}",
-                    'Performance': "🚀" if avg_change > 0.5 else "📉" if avg_change < -0.5 else "➡️"
+                    'Performance': "GAINER" if avg_change > 0.5 else "LOSER" if avg_change < -0.5 else "STEADY"
                 })
         
         # Sort by average change
@@ -921,7 +921,7 @@ class LiveKSE40Dashboard:
             default_tab = "today"
 
         # Create tabs for Today and Next Day
-        tab_today, tab_next_day = st.tabs(["📈 Today (9:30 - 3:30 PM)", "🔮 Next Day (from 9:30 AM)"])
+        tab_today, tab_next_day = st.tabs(["Today (9:30 - 3:30 PM)", "Next Day (from 9:30 AM)"])
 
         with tab_today:
             st.subheader("Today's Trading Session: 9:30 AM - 3:30 PM")
@@ -964,7 +964,7 @@ class LiveKSE40Dashboard:
                     ))
 
             fig_today.update_layout(
-                title=f"📈 Selected Companies ({len(selected_companies)}) - Today's Full Trading Day (9:30 AM - 3:30 PM)",
+                title=f"Selected Companies ({len(selected_companies)}) - Today's Full Trading Day (9:30 AM - 3:30 PM)",
                 xaxis_title="Time",
                 yaxis_title="Price (PKR)",
                 height=500,
@@ -1016,7 +1016,7 @@ class LiveKSE40Dashboard:
                     ))
 
             fig_next.update_layout(
-                title=f"🔮 Selected Companies ({len(selected_companies)}) - Next Day's Full Trading Day (9:30 AM - 3:30 PM)",
+                title=f"Selected Companies ({len(selected_companies)}) - Next Day's Full Trading Day (9:30 AM - 3:30 PM)",
                 xaxis_title="Time",
                 yaxis_title="Price (PKR)",
                 height=500,
@@ -1029,13 +1029,13 @@ class LiveKSE40Dashboard:
 
         # Set the active tab after defining the tabs
         if default_tab == "next_day":
-            st.session_state['st.tabs'] = "🔮 Next Day (from 9:30)"
+            st.session_state['st.tabs'] = "Next Day (from 9:30)"
         else:
-            st.session_state['st.tabs'] = "📈 Today (9:30 - 15:30)"
+            st.session_state['st.tabs'] = "Today (9:30 - 15:30)"
     
     def display_watchlist(self, live_data):
         """Display customizable watchlist for favorite companies"""
-        st.markdown("🎯 **Personal Watch List**")
+        st.markdown(" **Personal Watch List**")
         st.markdown("Select companies to monitor closely:")
         
         # Default high-performing companies for watchlist (expanded with major KSE-100 companies)
@@ -1063,7 +1063,7 @@ class LiveKSE40Dashboard:
                         'Price': f"PKR {data['current_price']:,.2f}",
                         'Change %': f"{data['change_pct']:+.2f}%",
                         'Volume': f"{data['volume']:,}",
-                        'Status': "🚀" if data['change_pct'] > 0.5 else "📉" if data['change_pct'] < -0.5 else "➡️"
+                        'Status': "GAINING" if data['change_pct'] > 0.5 else "LOSING" if data['change_pct'] < -0.5 else "STEADY"
                     })
             
             if watchlist_data:
@@ -1084,19 +1084,19 @@ class LiveKSE40Dashboard:
                     st.metric("Gainers", f"{gainers}/{total_companies}")
                 
                 # Price alerts simulation
-                st.markdown("**📢 Price Alerts:**")
+                st.markdown("** Price Alerts:**")
                 for symbol in selected_companies[:3]:  # Show alerts for first 3 companies
                     if symbol in live_data:
                         data = live_data[symbol]
                         if abs(data['change_pct']) > 1.0:  # Alert if change > 1%
-                            alert_type = "🚨 PRICE ALERT" if data['change_pct'] > 1.0 else "⚠️ PRICE DROP"
+                            alert_type = "PRICE ALERT" if data['change_pct'] > 1.0 else "PRICE DROP"
                             st.warning(f"{alert_type}: {symbol} moved {data['change_pct']:+.2f}% to PKR {data['current_price']:,.2f}")
         else:
             st.info("Select companies above to create your personal watchlist")
 
     def display_session_prediction(self, live_data):
         """Display remaining session prediction for 09:36-15:30 in live KSE-40 brands"""
-        st.subheader("🔮 Intraday Trading Sessions - Live Analysis")
+        st.subheader("Intraday Trading Sessions - Live Analysis")
         st.markdown("**Today's Trading Hours: 9:30 AM - 3:30 PM**")
         st.markdown("*Input: Yesterday + Today first 5 min + 09:30–09:36 live candles*")
         st.markdown("*Output: Today remaining session prediction in the live kse 40 brands*")
@@ -1107,11 +1107,11 @@ class LiveKSE40Dashboard:
         current_minute = pakistan_time.minute
 
         # Show prediction if it's 09:36 or later, or if manually triggered
-        show_prediction = (current_hour > 9 or (current_hour == 9 and current_minute >= 36)) or st.checkbox("🔄 Show Prediction Anyway (for testing)")
+        show_prediction = (current_hour > 9 or (current_hour == 9 and current_minute >= 36)) or st.checkbox("Show Prediction Anyway (for testing)")
 
         if show_prediction:
             # Manual trigger button
-            if st.button("🔄 Generate 09:36 Session Prediction", use_container_width=True):
+            if st.button("Generate 09:36 Session Prediction", use_container_width=True):
                 with st.spinner("Generating remaining session prediction..."):
                     try:
                         # Import the forecaster
@@ -1155,7 +1155,7 @@ class LiveKSE40Dashboard:
                         )
 
                         if not remaining_prediction.empty:
-                            st.success("✅ Remaining session prediction generated successfully!")
+                            st.success(" Remaining session prediction generated successfully!")
 
                             # Display prediction chart
                             fig = go.Figure()
@@ -1221,7 +1221,7 @@ class LiveKSE40Dashboard:
                                 st.metric("Trend Influence", f"{trend_influence:.4f}")
 
                             # Show prediction table
-                            st.subheader("📋 Detailed Predictions")
+                            st.subheader(" Detailed Predictions")
                             prediction_table = remaining_prediction[['time', 'predicted_price', 'confidence', 'trend_influence']].copy()
                             prediction_table['predicted_price'] = prediction_table['predicted_price'].round(2)
                             prediction_table['confidence'] = prediction_table['confidence'].round(1)
@@ -1230,7 +1230,7 @@ class LiveKSE40Dashboard:
                             st.dataframe(prediction_table, use_container_width=True)
 
                             # Apply predictions to live brands
-                            st.subheader("🏢 Predictions Applied to Live KSE-40 Brands")
+                            st.subheader("Predictions Applied to Live KSE-40 Brands")
 
                             # Select top companies to show predictions for
                             top_companies = list(live_data.keys())[:10]  # Top 10 companies
@@ -1261,6 +1261,6 @@ class LiveKSE40Dashboard:
                         st.info("Make sure the comprehensive_intraday module is available")
 
         else:
-            st.info("🔒 Session prediction will be available at 09:36 AM Pakistan time")
+            st.info(" Session prediction will be available at 09:36 AM Pakistan time")
             st.write(f"**Current time:** {pakistan_time.strftime('%H:%M:%S')} PKT")
             st.write("**Next prediction time:** 09:36 AM PKT")
