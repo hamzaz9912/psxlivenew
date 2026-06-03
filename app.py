@@ -356,11 +356,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        analysis_type = st.selectbox(
-            "",
-            ["Enhanced Live Dashboard (Top 80 KSE-100)", "Comprehensive Brand Predictions", "Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "15-Minute Live Predictions", "All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "Universal File Upload", "News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Technical Analysis Indicators", "Database Overview", "Master Oracle Terminal (Crypto + Commodities)"],
-            key="analysis_type"
-        )
+        selectbox("analysis_type", ["Enhanced Live Dashboard (Top 80 KSE-100)", "Comprehensive Brand Predictions", "Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "15-Minute Live Predictions", "All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "Universal File Upload", "News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Technical Analysis Indicators", "Database Overview", "Master Oracle Terminal (Crypto + Commodities)"])
 
         # Forecast Settings with enhanced styling
         st.markdown("""
@@ -370,7 +366,7 @@ def main():
         """, unsafe_allow_html=True)
 
         forecast_type = st.selectbox(
-            "",
+            " ",
             ["Today (Intraday)", "Morning Session (9:30-12:00)", "Afternoon Session (12:00-15:30)", "Next Day", "Custom Date Range"],
             key="forecast_type"
         )
