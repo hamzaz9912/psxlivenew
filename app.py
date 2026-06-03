@@ -356,7 +356,11 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        selectbox("analysis_type", ["Enhanced Live Dashboard (Top 80 KSE-100)", "Comprehensive Brand Predictions", "Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "15-Minute Live Predictions", "All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "Universal File Upload", "News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Technical Analysis Indicators", "Database Overview", "Master Oracle Terminal (Crypto + Commodities)"])
+        analysis_type = st.selectbox(
+            "Analysis Type",
+            ["Enhanced Live Dashboard (Top 80 KSE-100)", "Comprehensive Brand Predictions", "Live KSE-40 (5-Min Updates)", "Live Market Dashboard", "15-Minute Live Predictions", "All KSE-100 Companies (Live Prices)", "Individual Companies", "Advanced Forecasting Hub", "Universal File Upload", "News-Based Predictions", "Enhanced File Upload", "All Companies Live Prices", "Intraday Trading Sessions", "Comprehensive Intraday Forecasts", "Technical Analysis Indicators", "Database Overview", "Master Oracle Terminal (Crypto + Commodities)"],
+            key="analysis_type"
+        )
 
         # Forecast Settings with enhanced styling
         st.markdown("""
