@@ -40,6 +40,39 @@ from sklearn.metrics import mean_squared_error
 import xgboost as xgb
 from joblib import dump, load
 
+try:
+    import torch
+    import torch.nn as nn
+    from torch.utils.data import TensorDataset, DataLoader
+    _TORCH_AVAILABLE = True
+except Exception:
+    _TORCH_AVAILABLE = False
+    torch = None
+    nn = None
+    TensorDataset = None
+    DataLoader = None
+
+
+class _TorchSklearnLikeWrapper:
+    def __init__(self, model, scaler, device):
+        self._model = model
+        self._scaler = scaler
+        self._device = device
+        self.n_iter_ = 0
+
+    def predict(self, X):
+        import numpy as _np
+        Xs = _np.asarray(X, dtype=_np.float32)
+        Xs = self._scaler.transform(Xs)
+        with torch.no_grad():
+            t = torch.tensor(Xs, dtype=torch.float32).to(self._device)
+            out = self._model(t).cpu().numpy()
+        return out
+
+    def __getattr__(self, item):
+        return getattr(self._model, item)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  PATHS (relative to this file so folder is portable)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -135,19 +168,131 @@ def prepare_features(df, target_col="Close"):
 #  TELEMETRY + RESILIENT TRAINING (the "internal ML training logic")
 # ─────────────────────────────────────────────────────────────────────────────
 def train_with_telemetry_and_checkpoint(X, y, max_epochs=50, resume=True):
-    """
-    Core training routine with:
-    - Per-epoch console telemetry (loss + wall time) for tail -f
-    - Checkpoint at end of every epoch/iter to support 5-hour crash recovery
-    - Warm-start partial training for MLP to allow resume
-    """
     print("\n[TRAIN] Starting resilient MLP training with telemetry...")
     print(f"[TRAIN] Samples: {len(X)}, Max iters/epochs: {max_epochs}")
     print("[TRAIN] Progress will be printed every epoch - safe to tail -f this process\n")
 
     scaler = StandardScaler()
+    # reduce memory by using float32
+    X = X.astype('float32')
     X_scaled = scaler.fit_transform(X)
 
+    use_torch = os.environ.get("PSX_FORCE_TORCH_GPU") == "1" and _TORCH_AVAILABLE and torch.cuda.is_available()
+
+    start_epoch = 0
+    best_loss = float("inf")
+    loss_history = []
+
+    ERROR_LOG = CHECKPOINT_DIR / "train_error.log"
+
+    if use_torch:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"[TRAIN] Using PyTorch on device: {device}")
+
+        # build dataset + loader with streaming options
+        X_t = torch.tensor(X_scaled, dtype=torch.float32)
+        y_t = torch.tensor(y.astype('float32'))
+        dataset = TensorDataset(X_t, y_t)
+        loader = DataLoader(dataset, batch_size=256, shuffle=True, num_workers=4, pin_memory=True)
+
+        model = nn.Sequential(
+            nn.Linear(X_t.shape[1], 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1),
+        ).to(device)
+
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        criterion = nn.MSELoss()
+
+        # Resume from torch checkpoint if available
+        if resume and LATEST_CHECKPOINT.exists():
+            try:
+                ck = torch.load(LATEST_CHECKPOINT, map_location=device)
+                if isinstance(ck, dict) and "model_state" in ck:
+                    model.load_state_dict(ck["model_state"])
+                    optimizer.load_state_dict(ck.get("optimizer_state", {}))
+                    scaler = ck.get("scaler", scaler)
+                    start_epoch = ck.get("epoch", 0) + 1
+                    loss_history = ck.get("loss_history", [])
+                    print(f"[RESUME] Loaded PyTorch checkpoint, continuing from epoch {start_epoch}")
+            except Exception as e:
+                print(f"[RESUME] Torch checkpoint load failed ({e}), starting fresh")
+
+        run_start = time.time()
+        try:
+            for epoch in range(start_epoch, max_epochs):
+                t0 = time.time()
+                epoch_losses = []
+
+                for xb, yb in loader:
+                    xb = xb.to(device, non_blocking=True)
+                    yb = yb.to(device, non_blocking=True)
+
+                    optimizer.zero_grad(set_to_none=True)
+                    preds = model(xb).squeeze(-1)
+                    loss = criterion(preds, yb)
+                    loss.backward()
+                    optimizer.step()
+
+                    epoch_losses.append(loss.item())
+
+                avg_loss = float(np.mean(epoch_losses))
+                loss_history.append(avg_loss)
+                dt = time.time() - t0
+
+                print(f"[EPOCH {epoch+1:03d}/{max_epochs}] loss={avg_loss:.6f} | time={dt:.3f}s | device={device}")
+
+                # checkpoint per epoch
+                ckpt = {
+                    "model_state": model.state_dict(),
+                    "optimizer_state": optimizer.state_dict(),
+                    "scaler": scaler,
+                    "epoch": epoch,
+                    "loss_history": loss_history,
+                    "timestamp": datetime.now().isoformat(),
+                }
+                torch.save(ckpt, LATEST_CHECKPOINT)
+
+                if avg_loss < best_loss:
+                    best_loss = avg_loss
+
+                # early stop
+                if len(loss_history) > 5 and abs(loss_history[-1] - loss_history[-5]) < 1e-8:
+                    print("[TRAIN] Early stopping - loss plateau reached")
+                    break
+
+                # check runtime; if exception after 3 hours should be logged (handled below)
+            print(f"\n[TRAIN] PyTorch MLP training complete. Final loss: {loss_history[-1]:.6f}")
+            print(f"[TRAIN] Checkpoint left at: {LATEST_CHECKPOINT}")
+
+        except (MemoryError, RuntimeError, Exception) as e:
+            elapsed = time.time() - run_start
+            if elapsed >= 3 * 3600:
+                import traceback
+                tb = traceback.format_exc()
+                ERROR_LOG.write_text(f"Timestamp: {datetime.now().isoformat()}\nError after {elapsed} seconds:\n{tb}\n")
+                print(f"[ERROR] Critical error after 3+ hours logged to {ERROR_LOG}")
+                # return best-effort state
+                ckpt = {
+                    "model_state": model.state_dict(),
+                    "optimizer_state": optimizer.state_dict(),
+                    "scaler": scaler,
+                    "epoch": epoch,
+                    "loss_history": loss_history,
+                    "timestamp": datetime.now().isoformat(),
+                }
+                torch.save(ckpt, LATEST_CHECKPOINT)
+                return _TorchSklearnLikeWrapper(model, scaler, device), scaler, loss_history
+            else:
+                raise
+
+        return _TorchSklearnLikeWrapper(model, scaler, device), scaler, loss_history
+
+    # fallback to sklearn MLP path (original behavior)
     model = MLPRegressor(
         hidden_layer_sizes=(128, 64, 32),
         activation="relu",
@@ -155,48 +300,52 @@ def train_with_telemetry_and_checkpoint(X, y, max_epochs=50, resume=True):
         alpha=0.0001,
         batch_size=256,
         learning_rate="adaptive",
-        max_iter=1,          # we control the loop manually
-        warm_start=True,     # critical for checkpoint resume
+        max_iter=1,
+        warm_start=True,
         early_stopping=False,
         random_state=42
     )
-
-    start_epoch = 0
-    best_loss = float("inf")
-    loss_history = []
 
     # RESUME from checkpoint if exists
     if resume and LATEST_CHECKPOINT.exists():
         try:
             ckpt = load(LATEST_CHECKPOINT)
-            model = ckpt["model"]
-            scaler = ckpt["scaler"]
-            start_epoch = ckpt.get("epoch", 0)
-            loss_history = ckpt.get("loss_history", [])
-            X_scaled = scaler.transform(X)  # re-apply same scaler
-            print(f"[RESUME] Found checkpoint - continuing from epoch {start_epoch + 1}")
+            # sklearn checkpoint expected format
+            if isinstance(ckpt, dict) and "model" in ckpt:
+                model = ckpt["model"]
+                scaler = ckpt["scaler"]
+                start_epoch = ckpt.get("epoch", 0)
+                loss_history = ckpt.get("loss_history", [])
+                X_scaled = scaler.transform(X)  # re-apply same scaler
+                print(f"[RESUME] Found checkpoint - continuing from epoch {start_epoch + 1}")
         except Exception as e:
             print(f"[RESUME] Checkpoint load failed ({e}), starting fresh")
 
-    # Manual epoch loop for telemetry + checkpointing (the key internal logic)
+    run_start = time.time()
     for epoch in range(start_epoch, max_epochs):
         t0 = time.time()
+        try:
+            model.partial_fit(X_scaled, y)
+        except MemoryError as e:
+            elapsed = time.time() - run_start
+            if elapsed >= 3 * 3600:
+                import traceback
+                tb = traceback.format_exc()
+                ERROR_LOG.write_text(f"Timestamp: {datetime.now().isoformat()}\nMemoryError after {elapsed} seconds:\n{tb}\n")
+                print(f"[ERROR] MemoryError after 3+ hours logged to {ERROR_LOG}")
+                break
+            else:
+                raise
 
-        # One "epoch" = one partial_fit call (sklearn MLP warm_start style)
-        model.partial_fit(X_scaled, y)
-
-        # Compute training loss (MSE on same data for telemetry)
         preds = model.predict(X_scaled)
         current_loss = mean_squared_error(y, preds)
         loss_history.append(current_loss)
 
         dt = time.time() - t0
-
-        # TELEMETRY LOG (clean for background monitoring)
         print(f"[EPOCH {epoch+1:03d}/{max_epochs}] loss={current_loss:.6f} | time={dt:.3f}s | "
-              f"lr={getattr(model, 'learning_rate_', 'n/a')} | n_iter={model.n_iter_}")
+              f"lr={getattr(model, 'learning_rate_', 'n/a')} | n_iter={getattr(model, 'n_iter_', 'n/a')}")
 
-        # 5-HOUR FAILURE INSURANCE: checkpoint after EVERY epoch
+        # checkpoint per epoch
         ckpt = {
             "model": model,
             "scaler": scaler,
@@ -210,12 +359,10 @@ def train_with_telemetry_and_checkpoint(X, y, max_epochs=50, resume=True):
         if current_loss < best_loss:
             best_loss = current_loss
 
-        # Optional early stop (small improvement)
         if len(loss_history) > 5 and abs(loss_history[-1] - loss_history[-5]) < 1e-8:
             print("[TRAIN] Early stopping - loss plateau reached")
             break
 
-    # Final fit report
     print(f"\n[TRAIN] MLP training complete. Final loss: {loss_history[-1]:.6f}")
     print(f"[TRAIN] Checkpoint left at: {LATEST_CHECKPOINT}")
 
