@@ -932,7 +932,7 @@ class LiveKSE40Dashboard:
             start_time_today = datetime.combine(today, datetime.strptime('09:30', '%H:%M').time())
             end_time_today = datetime.combine(today, datetime.strptime('15:30', '%H:%M').time())
 
-            times_today = pd.date_range(start=start_time_today, end=end_time_today, freq='5T')
+            times_today = pd.date_range(start=start_time_today, end=end_time_today, freq='5min')
 
             for symbol in selected_companies:
                 if symbol in live_data:
@@ -984,7 +984,7 @@ class LiveKSE40Dashboard:
             start_time_next = datetime.combine(next_day, datetime.strptime('09:30', '%H:%M').time())
             end_time_next = datetime.combine(next_day, datetime.strptime('15:30', '%H:%M').time())
 
-            times_next = pd.date_range(start=start_time_next, end=end_time_next, freq='5T')
+            times_next = pd.date_range(start=start_time_next, end=end_time_next, freq='5min')
 
             for symbol in selected_companies:
                 if symbol in live_data:

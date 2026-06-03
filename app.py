@@ -6663,7 +6663,7 @@ def display_master_oracle_terminal():
             today = now_pkt.date()
             start_forecast = datetime.combine(today, datetime.strptime('09:30', '%H:%M').time())
             end_forecast = datetime.combine(today, datetime.strptime('15:30', '%H:%M').time())
-            forecast_times = pd.date_range(start=start_forecast, end=end_forecast, freq='5T')
+            forecast_times = pd.date_range(start=start_forecast, end=end_forecast, freq='5min')
 
             # Ensure forecast and times match in length
             min_len = min(len(forecast), len(forecast_times), len(upper_bound), len(lower_bound))
