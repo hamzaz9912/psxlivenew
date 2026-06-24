@@ -9,6 +9,10 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import json
+import yfinance as yf
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_absolute_percentage_error
 # from streamlit_autorefresh import st_autorefresh
 import pytz
 
@@ -264,103 +268,170 @@ class LiveKSE40Dashboard:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
     
+    @staticmethod
+    def compute_rsi(series, period=14):
+        delta = series.diff()
+        gain = delta.clip(lower=0)
+        loss = -delta.clip(upper=0)
+        avg_gain = gain.ewm(com=period - 1, min_periods=period).mean()
+        avg_loss = loss.ewm(com=period - 1, min_periods=period).mean()
+        rs = avg_gain / avg_loss
+        return 100 - (100 / (1 + rs))
+
+    @staticmethod
+    def compute_macd(series, fast=12, slow=26, signal=9):
+        ema_fast = series.ewm(span=fast, adjust=False).mean()
+        ema_slow = series.ewm(span=slow, adjust=False).mean()
+        macd_line = ema_fast - ema_slow
+        signal_line = macd_line.ewm(span=signal, adjust=False).mean()
+        return macd_line, signal_line
+
     def fetch_live_prices_batch(self):
-        """Fetch live prices for all companies in batches"""
+        """Fetch live prices for all companies: yfinance first, then fallback to estimates"""
         live_data = {}
-        
+
         try:
-            # Try to fetch from PSX market summary
-            psx_data = self._fetch_psx_market_data()
-            
-            for symbol, company_name in self.top40_companies.items():
-                current_price = self.price_estimates[symbol]
-                data_source = 'estimated'
-                
-                # Look for live price in PSX data with improved matching
-                if psx_data:
-                    # Try exact match first
-                    if symbol.upper() in psx_data:
-                        current_price = psx_data[symbol.upper()]['current']
-                        data_source = 'psx_live'
-                    else:
-                        # Try partial matching for variations
-                        for market_symbol, market_info in psx_data.items():
-                            if (symbol.upper() in market_symbol.upper() or
-                                market_symbol.upper() in symbol.upper() or
-                                self._symbols_match(symbol, market_symbol)):
-                                current_price = market_info['current']
-                                data_source = 'psx_live'
-                                break
-                
-                # Enhanced prediction accuracy with realistic market patterns
-                pakistan_time = self.get_pakistan_time()
-                today_seed = int(pakistan_time.strftime('%Y%m%d'))
-                np.random.seed(hash(symbol + str(today_seed)) % 10000)
+            if HAS_YFINANCE:
+                tickers = [f"{sym}.KA" for sym in self.top40_companies.keys() if sym not in {"KSE100", "PSX"}]
+                tickers += ["^KSE100"]
+                raw = None
+                try:
+                    raw = yf.download(
+                        " ".join(tickers),
+                        period="2d",
+                        interval="1m",
+                        auto_adjust=True,
+                        progress=False,
+                        group_by='ticker'
+                    )
+                except Exception:
+                    try:
+                        raw = yf.download(" ".join(tickers), period="2d", auto_adjust=True, progress=False)
+                    except Exception:
+                        raw = None
 
-                hour = pakistan_time.hour
-                minute = pakistan_time.minute
+                if raw is not None and not raw.empty:
+                    if isinstance(raw.columns, pd.MultiIndex):
+                        for sym, comp_name in self.top40_companies.items():
+                            try:
+                                col_sym = None
+                                if sym == "KSE100":
+                                    for c in raw.columns:
+                                        if "KSE" in str(c[0]).upper() or "KSE" in str(c[-1]).upper():
+                                            col_sym = c
+                                            break
+                                else:
+                                    for c in raw.columns:
+                                        if sym.upper() == str(c[0]).upper() or sym.upper() == str(c[-1]).upper():
+                                            col_sym = c
+                                            break
+                                if col_sym is None:
+                                    continue
+                                sub = raw[col_sym].copy() if isinstance(raw.columns, pd.MultiIndex) else raw.copy()
+                                sub = sub.dropna(subset=[sub.columns[0]])
+                                if sub.empty:
+                                    continue
+                                price = float(sub.iloc[-1, 0])
+                                prev = float(sub.iloc[-2, 0]) if len(sub) > 1 else price
+                                change = price - prev
+                                change_pct = (change / prev) * 100 if prev else 0.0
+                                volume = float(sub.iloc[-1, 1]) if len(sub.columns) > 1 else 0.0
+                                high = float(sub.iloc[-1, 2]) if len(sub.columns) > 2 else price * 1.01
+                                low = float(sub.iloc[-1, 3]) if len(sub.columns) > 3 else price * 0.99
+                                live_data[sym] = {
+                                    'company_name': comp_name,
+                                    'current_price': round(price, 2),
+                                    'change': round(change, 2),
+                                    'change_pct': round(change_pct, 2),
+                                    'volume': volume,
+                                    'high': round(high, 2),
+                                    'low': round(low, 2),
+                                    'data_source': 'yfinance',
+                                    'timestamp': self.get_pakistan_time()
+                                }
+                                self.price_estimates[sym] = price
+                            except Exception:
+                                continue
+        except Exception:
+            pass
 
-                # Base market conditions
-                market_trend = self._calculate_market_trend(symbol)
-                sector_sentiment = self._get_sector_sentiment(symbol)
+        for symbol, company_name in self.top40_companies.items():
+            if symbol in live_data:
+                continue
+            if symbol == "KSE100":
+                continue
+            current_price = self.price_estimates.get(symbol, 105.0)
+            data_source = 'estimated'
+            try:
+                if HAS_YFINANCE:
+                    sym_ticker = f"{symbol}.KA"
+                    try:
+                        single = yf.download(sym_ticker, period="2d", interval="5m", auto_adjust=True, progress=False)
+                        if single is not None and not single.empty:
+                            single = flatten_multiindex(single)
+                            price_col = single.columns[0]
+                            single = single.dropna(subset=[price_col])
+                            if not single.empty:
+                                current_price = float(single[price_col].iloc[-1])
+                                prev_price = float(single[price_col].iloc[-2]) if len(single) > 1 else current_price
+                                change = current_price - prev_price
+                                change_pct = (change / prev_price) * 100 if prev_price else 0.0
+                                high = float(single[price_col].max()) if len(single) > 0 else current_price * 1.01
+                                low = float(single[price_col].min()) if len(single) > 0 else current_price * 0.99
+                                volume = 0.0
+                                data_source = 'yfinance'
+                                self.price_estimates[symbol] = current_price
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
-                if (hour > 9 or (hour == 9 and minute >= 30)) and (hour < 17 or (hour == 17 and minute <= 30)):  # Market hours 9:30 AM to 5:30 PM PKT
-                    # Time-based volatility patterns
-                    if 9 <= hour <= 11:  # Morning session - highest volatility
-                        base_volatility = current_price * 0.005
-                        trend_bias = market_trend * 0.7  # Strong trend influence
-                    elif 11 <= hour <= 13:  # Mid-morning
-                        base_volatility = current_price * 0.003
-                        trend_bias = market_trend * 0.5
-                    elif 13 <= hour <= 15:  # Afternoon - lower activity
-                        base_volatility = current_price * 0.001
-                        trend_bias = market_trend * 0.2
-                    else:  # Late afternoon session
-                        base_volatility = current_price * 0.004
-                        trend_bias = market_trend * 0.6
+            pakistan_time = self.get_pakistan_time()
+            hour = pakistan_time.hour
+            minute = pakistan_time.minute
+            market_trend = self._calculate_market_trend(symbol)
+            sector_sentiment = self._get_sector_sentiment(symbol)
 
-                    # Add sector sentiment influence
-                    sentiment_modifier = 1 + (sector_sentiment * 0.3)
-                    volatility = base_volatility * sentiment_modifier
-
-                    # Generate price movement with trend bias
-                    random_component = np.random.normal(0, volatility)
-                    trend_component = trend_bias * current_price * 0.001
-                    price_change = random_component + trend_component
-
+            if (hour > 9 or (hour == 9 and minute >= 30)) and (hour < 17 or (hour == 17 and minute <= 30)):
+                if 9 <= hour <= 11:
+                    base_volatility = current_price * 0.005
+                    trend_bias = market_trend * 0.7
+                elif 11 <= hour <= 13:
+                    base_volatility = current_price * 0.003
+                    trend_bias = market_trend * 0.5
+                elif 13 <= hour <= 15:
+                    base_volatility = current_price * 0.001
+                    trend_bias = market_trend * 0.2
                 else:
-                    # After market hours - very low volatility with slight drift
-                    price_change = np.random.normal(market_trend * current_price * 0.0002,
-                                                  current_price * 0.0003)
+                    base_volatility = current_price * 0.004
+                    trend_bias = market_trend * 0.6
+                sentiment_modifier = 1 + (sector_sentiment * 0.3)
+                volatility = base_volatility * sentiment_modifier
+                random_component = np.random.normal(0, volatility)
+                trend_component = trend_bias * current_price * 0.001
+                price_change = random_component + trend_component
+            else:
+                price_change = np.random.normal(market_trend * current_price * 0.0002, current_price * 0.0003)
 
-                current_price += price_change
-                
-                # Generate volume
-                volume = np.random.randint(10000, 1000000)
-                
-                # Calculate change from yesterday (simulated)
-                yesterday_close = current_price * np.random.uniform(0.97, 1.03)
-                change = current_price - yesterday_close
-                change_pct = (change / yesterday_close) * 100
-                
-                live_data[symbol] = {
-                    'company_name': company_name,
-                    'current_price': current_price,
-                    'change': change,
-                    'change_pct': change_pct,
-                    'volume': volume,
-                    'high': current_price * np.random.uniform(1.001, 1.02),
-                    'low': current_price * np.random.uniform(0.98, 0.999),
-                    'data_source': data_source,
-                    'timestamp': self.get_pakistan_time()
-                }
-                
-                # Update price estimate for next iteration
-                self.price_estimates[symbol] = current_price
-        
-        except Exception as e:
-            st.error(f"Error fetching live data: {str(e)}")
-        
+            current_price = round(current_price + price_change, 2)
+            volume = np.random.randint(10000, 1000000)
+            yesterday_close = round(current_price * np.random.uniform(0.97, 1.03), 2)
+            change = round(current_price - yesterday_close, 2)
+            change_pct = round((change / yesterday_close) * 100, 2)
+
+            live_data[symbol] = {
+                'company_name': company_name,
+                'current_price': current_price,
+                'change': change,
+                'change_pct': change_pct,
+                'volume': volume,
+                'high': round(current_price * np.random.uniform(1.001, 1.02), 2),
+                'low': round(current_price * np.random.uniform(0.98, 0.999), 2),
+                'data_source': data_source,
+                'timestamp': self.get_pakistan_time()
+            }
+            self.price_estimates[symbol] = current_price
+
         return live_data
     
     def _fetch_psx_market_data(self):

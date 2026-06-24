@@ -16,6 +16,23 @@ except ImportError:
     HAS_YFINANCE = False
 
 try:
+    import xgboost as xgb
+    HAS_XGB = True
+except ImportError:
+    HAS_XGB = False
+
+try:
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.neural_network import MLPRegressor
+    from sklearn.metrics import mean_absolute_percentage_error
+    HAS_SKLEARN_FULL = True
+except ImportError:
+    HAS_SKLEARN_FULL = False
+    StandardScaler = None
+    MLPRegressor = None
+    mean_absolute_percentage_error = None
+
+try:
     from river import time_series, compose, preprocessing, linear_model
     HAS_RIVER = True
 except ImportError:
@@ -24,7 +41,8 @@ except ImportError:
 # Optional sklearn imports for online learning features
 try:
     from sklearn.linear_model import SGDRegressor
-    from sklearn.preprocessing import StandardScaler
+    if HAS_SKLEARN_FULL is False:
+        from sklearn.preprocessing import StandardScaler
     HAS_SKLEARN = True
 except ImportError:
     HAS_SKLEARN = False
